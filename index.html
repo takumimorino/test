@@ -1,107 +1,63 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joker</title>
-    <style>
-        body {
-            background: #eee;
-        }
-        canvas {
-            width: 60vw;
-        }
-        #canvas {
-            width: 60vw;
-            margin: auto;
-        }
-        button,input,a {
-            display: block;
-            width: 40vw;
-            height: 60px;
-            margin: 10px auto;
-        }
-        input {
-            width: 25vh;
-            height: 40px;
-        }
-    
-        #explain {
-            margin-top: 100px;
-            max-width: 500px;
-            margin: 50px auto;
-        }
-        #each {
-            border-bottom: 2px solid skyblue;
-        }
-        #title {
-            font-size: 2rem;
-            width: 10rem;
-            background: skyblue;
-        }
-
-        @media (max-width: 1000px) {
-            #canvas {
-                width: 100vw;
-            }
-            canvas {
-                width: 100vw;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>JOKER — 3人用推理ゲーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <section id="canvas">
-        <canvas width="800" height="500">
-            Canvas not supported.
-        </canvas>
+
+  <div class="table-glow" aria-hidden="true"></div>
+
+  <main class="page">
+
+    <section class="stage-wrap">
+      <div class="stage" id="app">
+        <!-- JSが画面を描画します -->
+      </div>
     </section>
 
-    <!-- ボタン配置 -->
-    <div>
-        <button id='start'>start</button>
-    </div>
+    <section class="rules" id="rules">
+      <h2 class="rules-title"><span class="rules-eyebrow">HOW TO PLAY</span>ルール説明</h2>
+      <p class="rules-lead">3人はそれぞれ違う役職を割り振られます。それぞれの役職には別々の目的があります。他の二人をうまく騙して1位を目指しましょう。</p>
 
-    <section id="explain">
-        <section id="title">
-            ルール説明
-        </section>
-        <section>
-            <p>3人はそれぞれ違う役職を割り振られます。</p>
-            <p>それぞれの役職にはそれぞれの目的があります。</p>
-            <p>他の二人をうまく騙して1位を目指しましょう。</p>   
-        </section>
-        <section>
-            <section id="each">それぞれの役職の説明</section>
-        <ul>
-                <li>
-                    Normal
-                    <p>普通の人、誰がJokerか見極めてJokerに投票しよう</p>
-                    <p>投票された数がJokerより少なければJokerに勝つ</p>
-                    <p>1票投票できる</p>
-                </li>
-                <li>
-                    Joker
-                    <p>嘘つきな人、Jokerであることをバレないようにしよう</p>
-                    <p>投票された数がNormalより少なければNormalに勝つ</p>
-                    <p>1票投票できる</p>
-                </li>
-                <li>
-                    Ace
-                    <p>特殊な人、Jokerだと思われて投票されよう</p>
-                    <p>0票投票されたら3位</p>
-                    <p>1票投票されたら2位</p>
-                    <p>2票投票されたら1位</p>
-                    <p>0.5票しか投票できない</p>
-                </li>
-            </ul>
-        </section>
+      <ul class="role-list">
+        <li class="role-card role-card--normal">
+          <div class="role-card-head">
+            <span class="role-icon" data-icon="normal"></span>
+            <span class="role-card-name">Normal</span>
+          </div>
+          <p>普通の人。誰がJokerか見極めて、Jokerに投票しよう。</p>
+          <p class="role-rule">投票された数がJokerより少なければ勝ち／1票投票できる</p>
+        </li>
+        <li class="role-card role-card--joker">
+          <div class="role-card-head">
+            <span class="role-icon" data-icon="joker"></span>
+            <span class="role-card-name">Joker</span>
+          </div>
+          <p>嘘つきな人。Jokerであることをバレないようにしよう。</p>
+          <p class="role-rule">投票された数がNormalより少なければ勝ち／1票投票できる</p>
+        </li>
+        <li class="role-card role-card--ace">
+          <div class="role-card-head">
+            <span class="role-icon" data-icon="ace"></span>
+            <span class="role-card-name">Ace</span>
+          </div>
+          <p>特殊な人。Jokerだと思われて、あえて投票されよう。</p>
+          <p class="role-rule">0票→3位／1票→2位／2票→1位／投票は0.5票分</p>
+        </li>
+      </ul>
     </section>
 
-    <footer>takumi morino</footer>
-    
+    <footer class="page-footer">takumi morino</footer>
 
-    <script src="main.js"></script>
+  </main>
+
+<script src="main.js"></script>
 </body>
 </html>
