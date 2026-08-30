@@ -1,457 +1,461 @@
 'use strict';
 
-const canvas = document.querySelector('canvas');
-const ctx = canvas.getContext('2d');
-const start = document.getElementById('start');
-const div = document.querySelector('div');
+/* ============================================================
+   JOKER — 3人用推理ゲーム
+   役職(0:Joker, 1:Normal, 2:Ace) / 投票 / 順位判定のロジックは
+   元の main.js の仕様を踏襲しています。
+============================================================ */
 
-//ボタンを予め用意しておいてあとでDOMに追加する
-//名前入力ボックス
-const name1 = document.createElement('input');
-name1.value = 'Tom';
-const name2 = document.createElement('input');
-name2.value = 'Bob';
-const name3 = document.createElement('input');
-name3.value = 'Tim';
-//名前確定ボタン
-const ok = document.createElement('button');
-ok.textContent = '名前を確定する';
-//準備OKボタン
-const ready = document.createElement('button');
-ready.textContent = '準備OK';
-//役職確認ボタン
-const check = document.createElement('button');
-check.textContent = '役職を見る';
-//役職確認終了ボタン
-const checked = document.createElement('button');
-checked.textContent = '確認終了';
-//話し合い終了ボタン
-const end = document.createElement('button');
-end.textContent = '話し合い終了';
-//投票ボタン
-const judge1 = document.createElement('button');
-const judge2 = document.createElement('button');
-const judge3 = document.createElement('button');
-//投票結果見るボタン
-const result = document.createElement('button');
-result.textContent = '投票結果を見る';
-//順位発表ボタン
-const ranking = document.createElement('button');
-ranking.textContent = '順位発表';
-//もう一回プレイボタン
-const replay = document.createElement('a');
-replay.href = '';
-replay.textContent = 'もう一度プレイ';
+const ROLE = { JOKER: 0, NORMAL: 1, ACE: 2 };
 
+const ROLE_INFO = {
+  [ROLE.JOKER]: {
+    name: 'Joker',
+    tone: 'tone-joker',
+    desc: '嘘つきな人。Jokerであることをバレないようにしよう。',
+    icon: iconJoker,
+  },
+  [ROLE.NORMAL]: {
+    name: 'Normal',
+    tone: 'tone-normal',
+    desc: '普通の人。誰がJokerか見極めて投票しよう。',
+    icon: iconEye,
+  },
+  [ROLE.ACE]: {
+    name: 'Ace',
+    tone: 'tone-ace',
+    desc: '特殊な人。Jokerだと思われて、あえて投票されよう。',
+    icon: iconStar,
+  },
+};
 
-let i = 0;             //whoseTurnのフェイズ確認用
-let j = 0;             //誰から誰への投票かの、誰からの判定用
-let arrow1 = 0;        //1番目の人の矢印
-let arrow2 = 0;        //2番目の人の矢印
-let arrow3 = 0;        //3番目の人の矢印
-let judgeCount1 = 0;    //投票された数
-let judgeCount2 = 0;   //投票された数
-let judgeCount3 = 0;    //投票された数
-let rank1;         //一番目の人の順位（０から数える）
-let rank2;         //二番目の人の順位
-let rank3;         //三番目の人の順位
-let array = [0, 1, 2];   //役職用
-let role1;         //一番目の人の役職（0:Joker, 1:Normal, 2:Ace)
-let role2;         //二番目の人の役職（0:Joker, 1:Normal, 2:Ace)
-let role3;         //三番目の人の役職（0:Joker, 1:Normal, 2:Ace)
-let role1Name;
-let role2Name;
-let role3Name;
+const DEFAULT_NAMES = ['Tom', 'Bob', 'Tim'];
 
+const app = document.getElementById('app');
 
-//役職を振り分ける
-role1 = array.splice(Math.floor(Math.random() * 3), 1)[0];
-role2 = array.splice(Math.floor(Math.random() * 2), 1)[0];
-role3 = array.splice(Math.floor(Math.random() * 1), 1)[0];
-//数字と役職名をリンク
-switch (role1) {
-    case 0:
-        role1Name = 'Joker';
-        break;
-    case 1:
-        role1Name = 'Normal';
-        break;
-    case 2:
-        role1Name = 'Ace';
-        break;
-}
-switch (role2) {
-    case 0:
-        role2Name = 'Joker';
-        break;
-    case 1:
-        role2Name = 'Normal';
-        break;
-    case 2:
-        role2Name = 'Ace';
-        break;
-}
-switch (role3) {
-    case 0:
-        role3Name = 'Joker';
-        break;
-    case 1:
-        role3Name = 'Normal';
-        break;
-    case 2:
-        role3Name = 'Ace';
-        break;
+function freshState() {
+  return {
+    players: DEFAULT_NAMES.map((n) => ({ name: n })),
+    roles: [],          // roles[i] = ROLE.* for player i
+    revealIndex: 0,
+    voteTurn: 0,
+    votes: [],           // { voter, target }
+    voteCounts: [0, 0, 0],
+  };
 }
 
+let state = freshState();
 
-console.log(role1, role2, role3);
+/* ---------------- helpers ---------------- */
 
-ctx.font = 'bold 60px Verdana';
-if (screen.width < 1600) {
-    ctx.font = 'bold 48　　　　px Verdana'
-}
-ctx.textBaseline = 'top';
-ctx.fillStyle  = 'skyblue';
-
-// スタート画面描写
-function drawstart() {
-    ctx.fillText('３人用ゲーム', 50, 50);
-}
-drawstart();
-
-
-// 名前教えての画面描写
-start.addEventListener('click', () => {
-    console.log('ok');
-    ctx.clearRect(0, 0, 800, 500);
-    ctx.fillText('名前の入力', 50, 50);
-    div.removeChild(start);
-    div.appendChild(name1);
-    div.appendChild(name2);
-    div.appendChild(name3);
-    div.appendChild(ok);
-});
-
-
-// 名前取得
-ok.addEventListener('click', ()=> {
-    ctx.clearRect(0, 0, 800, 500);
-    ctx.fillText(name1.value, 50, 50);
-    ctx.fillText(name2.value, 50, 150);
-    ctx.fillText(name3.value, 50, 250);
-    ctx.fillText('開始する', 50, 350);
-    div.removeChild(ok);
-    div.removeChild(name1);
-    div.removeChild(name2);
-    div.removeChild(name3);
-    div.appendChild(ready);
-});
-
-
-// 役職確認
-function whoseTurn() {              //本人確認と話し合い開始
-    ctx.clearRect(0, 0, 800, 500);
-    switch( i ) {
-        case 0:
-            ctx.fillText(name1.value + 'の番です', 50, 50);
-            break;
-        case 1:
-            ctx.fillText(name2.value + 'の番です', 50, 50);
-            break;
-        case 2:
-            ctx.fillText(name3.value + 'の番です', 50, 50);
-            break;
-        case 3:
-            ctx.fillText('誰がJokerか', 50, 50);
-            ctx.fillText('話し合ってください', 50, 150);
-            break;
-        case 4:
-            ctx.fillText( name1.value + 'の投票です', 50, 150);
-            div.appendChild(judge2);
-            div.appendChild(judge3);
-            j = 1;
-            break;
-        case 5:
-            ctx.fillText(name2.value + 'の投票です', 50, 150);
-            div.removeChild(judge2);
-            div.removeChild(judge3);
-            div.appendChild(judge1);
-            div.appendChild(judge3);
-            j = 2;
-            break;
-        case 6:
-            ctx.fillText(name3.value + 'の投票です', 50, 150);
-            div.removeChild(judge1);
-            div.removeChild(judge3);
-            div.appendChild(judge1);
-            div.appendChild(judge2);
-            j = 3;
-            break;
-        case 7:
-            ctx.fillText('投票が終わりました', 50, 50);
-            div.removeChild(judge1);
-            div.removeChild(judge2);
-            div.appendChild(result);
-    }
-    i++;
+function shuffledRoles() {
+  const arr = [ROLE.JOKER, ROLE.NORMAL, ROLE.ACE];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 
-function positionView() {               //役職を見せてゆく
-    ctx.clearRect(0, 0, 800, 500);
-    ctx.fillText('あなたの役職は', 50, 50);
-    switch( i - 1 ) {
-        case 0:
-            ctx.fillText(role1Name + 'です', 50, 150);
-            break;
-        case 1:
-            ctx.fillText(role2Name + 'です', 50, 150);
-            break;
-        case 2:
-            ctx.fillText(role3Name + 'です', 50, 150);
-            break;
-    }
+function fmtVotes(v) {
+  return Number.isInteger(v) ? `${v}` : v.toFixed(1);
 }
 
+function otherTwo(i) {
+  return [0, 1, 2].filter((x) => x !== i);
+}
 
+// Ranks: 0 = 1st place, 1 = 2nd, 2 = 3rd. Mirrors the original
+// makeTable() logic — the Ace's rank is fixed by votes received,
+// and the remaining two players split the leftover ranks by
+// whoever received fewer votes.
+function computeRanks() {
+  const aceIndex = state.roles.indexOf(ROLE.ACE);
+  const ranks = [0, 1, 2];
+  const rankOf = {};
 
+  rankOf[aceIndex] = 2 - state.voteCounts[aceIndex];
+  ranks.splice(ranks.indexOf(rankOf[aceIndex]), 1);
 
-ready.addEventListener('click', () => {
-    whoseTurn();
-    div.removeChild(ready);
-    div.appendChild(check);
-});
+  const [a, b] = otherTwo(aceIndex);
+  if (state.voteCounts[a] < state.voteCounts[b]) {
+    rankOf[a] = ranks[0];
+    rankOf[b] = ranks[1];
+  } else {
+    rankOf[a] = ranks[1];
+    rankOf[b] = ranks[0];
+  }
+  return rankOf;
+}
 
-check.addEventListener('click', () => {
-    positionView();
-    div.removeChild(check);
-    div.appendChild(checked);
-});
+function goto(renderFn) {
+  app.innerHTML = '';
+  renderFn();
+}
 
-checked.addEventListener('click', () => {
-    whoseTurn();
-    div.removeChild(checked);
-    if (i > 3) {
-        div.appendChild(end);
+/* ---------------- icons ---------------- */
+
+function iconJoker() {
+  return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 6c-2 3-5 3-6 7-3-1-6 1-6 4 0 3 3 4 3 7 0 4-4 5-4 9h26c0-4-4-5-4-9 0-3 3-4 3-7 0-3-3-5-6-4-1-4-4-4-6-7z"/>
+    <circle cx="18" cy="20" r="1.6" fill="currentColor"/>
+    <circle cx="30" cy="20" r="1.6" fill="currentColor"/>
+    <path d="M18 26c2 2 10 2 12 0"/>
+    <path d="M14 40h20"/>
+  </svg>`;
+}
+function iconEye() {
+  return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M6 24c4-8 12-13 18-13s14 5 18 13c-4 8-12 13-18 13S10 32 6 24z"/>
+    <circle cx="24" cy="24" r="6"/>
+  </svg>`;
+}
+function iconStar() {
+  return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">
+    <path d="M24 5l5.6 12.2L43 19l-9.6 9 2.6 13.6L24 35.2 12 41.6 14.6 28 5 19l13.4-1.8z"/>
+  </svg>`;
+}
+function iconDiscuss() {
+  return `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 12h22a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H20l-8 6v-6H8a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4z" transform="translate(2,0)"/>
+    <path d="M34 20h6a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4h-2v5l-6-5" opacity="0.55" transform="translate(-2,0)"/>
+  </svg>`;
+}
+
+/* ============================================================
+   SCREEN 1 — Start
+============================================================ */
+function renderStart() {
+  const el = document.createElement('div');
+  el.className = 'screen screen-center';
+  el.innerHTML = `
+    <div class="eyebrow">3人用推理ゲーム</div>
+    <h1 class="title">JOKER</h1>
+    <p class="subtitle">誰を、信じる？</p>
+    <div style="width:96px;height:96px;color:var(--joker);margin:6px 0 30px;">${iconJoker()}</div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="btnStart">はじめる</button>
+  `;
+  app.appendChild(el);
+  el.querySelector('#btnStart').addEventListener('click', () => goto(renderNames));
+}
+
+/* ============================================================
+   SCREEN 2 — Names
+============================================================ */
+function renderNames() {
+  const el = document.createElement('div');
+  el.className = 'screen';
+  el.innerHTML = `
+    <div class="eyebrow">STEP 1</div>
+    <h2 class="title" style="font-size:26px;">名前を入力</h2>
+    <p class="lead">3人それぞれの名前を入力してください。</p>
+    <div class="field-list">
+      ${state.players.map((p, i) => `
+        <div class="field">
+          <label for="name${i}">プレイヤー ${i + 1}</label>
+          <input id="name${i}" type="text" maxlength="8" value="${p.name}" autocomplete="off">
+        </div>
+      `).join('')}
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="btnNext">つぎへ</button>
+  `;
+  app.appendChild(el);
+  el.querySelector('#btnNext').addEventListener('click', () => {
+    state.players.forEach((p, i) => {
+      const input = el.querySelector(`#name${i}`);
+      const v = input.value.trim();
+      p.name = v || DEFAULT_NAMES[i];
+    });
+    goto(renderReady);
+  });
+}
+
+/* ============================================================
+   SCREEN 3 — Ready lineup
+============================================================ */
+function renderReady() {
+  const el = document.createElement('div');
+  el.className = 'screen';
+  el.innerHTML = `
+    <div class="eyebrow">STEP 2</div>
+    <h2 class="title" style="font-size:26px;">メンバー確認</h2>
+    <p class="lead">この3人でゲームを始めます。準備ができたら役職を配ります。</p>
+    <div class="lineup">
+      ${state.players.map((p, i) => `
+        <div class="lineup-item">
+          <span class="lineup-num">${i + 1}</span>
+          <span class="lineup-name">${escapeHtml(p.name)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="btnReady">役職を配る</button>
+  `;
+  app.appendChild(el);
+  el.querySelector('#btnReady').addEventListener('click', () => {
+    state.roles = shuffledRoles();
+    state.revealIndex = 0;
+    goto(renderReveal);
+  });
+}
+
+/* ============================================================
+   SCREEN 4 — Reveal (flip card), one per player
+============================================================ */
+function renderReveal() {
+  const i = state.revealIndex;
+  const player = state.players[i];
+  const role = ROLE_INFO[state.roles[i]];
+
+  const el = document.createElement('div');
+  el.className = 'screen';
+  el.innerHTML = `
+    <div class="eyebrow">STEP 3 — ${i + 1} / 3</div>
+    <div class="turn-banner">
+      <div class="name">${escapeHtml(player.name)} さんの番です</div>
+    </div>
+    <p class="lead" style="text-align:center;">スマホをこの人に渡してください。カードをタップすると役職がめくれます。</p>
+
+    <div class="flip-scene">
+      <div class="flip-card" id="flipCard">
+        <div class="flip-face flip-front">
+          <div class="role-icon" style="width:56px;height:56px;">${iconJoker()}</div>
+          <div class="hint">TAP TO REVEAL</div>
+        </div>
+        <div class="flip-face flip-back">
+          <div class="role-icon ${role.tone}" style="width:44px;height:44px;">${role.icon()}</div>
+          <div class="role-name ${role.tone}">${role.name}</div>
+          <div class="role-desc">${role.desc}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="btnNextReveal" disabled style="opacity:.35;">確認しました。次へ</button>
+  `;
+  app.appendChild(el);
+
+  const card = el.querySelector('#flipCard');
+  const nextBtn = el.querySelector('#btnNextReveal');
+  card.addEventListener('click', () => {
+    if (card.classList.contains('is-flipped')) return;
+    card.classList.add('is-flipped');
+    nextBtn.disabled = false;
+    nextBtn.style.opacity = '1';
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (nextBtn.disabled) return;
+    state.revealIndex++;
+    if (state.revealIndex < 3) {
+      goto(renderReveal);
     } else {
-        div.appendChild(check);
+      goto(renderDiscuss);
     }
-});
-
-
-end.addEventListener('click', () => {
-    judge1.textContent = name1.value + 'に投票する';
-    judge2.textContent = name2.value + 'に投票する';
-    judge3.textContent = name3.value + 'に投票する';
-    whoseTurn();
-    div.removeChild(end);
-});
-
-judge1.addEventListener('click', () => {
-    judgeCount1++;       
-    if ( j == 2 ) {       //2番目の人からの指名だったら
-        arrow2 = -1;      //矢印2は逆順 
-        if (role2 == 2) {    //Aceだったら
-            judgeCount1 -= 0.5;
-        }
-    }
-    if ( j == 3 ) {       //3番目の人からの指名だったら
-        arrow3 = 1;     //矢印3は正順
-        if (role3 == 2) {    //Aceだったら
-            judgeCount1 -= 0.5;
-        }
-    }
-    whoseTurn();
-});
-judge2.addEventListener('click', () => {
-    judgeCount2++;
-    if ( j == 1 ) {       //1番目の人からの指名だったら
-        arrow1 = 1;      //矢印１は正順
-        if (role1 == 2) {    //Aceだったら
-            judgeCount2 -= 0.5;
-        }
-    }
-    if ( j == 3 ) {       //3番目の人からの指名だったら
-        arrow3 = -1;     //矢印3は逆順
-        if (role3 == 2) {    //Aceだったら
-            judgeCount2 -= 0.5;
-        }
-    }
-    whoseTurn();
-});
-judge3.addEventListener('click', () => {
-    judgeCount3++;
-    if ( j == 1 ) {       //1番目の人からの指名だったら
-        arrow1 = -1;      //矢印１は逆順
-        if (role1 == 2) {    //Aceだったら
-            judgeCount3 -= 0.5;
-        }
-    }
-    if ( j == 2 ) {       //2番目の人からの指名だったら
-        arrow2 = 1;     //矢印2は正順
-        if (role2 == 2) {    //Aceだったら
-            judgeCount3 -= 0.5;
-        }
-    }
-    whoseTurn();
-});
-
-function threePeople() {     //3人の名前と枠と役職を描画
-    //一人目
-    ctx.fillText(name1.value, canvas.width / 2 - 100, 60, 200);
-    ctx.strokeRect(canvas.width / 2 - 100, 55, 200, 60);
-    ctx.fillText(role1Name, canvas.width / 2 -100, 0, 200);
-    //二人目
-    ctx.fillText(name2.value, 0, canvas.height - 100, 200);
-    ctx.strokeRect(0, canvas.height - 105, 200, 60);
-    ctx.fillText(role2Name, 0, canvas.height - 155, 200);
-    //３人目
-    ctx.fillText(name3.value, canvas.width - 200, canvas.height - 100, 200);
-    ctx.strokeRect(canvas.width - 200, canvas.height - 105, 200, 60);
-    ctx.fillText(role3Name, canvas.width - 200, canvas.height - 155, 200);
-
+  });
 }
 
-function selectArrow1() {   //1人目の矢印を描画（場合分けもオッケー）
-    ctx.beginPath();
-    if (arrow1 == 1) {         //正順の場合
-        ctx.moveTo(canvas.width / 2, 118);
-        ctx.lineTo(canvas.width / 2 - 90, canvas.height - 300);
-        ctx.lineTo(canvas.width / 2 - 70, canvas.height - 300);
-        ctx.moveTo(canvas.width / 2 - 90, canvas.height - 300);
-        ctx.lineTo(canvas.width / 2 - 85, canvas.height - 320);
-    } else {                  //逆順の場合
-        ctx.moveTo(canvas.width / 2, 118);
-        ctx.lineTo(canvas.width / 2 + 90, canvas.height - 300);
-        ctx.lineTo(canvas.width / 2 + 70, canvas.height - 300);
-        ctx.moveTo(canvas.width / 2 + 90, canvas.height - 300);
-        ctx.lineTo(canvas.width / 2 + 85, canvas.height - 320);
-    }
-    ctx.stroke();
-}
-function selectArrow2() {   //2人目の矢印を描画（場合分けもオッケー）
-    ctx.beginPath();
-    if (arrow2 == 1) {        //正順の場合
-        ctx.moveTo(200, canvas.height - 80);
-        ctx.lineTo(330, canvas.height - 80);
-        ctx.lineTo(310, canvas.height - 65);
-        ctx.moveTo(330, canvas.height - 80);
-        ctx.lineTo(310, canvas.height - 95);
-    } else {                 //逆順の場合
-        ctx.moveTo(200, canvas.height - 150);
-        ctx.lineTo(280, canvas.height - 240);
-        ctx.lineTo(280, canvas.height - 220);
-        ctx.moveTo(280, canvas.height - 240);
-        ctx.lineTo(255, canvas.height - 230);
-    }
-    ctx.stroke();
-}
-function selectArrow3() {   //3人目の矢印を描画（場合分けもオッケー）
-    ctx.beginPath();
-    if (arrow3 == 1) {        //正順の場合
-        ctx.moveTo(canvas.width - 200, canvas.height - 150);
-        ctx.lineTo(canvas.width - 280, canvas.height - 240);
-        ctx.lineTo(canvas.width - 280, canvas.height - 220);
-        ctx.moveTo(canvas.width - 280, canvas.height - 240);
-        ctx.lineTo(canvas.width - 255, canvas.height - 230);
-
-    } else {                 //逆順の場合
-        ctx.moveTo(canvas.width - 200, canvas.height - 80);
-        ctx.lineTo(canvas.width - 330, canvas.height - 80);
-        ctx.lineTo(canvas.width - 310, canvas.height - 65);
-        ctx.moveTo(canvas.width - 330, canvas.height - 80);
-        ctx.lineTo(canvas.width - 310, canvas.height - 95);
-    }
-    ctx.stroke();
+/* ============================================================
+   SCREEN 5 — Discuss
+============================================================ */
+function renderDiscuss() {
+  const el = document.createElement('div');
+  el.className = 'screen screen-center';
+  el.innerHTML = `
+    <div class="eyebrow">STEP 4</div>
+    <div class="discuss-icon">${iconDiscuss()}</div>
+    <h2 class="title" style="font-size:26px;">話し合いタイム</h2>
+    <p class="lead">誰がJokerか話し合ってください。<br>話し終えたら投票に進みます。</p>
+    <div class="spacer"></div>
+    <button class="btn btn-joker" id="btnEndDiscuss">話し合い終了・投票へ</button>
+  `;
+  app.appendChild(el);
+  el.querySelector('#btnEndDiscuss').addEventListener('click', () => {
+    state.voteTurn = 0;
+    state.votes = [];
+    state.voteCounts = [0, 0, 0];
+    goto(renderVote);
+  });
 }
 
+/* ============================================================
+   SCREEN 6 — Vote, one per player
+============================================================ */
+function renderVote() {
+  const voter = state.voteTurn;
+  const targets = otherTwo(voter);
+  const player = state.players[voter];
 
-result.addEventListener('click', ()=> {
-    ctx.clearRect(0, 0, 800, 500);
-    console.log(name1.value + 'に' + judgeCount1 + '票');
-    console.log(name2.value + 'に' + judgeCount2 + '票');
-    console.log(name3.value + 'に' + judgeCount3 + '票');
-    console.log(arrow1);
-    console.log(arrow2);
-    console.log(arrow3);
+  const el = document.createElement('div');
+  el.className = 'screen';
+  el.innerHTML = `
+    <div class="eyebrow">STEP 5 — 投票 ${voter + 1} / 3</div>
+    <div class="turn-banner">
+      <div class="name">${escapeHtml(player.name)} さんの投票</div>
+    </div>
+    <p class="lead" style="text-align:center;">Jokerだと思う人に投票してください。</p>
+    <div class="vote-options">
+      ${targets.map((t) => `
+        <button class="vote-btn" data-target="${t}">
+          <span>${escapeHtml(state.players[t].name)}</span>
+          <span class="arrow">→</span>
+        </button>
+      `).join('')}
+    </div>
+  `;
+  app.appendChild(el);
 
-    threePeople();
-    selectArrow1();
-    selectArrow2();
-    selectArrow3();
-
-    div.appendChild(ranking);
-    div.appendChild(replay);
-});
-
-
-
-function makeTable() {   //順位確定、順位入りの表を作成
-//順位確定
-    const ranks = [0, 1, 2];          // ０位、１位、２位を準備
-    if (role1 == 2) {             //一人目がAceの場合
-        rank1 = 2 - judgeCount1  ;    //Aceの順位を確定
-        ranks.splice(rank1, 1);     //ranksからAceの順位を取り除く
-        if (judgeCount2 < judgeCount3) {      //2人目が3人目より勝つ場合
-            rank2 = ranks[0];
-            rank3 = ranks[1];
-        } else{        //2人目が3人目より負ける場合
-            rank2 = ranks[1];
-            rank3 = ranks[0];
-        }
-    }
-    if (role2 == 2) {            //２人目がAceの場合
-        rank2 = 2 - judgeCount2;    //Aceの順位を確定
-        ranks.splice(rank2, 1);     //ranksからAceの順位を取り除く
-        if (judgeCount1 < judgeCount3) {      //一人目が3人目より勝つ場合
-            rank1 = ranks[0];
-            rank3 = ranks[1];
-        } else{        //一人目が3人目より負ける場合
-            rank1 = ranks[1];
-            rank3 = ranks[0];
-        }
-    }
-    if (role3 == 2) {            //３人目がAceの場合
-        rank3 = 2 - judgeCount3;    //Aceの順位を確定
-        ranks.splice(rank3, 1);     //ranksからAceの順位を取り除く
-        if (judgeCount1 < judgeCount2) {      //一人目が二人目より勝つ場合
-            rank1 = ranks[0];
-            rank2 = ranks[1];
-        } else{        //一人目が二人目より負ける場合
-            rank1 = ranks[1];
-            rank2 = ranks[0];
-        }
-    }
-
-
-//表の線を描画
-    ctx.beginPath();
-    ctx.moveTo(0,80);
-    ctx.lineTo(canvas.width,80);
-    ctx.moveTo(0,canvas.height / 3 + 80);
-    ctx.lineTo(canvas.width, canvas.height / 3 + 80);
-    ctx.moveTo(0, canvas.height * 2 / 3 + 80);
-    ctx.lineTo(canvas.width, canvas.height * 2 / 3 + 80);
-    ctx.stroke();
-    console.log(canvas.height);
-    console.log('ueue');
-//1st 2nd 3rd を描画
-    ctx.fillText('1st', 10, 10, canvas.width / 3);
-    ctx.fillText('2nd', 10, 10 + canvas.height / 3, canvas.width / 3);
-    ctx.fillText('3rd', 10, 10 + canvas.height * 2 / 3, canvas.width / 3);
-
-//名前を描画
-    ctx.fillText(name1.value, canvas.width / 2 + 10, canvas.height / 3 * rank1, canvas.width / 2 - 20);
-    ctx.fillText(name2.value, canvas.width / 2 + 10, canvas.height / 3 * rank2, canvas.width / 2 - 20);
-    ctx.fillText(name3.value, canvas.width / 2 + 10, canvas.height / 3 * rank3, canvas.width / 2 - 20);
+  el.querySelectorAll('.vote-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = Number(btn.dataset.target);
+      const weight = state.roles[voter] === ROLE.ACE ? 0.5 : 1;
+      state.voteCounts[target] += weight;
+      state.votes.push({ voter, target });
+      state.voteTurn++;
+      if (state.voteTurn < 3) {
+        goto(renderVote);
+      } else {
+        goto(renderResult);
+      }
+    });
+  });
 }
 
+/* ============================================================
+   SCREEN 7 — Result table (SVG triangle)
+============================================================ */
+function renderResult() {
+  const el = document.createElement('div');
+  el.className = 'screen';
+  el.innerHTML = `
+    <div class="eyebrow">RESULT</div>
+    <h2 class="title" style="font-size:24px;">投票結果</h2>
+    <div class="table-diagram">${buildTableSvg()}</div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="btnRanking">順位を見る</button>
+  `;
+  app.appendChild(el);
+  el.querySelector('#btnRanking').addEventListener('click', () => goto(renderRanking));
+}
 
-ranking.addEventListener('click', () => {
-    ctx.clearRect(0, 0, 800, 500);
-    //表をつくる
-    makeTable();
-});
+// Layout: player0 top, player1 bottom-left, player2 bottom-right.
+function nodePositions() {
+  return [
+    { x: 150, y: 66 },
+    { x: 62, y: 258 },
+    { x: 238, y: 258 },
+  ];
+}
 
+function buildTableSvg() {
+  const pos = nodePositions();
+  const R = 44;
 
+  const arrows = state.votes.map(({ voter, target }, idx) => {
+    const p1 = pos[voter];
+    const p2 = pos[target];
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const ux = dx / dist, uy = dy / dist;
+    // perpendicular offset so a<->b pairs in both directions don't overlap
+    const px = -uy, py = ux;
+    const side = voter < target ? 1 : -1;
+    const bend = 20 * side;
 
+    const startX = p1.x + ux * (R + 2) + px * bend * 0.3;
+    const startY = p1.y + uy * (R + 2) + py * bend * 0.3;
+    const endX = p2.x - ux * (R + 10) + px * bend * 0.3;
+    const endY = p2.y - uy * (R + 10) + py * bend * 0.3;
+    const midX = (p1.x + p2.x) / 2 + px * bend;
+    const midY = (p1.y + p2.y) / 2 + py * bend;
 
+    return `<path class="arrow-path" style="animation-delay:${300 + idx * 180}ms"
+      d="M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}"
+      marker-end="url(#arrowhead)" />`;
+  }).join('');
+
+  const nodes = pos.map((p, i) => {
+    const role = ROLE_INFO[state.roles[i]];
+    const fillByRole = { [ROLE.JOKER]: 'var(--joker)', [ROLE.NORMAL]: 'var(--normal-blue)', [ROLE.ACE]: 'var(--ace)' };
+    return `
+      <g>
+        <circle cx="${p.x}" cy="${p.y}" r="${R}" fill="#fffdf7" stroke="${fillByRole[state.roles[i]]}" stroke-width="2.5"/>
+        <text x="${p.x}" y="${p.y - 10}" text-anchor="middle" class="node-name">${escapeHtml(truncate(state.players[i].name, 6))}</text>
+        <text x="${p.x}" y="${p.y + 6}" text-anchor="middle" class="node-role" fill="${fillByRole[state.roles[i]]}">${role.name}</text>
+        <text x="${p.x}" y="${p.y + 22}" text-anchor="middle" class="node-votes">${fmtVotes(state.voteCounts[i])}票</text>
+      </g>`;
+  }).join('');
+
+  return `
+    <svg viewBox="0 0 300 320" width="100%">
+      <defs>
+        <marker id="arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="var(--joker)"/>
+        </marker>
+      </defs>
+      ${arrows}
+      ${nodes}
+    </svg>
+  `;
+}
+
+function truncate(str, n) {
+  return str.length > n ? str.slice(0, n) + '…' : str;
+}
+
+/* ============================================================
+   SCREEN 8 — Ranking
+============================================================ */
+function renderRanking() {
+  const rankOf = computeRanks();
+  const order = [0, 1, 2].slice().sort((a, b) => rankOf[a] - rankOf[b]);
+  const medalClass = ['is-first', 'is-second', 'is-third'];
+  const medalLabel = ['1st', '2nd', '3rd'];
+
+  const el = document.createElement('div');
+  el.className = 'screen';
+  el.innerHTML = `
+    <div class="eyebrow">FINAL</div>
+    <h2 class="title" style="font-size:26px;">順位発表</h2>
+    <div class="rank-list">
+      ${order.map((playerIdx, pos) => {
+        const role = ROLE_INFO[state.roles[playerIdx]];
+        return `
+          <div class="rank-item ${medalClass[pos]}">
+            <div class="rank-medal">${medalLabel[pos]}</div>
+            <div class="rank-info">
+              <span class="rname">${escapeHtml(state.players[playerIdx].name)}</span>
+              <span class="rrole ${role.tone}">${role.name} · ${fmtVotes(state.voteCounts[playerIdx])}票</span>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="btnReplay">もう一度あそぶ</button>
+  `;
+  app.appendChild(el);
+  el.querySelector('#btnReplay').addEventListener('click', () => {
+    state = freshState();
+    goto(renderStart);
+  });
+}
+
+/* ---------------- util ---------------- */
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
+/* ---------------- boot ---------------- */
+function populateStaticIcons() {
+  const map = { normal: iconEye, joker: iconJoker, ace: iconStar };
+  document.querySelectorAll('.role-icon[data-icon]').forEach((elm) => {
+    const fn = map[elm.dataset.icon];
+    if (fn) elm.innerHTML = fn();
+  });
+}
+populateStaticIcons();
+goto(renderStart);
