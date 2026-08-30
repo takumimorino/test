@@ -1,0 +1,598 @@
+:root {
+  --felt: #123c2f;
+  --felt-deep: #082720;
+  --card: #f3e9d3;
+  --card-dim: #e9dcbf;
+  --ink: #1c1410;
+  --ink-soft: #4a3f36;
+  --gold: #c9a227;
+  --gold-bright: #e4c34d;
+  --joker: #6e2a5e;
+  --joker-soft: #8a3f77;
+  --ace: #9c2f3a;
+  --ace-soft: #b74a54;
+  --normal-blue: #2c5f6b;
+
+  --font-display: "Fraunces", "Hiragino Mincho ProN", serif;
+  --font-body: "Inter", "Hiragino Kaku Gothic ProN", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius-lg: 28px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--felt);
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--card);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* --- felt table backdrop --- */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 50% 10%, rgba(228, 195, 77, 0.08), transparent 55%),
+    radial-gradient(ellipse at 50% 0%, var(--felt) 0%, var(--felt-deep) 78%);
+  pointer-events: none;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.05;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 1px, transparent 14px);
+}
+
+.table-glow {
+  position: fixed;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140vw;
+  height: 60vh;
+  background: radial-gradient(circle, rgba(228, 195, 77, 0.12), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: max(20px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  gap: 28px;
+}
+
+/* ============ STAGE (the "card" everything happens on) ============ */
+
+.stage-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+}
+
+.stage {
+  position: relative;
+  width: min(92vw, 440px);
+  min-height: 520px;
+  background: var(--card);
+  color: var(--ink);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(28, 20, 16, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.55),
+    0 0 0 6px rgba(201, 162, 39, 0.14);
+  padding: 30px 24px 26px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.stage::before,
+.stage::after {
+  content: "♠";
+  position: absolute;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--gold);
+  opacity: 0.55;
+  line-height: 1;
+}
+.stage::before { top: 14px; left: 16px; }
+.stage::after  { bottom: 14px; right: 16px; transform: rotate(180deg); }
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  animation: rise 420ms cubic-bezier(.2, .8, .2, 1);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen, .flip-card, .arrow-path, .btn { animation: none !important; transition: none !important; }
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 6px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(34px, 11vw, 46px);
+  letter-spacing: 0.01em;
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+
+.subtitle {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--joker);
+  margin: 0 0 18px;
+}
+
+.lead {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+}
+
+.screen-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.spacer { flex: 1; }
+
+/* ============ Buttons ============ */
+
+.btn {
+  appearance: none;
+  border: none;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  border-radius: 999px;
+  padding: 16px 20px;
+  width: 100%;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:active { transform: scale(0.97); }
+.btn:focus-visible {
+  outline: 3px solid var(--gold-bright);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+  color: var(--ink);
+  box-shadow: 0 8px 20px -8px rgba(201, 162, 39, 0.7);
+}
+.btn-primary:hover { filter: brightness(1.04); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid rgba(28, 20, 16, 0.25);
+}
+
+.btn-joker {
+  background: linear-gradient(180deg, var(--joker-soft), var(--joker));
+  color: var(--card);
+  box-shadow: 0 8px 20px -8px rgba(110, 42, 94, 0.55);
+}
+
+.btn-stack { display: flex; flex-direction: column; gap: 12px; margin-top: auto; }
+.btn-row { display: flex; gap: 12px; margin-top: auto; }
+.btn-row .btn { flex: 1; }
+
+/* ============ Name entry ============ */
+
+.field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.field input {
+  font-family: var(--font-body);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  background: #fffdf7;
+  border: 1.5px solid rgba(28, 20, 16, 0.15);
+  border-radius: var(--radius-sm);
+  padding: 13px 14px;
+  outline: none;
+  transition: border-color 120ms ease;
+}
+.field input:focus-visible {
+  border-color: var(--gold);
+  outline: 2px solid rgba(201, 162, 39, 0.35);
+  outline-offset: 1px;
+}
+
+/* ============ Lineup (ready screen) ============ */
+
+.lineup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 6px 0 20px;
+}
+.lineup-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(28, 20, 16, 0.04);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.lineup-num {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--card);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.lineup-name { font-weight: 600; font-size: 16px; }
+
+/* ============ Flip card (role reveal) ============ */
+
+.turn-banner {
+  text-align: center;
+  margin-bottom: 18px;
+}
+.turn-banner .name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.flip-scene {
+  perspective: 1200px;
+  width: 100%;
+  max-width: 260px;
+  margin: 6px auto 22px;
+  aspect-ratio: 3 / 4;
+}
+
+.flip-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  transition: transform 620ms cubic-bezier(.22, 1, .36, 1);
+  transform-style: preserve-3d;
+}
+.flip-card.is-flipped { transform: rotateY(180deg); }
+
+.flip-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 18px;
+}
+
+.flip-front {
+  background:
+    repeating-linear-gradient(135deg, rgba(228,195,77,.16) 0 10px, transparent 10px 20px),
+    linear-gradient(160deg, var(--joker), #431c39);
+  border: 2px solid var(--gold);
+  color: var(--gold-bright);
+}
+.flip-front .hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: rgba(228, 195, 77, 0.75);
+}
+
+.flip-back {
+  background: #fffdf7;
+  border: 2px solid var(--gold);
+  transform: rotateY(180deg);
+  color: var(--ink);
+}
+.flip-back .role-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+}
+.flip-back .role-desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ink-soft);
+}
+
+.role-icon {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+}
+.role-icon svg { width: 100%; height: 100%; }
+
+/* ============ Discuss ============ */
+
+.discuss-icon {
+  width: 64px; height: 64px;
+  margin: 0 auto 8px;
+  color: var(--gold);
+}
+
+/* ============ Voting ============ */
+
+.vote-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 8px 0 auto;
+}
+
+.vote-btn {
+  appearance: none;
+  text-align: left;
+  width: 100%;
+  border: 1.5px solid rgba(28, 20, 16, 0.15);
+  background: #fffdf7;
+  border-radius: var(--radius-sm);
+  padding: 16px 16px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: border-color 120ms ease, background 120ms ease, transform 120ms ease;
+}
+.vote-btn:hover { border-color: var(--joker); }
+.vote-btn:active { transform: scale(0.98); }
+.vote-btn:focus-visible { outline: 3px solid var(--gold-bright); outline-offset: 2px; }
+.vote-btn .arrow { color: var(--joker); font-size: 18px; }
+
+/* ============ Result table (SVG) ============ */
+
+.table-diagram {
+  width: 100%;
+  margin: 4px auto 14px;
+}
+
+.node-name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 13px;
+  fill: var(--ink);
+}
+.node-role {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.node-votes {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 12px;
+  fill: var(--ink);
+}
+
+.arrow-path {
+  fill: none;
+  stroke: var(--joker);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  animation: draw 900ms ease forwards;
+  animation-delay: 300ms;
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
+/* ============ Ranking / podium ============ */
+
+.rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 auto;
+}
+
+.rank-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  background: #fffdf7;
+  border: 1.5px solid rgba(28, 20, 16, 0.1);
+}
+.rank-item.is-first {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, #fffaf0, #fff3d6);
+  box-shadow: 0 10px 24px -14px rgba(201, 162, 39, 0.65);
+}
+.rank-medal {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  color: #fff;
+}
+.rank-item.is-first .rank-medal { background: var(--gold); color: var(--ink); }
+.rank-item.is-second .rank-medal { background: #9aa3ab; }
+.rank-item.is-third .rank-medal { background: #a9713f; }
+
+.rank-info { display: flex; flex-direction: column; gap: 2px; }
+.rank-info .rname { font-weight: 700; font-size: 16px; }
+.rank-info .rrole { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); letter-spacing: 0.06em; }
+
+/* ============ role colors used across screens ============ */
+.tone-joker { color: var(--joker); }
+.tone-normal { color: var(--normal-blue); }
+.tone-ace { color: var(--ace); }
+
+/* ============ Rules section (below stage) ============ */
+
+.rules {
+  width: min(92vw, 440px);
+  color: var(--card);
+}
+
+.rules-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  margin: 0 0 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rules-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  color: var(--gold-bright);
+}
+
+.rules-lead {
+  font-size: 14px;
+  line-height: 1.75;
+  color: rgba(243, 233, 211, 0.78);
+  margin: 0 0 20px;
+}
+
+.role-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.role-card {
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  background: rgba(243, 233, 211, 0.06);
+  border: 1px solid rgba(243, 233, 211, 0.14);
+  border-left: 4px solid var(--gold);
+}
+.role-card--joker { border-left-color: var(--joker-soft); }
+.role-card--ace { border-left-color: var(--ace-soft); }
+.role-card--normal { border-left-color: var(--normal-blue); }
+
+.role-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.role-card .role-icon { width: 24px; height: 24px; color: var(--gold-bright); }
+.role-card--joker .role-icon { color: var(--joker-soft); }
+.role-card--ace .role-icon { color: var(--ace-soft); }
+.role-card--normal .role-icon { color: #6fa9b8; }
+
+.role-card-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+}
+
+.role-card p {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: rgba(243, 233, 211, 0.82);
+}
+.role-card .role-rule {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(228, 195, 77, 0.85);
+  margin-top: 6px;
+}
+
+.page-footer {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(243, 233, 211, 0.35);
+  padding-bottom: 10px;
+}
