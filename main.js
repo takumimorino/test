@@ -131,7 +131,6 @@ function renderStart() {
   el.innerHTML = `
     <div class="eyebrow">3人用推理ゲーム</div>
     <h1 class="title">JOKER</h1>
-    //<p class="subtitle">誰を、信じる？</p>
     <div style="width:96px;height:96px;color:var(--joker);margin:6px 0 30px;">${iconJoker()}</div>
     <div class="spacer"></div>
     <button class="btn btn-primary" id="btnStart">はじめる</button>
