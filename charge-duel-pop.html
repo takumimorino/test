@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Charge Fire Duel</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#7bdff2}iframe{display:block;width:100%;height:100%;border:0;background:#7bdff2}</style>
+</head>
+<body>
+<iframe id="gameFrame" src="charge-duel.html" title="Charge Fire Duel"></iframe>
+<script>
+const frame=document.getElementById('gameFrame');
+frame.addEventListener('load',()=>{
+  const doc=frame.contentDocument;
+  if(!doc)return;
+  const pre1=doc.createElement('link');
+  pre1.rel='preconnect';pre1.href='https://fonts.googleapis.com';
+  const pre2=doc.createElement('link');
+  pre2.rel='preconnect';pre2.href='https://fonts.gstatic.com';pre2.crossOrigin='anonymous';
+  const fonts=doc.createElement('link');
+  fonts.rel='stylesheet';fonts.href='https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap';
+  const theme=doc.createElement('link');
+  theme.rel='stylesheet';theme.href='charge-pop.css';
+  doc.head.append(pre1,pre2,fonts,theme);
+});
+</script>
+</body>
+</html>
