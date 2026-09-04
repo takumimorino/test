@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Game Select</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b1120;color:#fff}body{min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 20% 15%,rgba(59,130,246,.18),transparent 30%),radial-gradient(circle at 80% 80%,rgba(239,68,68,.16),transparent 32%),#0b1120}.wrap{width:min(900px,100%)}.eyebrow{font-size:13px;font-weight:900;letter-spacing:.18em;color:#94a3b8;text-align:center;margin-bottom:10px}.title{margin:0;text-align:center;font-size:clamp(36px,8vw,72px);line-height:.95;font-weight:1000;letter-spacing:-.04em}.lead{text-align:center;color:#cbd5e1;margin:18px auto 30px;max-width:560px;font-weight:700}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.card{position:relative;display:flex;flex-direction:column;min-height:340px;padding:28px;border-radius:28px;text-decoration:none;color:white;overflow:hidden;border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 60px rgba(0,0,0,.28);transition:transform .15s ease,filter .15s ease}.card:hover{transform:translateY(-4px);filter:brightness(1.05)}.card:active{transform:scale(.985)}.two{background:linear-gradient(145deg,#7c2d12,#dc2626 58%,#f97316)}.three{background:linear-gradient(145deg,#172554,#4338ca 56%,#7c3aed)}.icon{font-size:74px;line-height:1;margin-bottom:22px}.label{font-size:13px;font-weight:900;letter-spacing:.12em;opacity:.8}.name{font-size:clamp(28px,5vw,42px);font-weight:1000;margin:6px 0 12px}.desc{font-size:15px;line-height:1.7;font-weight:700;opacity:.9;max-width:34ch}.go{margin-top:auto;padding-top:28px;font-size:16px;font-weight:1000}.footer{text-align:center;color:#64748b;font-size:12px;margin-top:24px}@media(max-width:700px){.cards{grid-template-columns:1fr}.card{min-height:260px}.icon{font-size:58px}}
+:root{--sky:#7bdff2;--cream:#fffaf0;--paper:#fff;--ink:#25213b;--soft:#665f7a;--pink:#ff5f9e;--yellow:#ffd447;--purple:#8b5cf6;--mint:#70e1b2;--blue:#4d96ff;--font-display:"Fredoka","Hiragino Kaku Gothic ProN",sans-serif;--font-body:"Nunito","Hiragino Kaku Gothic ProN",sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:var(--font-body);color:var(--ink)}body{min-height:100dvh;display:grid;place-items:center;padding:28px 16px;background:var(--sky);position:relative;overflow-x:hidden}body::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 9% 14%,rgba(255,255,255,.8) 0 5px,transparent 6px),radial-gradient(circle at 88% 20%,rgba(255,212,71,.9) 0 7px,transparent 8px),radial-gradient(circle at 18% 74%,rgba(255,95,158,.45) 0 9px,transparent 10px),radial-gradient(circle at 92% 83%,rgba(112,225,178,.75) 0 11px,transparent 12px),linear-gradient(145deg,#95e7f4,var(--sky) 42%,#8ed7ff);pointer-events:none}.wrap{position:relative;z-index:1;width:min(900px,100%);background:var(--cream);border:4px solid var(--ink);border-radius:34px;box-shadow:10px 12px 0 var(--ink);padding:34px 28px 30px}.eyebrow{display:table;margin:0 auto 13px;font-size:11px;font-weight:900;letter-spacing:.12em;color:#6842d6;background:#eee7ff;border:2px solid var(--ink);border-radius:999px;padding:5px 11px;box-shadow:3px 3px 0 var(--ink)}.title{font-family:var(--font-display);margin:0;text-align:center;font-size:clamp(40px,9vw,68px);line-height:1;font-weight:700;letter-spacing:.01em;text-shadow:4px 4px 0 var(--yellow)}.lead{text-align:center;color:var(--soft);margin:16px auto 27px;max-width:560px;font-size:15px;line-height:1.7;font-weight:700}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.card{position:relative;display:flex;flex-direction:column;min-height:310px;padding:25px;border:3px solid var(--ink);border-radius:24px;text-decoration:none;color:var(--ink);overflow:hidden;transition:transform .12s,box-shadow .12s;box-shadow:7px 8px 0 var(--ink)}.card:hover{transform:translate(-2px,-3px);box-shadow:9px 11px 0 var(--ink)}.card:active{transform:translate(4px,5px);box-shadow:3px 3px 0 var(--ink)}.two{background:#fff3bd}.three{background:#eee7ff}.card::after{content:"✦";position:absolute;right:17px;top:15px;font-size:25px}.two::after{color:var(--pink)}.three::after{color:var(--yellow)}.icon{font-size:67px;line-height:1;margin-bottom:18px}.label{display:inline-block;align-self:flex-start;font-size:11px;font-weight:900;letter-spacing:.1em;border:2px solid var(--ink);border-radius:999px;padding:4px 8px;background:#fff}.name{font-family:var(--font-display);font-size:clamp(28px,5vw,40px);font-weight:700;margin:8px 0 10px}.desc{font-size:14px;line-height:1.65;font-weight:700;color:var(--soft);max-width:34ch}.go{margin-top:auto;padding-top:24px;font-weight:900;color:#6842d6}.footer{text-align:center;color:rgba(37,33,59,.55);font-size:11px;font-weight:900;letter-spacing:.08em;margin-top:25px}@media(max-width:700px){body{padding:18px 12px}.wrap{padding:28px 18px 24px;box-shadow:7px 8px 0 var(--ink)}.cards{grid-template-columns:1fr}.card{min-height:235px}.icon{font-size:54px}}
 </style>
 </head>
 <body>
@@ -13,25 +17,10 @@
   <div class="eyebrow">SELECT A GAME</div>
   <h1 class="title">どのゲームで遊ぶ？</h1>
   <p class="lead">同じスマホで遊べる2人用ゲームと、3人で読み合う推理ゲームから選べます。</p>
-
   <section class="cards">
-    <a class="card two" href="charge-duel.html">
-      <div class="icon">🔥⚡</div>
-      <div class="label">2 PLAYERS</div>
-      <div class="name">Charge Fire Duel</div>
-      <div class="desc">チャージ、ファイア、カウンターを3秒ごとに選ぶ対戦ゲーム。10ポイント先取で勝利。</div>
-      <div class="go">2人用ゲームを遊ぶ →</div>
-    </a>
-
-    <a class="card three" href="three-player.html">
-      <div class="icon">🃏♠️</div>
-      <div class="label">3 PLAYERS</div>
-      <div class="name">JOKER</div>
-      <div class="desc">Normal・Joker・Aceに分かれて、会話と投票で相手を読み合う3人用推理ゲーム。</div>
-      <div class="go">3人用ゲームを遊ぶ →</div>
-    </a>
+    <a class="card two" href="charge-duel.html"><div class="icon">🔥⚡</div><div class="label">2 PLAYERS</div><div class="name">Charge Fire Duel</div><div class="desc">チャージ、ファイア、カウンターを3秒ごとに選ぶ対戦ゲーム。10ポイント先取で勝利。</div><div class="go">2人用ゲームを遊ぶ →</div></a>
+    <a class="card three" href="three-player.html"><div class="icon">🃏♠️</div><div class="label">3 PLAYERS</div><div class="name">JOKER</div><div class="desc">Normal・Joker・Aceに分かれて、会話と投票で相手を読み合う3人用推理ゲーム。</div><div class="go">3人用ゲームを遊ぶ →</div></a>
   </section>
-
   <div class="footer">takumi morino</div>
 </main>
 </body>
