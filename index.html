@@ -2,62 +2,37 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>JOKER — 3人用推理ゲーム</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<title>Game Select</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b1120;color:#fff}body{min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 20% 15%,rgba(59,130,246,.18),transparent 30%),radial-gradient(circle at 80% 80%,rgba(239,68,68,.16),transparent 32%),#0b1120}.wrap{width:min(900px,100%)}.eyebrow{font-size:13px;font-weight:900;letter-spacing:.18em;color:#94a3b8;text-align:center;margin-bottom:10px}.title{margin:0;text-align:center;font-size:clamp(36px,8vw,72px);line-height:.95;font-weight:1000;letter-spacing:-.04em}.lead{text-align:center;color:#cbd5e1;margin:18px auto 30px;max-width:560px;font-weight:700}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.card{position:relative;display:flex;flex-direction:column;min-height:340px;padding:28px;border-radius:28px;text-decoration:none;color:white;overflow:hidden;border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 60px rgba(0,0,0,.28);transition:transform .15s ease,filter .15s ease}.card:hover{transform:translateY(-4px);filter:brightness(1.05)}.card:active{transform:scale(.985)}.two{background:linear-gradient(145deg,#7c2d12,#dc2626 58%,#f97316)}.three{background:linear-gradient(145deg,#172554,#4338ca 56%,#7c3aed)}.icon{font-size:74px;line-height:1;margin-bottom:22px}.label{font-size:13px;font-weight:900;letter-spacing:.12em;opacity:.8}.name{font-size:clamp(28px,5vw,42px);font-weight:1000;margin:6px 0 12px}.desc{font-size:15px;line-height:1.7;font-weight:700;opacity:.9;max-width:34ch}.go{margin-top:auto;padding-top:28px;font-size:16px;font-weight:1000}.footer{text-align:center;color:#64748b;font-size:12px;margin-top:24px}@media(max-width:700px){.cards{grid-template-columns:1fr}.card{min-height:260px}.icon{font-size:58px}}
+</style>
 </head>
 <body>
+<main class="wrap">
+  <div class="eyebrow">SELECT A GAME</div>
+  <h1 class="title">どのゲームで遊ぶ？</h1>
+  <p class="lead">同じスマホで遊べる2人用ゲームと、3人で読み合う推理ゲームから選べます。</p>
 
-  <div class="table-glow" aria-hidden="true"></div>
+  <section class="cards">
+    <a class="card two" href="charge-duel.html">
+      <div class="icon">🔥⚡</div>
+      <div class="label">2 PLAYERS</div>
+      <div class="name">Charge Fire Duel</div>
+      <div class="desc">チャージ、ファイア、カウンターを3秒ごとに選ぶ対戦ゲーム。10ポイント先取で勝利。</div>
+      <div class="go">2人用ゲームを遊ぶ →</div>
+    </a>
 
-  <main class="page">
+    <a class="card three" href="three-player.html">
+      <div class="icon">🃏♠️</div>
+      <div class="label">3 PLAYERS</div>
+      <div class="name">JOKER</div>
+      <div class="desc">Normal・Joker・Aceに分かれて、会話と投票で相手を読み合う3人用推理ゲーム。</div>
+      <div class="go">3人用ゲームを遊ぶ →</div>
+    </a>
+  </section>
 
-    <section class="stage-wrap">
-      <div class="stage" id="app">
-        <!-- JSが画面を描画します -->
-      </div>
-    </section>
-
-    <section class="rules" id="rules">
-      <h2 class="rules-title"><span class="rules-eyebrow">HOW TO PLAY</span>ルール説明</h2>
-      <p class="rules-lead">3人はそれぞれ違う役職を割り振られます。それぞれの役職には別々の目的があります。他の二人をうまく騙して1位を目指しましょう。</p>
-
-      <ul class="role-list">
-        <li class="role-card role-card--normal">
-          <div class="role-card-head">
-            <span class="role-icon" data-icon="normal"></span>
-            <span class="role-card-name">Normal</span>
-          </div>
-          <p>普通の人。誰がJokerか見極めて、Jokerに投票しよう。</p>
-          <p class="role-rule">投票された数がJokerより少なければ勝ち／1票投票できる</p>
-        </li>
-        <li class="role-card role-card--joker">
-          <div class="role-card-head">
-            <span class="role-icon" data-icon="joker"></span>
-            <span class="role-card-name">Joker</span>
-          </div>
-          <p>嘘つきな人。Jokerであることをバレないようにしよう。</p>
-          <p class="role-rule">投票された数がNormalより少なければ勝ち／1票投票できる</p>
-        </li>
-        <li class="role-card role-card--ace">
-          <div class="role-card-head">
-            <span class="role-icon" data-icon="ace"></span>
-            <span class="role-card-name">Ace</span>
-          </div>
-          <p>特殊な人。Jokerだと思われて、あえて投票されよう。</p>
-          <p class="role-rule">0票→3位／1票→2位／2票→1位／投票は0.5票分</p>
-        </li>
-      </ul>
-    </section>
-
-    <footer class="page-footer">takumi morino</footer>
-
-  </main>
-
-<script src="main.js"></script>
+  <div class="footer">takumi morino</div>
+</main>
 </body>
 </html>
