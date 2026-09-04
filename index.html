@@ -4,34 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Game Select</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b1120;color:#fff}body{min-height:100dvh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 20% 15%,rgba(59,130,246,.18),transparent 30%),radial-gradient(circle at 80% 80%,rgba(239,68,68,.16),transparent 32%),#0b1120}.wrap{width:min(900px,100%)}.eyebrow{font-size:13px;font-weight:900;letter-spacing:.18em;color:#94a3b8;text-align:center;margin-bottom:10px}.title{margin:0;text-align:center;font-size:clamp(36px,8vw,72px);line-height:.95;font-weight:1000;letter-spacing:-.04em}.lead{text-align:center;color:#cbd5e1;margin:18px auto 30px;max-width:560px;font-weight:700}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.card{position:relative;display:flex;flex-direction:column;min-height:340px;padding:28px;border-radius:28px;text-decoration:none;color:white;overflow:hidden;border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 60px rgba(0,0,0,.28);transition:transform .15s ease,filter .15s ease}.card:hover{transform:translateY(-4px);filter:brightness(1.05)}.card:active{transform:scale(.985)}.two{background:linear-gradient(145deg,#7c2d12,#dc2626 58%,#f97316)}.three{background:linear-gradient(145deg,#172554,#4338ca 56%,#7c3aed)}.icon{font-size:74px;line-height:1;margin-bottom:22px}.label{font-size:13px;font-weight:900;letter-spacing:.12em;opacity:.8}.name{font-size:clamp(28px,5vw,42px);font-weight:1000;margin:6px 0 12px}.desc{font-size:15px;line-height:1.7;font-weight:700;opacity:.9;max-width:34ch}.go{margin-top:auto;padding-top:28px;font-size:16px;font-weight:1000}.footer{text-align:center;color:#64748b;font-size:12px;margin-top:24px}@media(max-width:700px){.cards{grid-template-columns:1fr}.card{min-height:260px}.icon{font-size:58px}}
+:root{--sky:#7bdff2;--cream:#fffaf0;--ink:#25213b;--soft:#665f7a;--pink:#ff5f9e;--yellow:#ffd447;--purple:#8b5cf6;--mint:#70e1b2;--blue:#4d96ff;--orange:#ff934f;--display:"Fredoka","Hiragino Kaku Gothic ProN",sans-serif;--body:"Nunito","Hiragino Kaku Gothic ProN",sans-serif}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:var(--body);color:var(--ink);background:var(--sky)}body{min-height:100dvh;display:grid;place-items:center;padding:max(28px,env(safe-area-inset-top)) 18px max(30px,env(safe-area-inset-bottom));background:radial-gradient(circle at 9% 14%,rgba(255,255,255,.9) 0 6px,transparent 7px),radial-gradient(circle at 88% 20%,rgba(255,212,71,.95) 0 8px,transparent 9px),radial-gradient(circle at 15% 82%,rgba(255,95,158,.48) 0 10px,transparent 11px),radial-gradient(circle at 91% 82%,rgba(112,225,178,.85) 0 12px,transparent 13px),linear-gradient(145deg,#95e7f4,var(--sky) 44%,#8ed7ff)}body::before{content:"★  ●  ✦  ●  ★";position:fixed;top:22px;left:0;right:0;text-align:center;color:rgba(255,255,255,.7);font-size:20px;letter-spacing:min(8vw,78px);pointer-events:none}.wrap{position:relative;width:min(920px,100%);z-index:1}.hero{width:min(720px,100%);margin:0 auto 28px;text-align:center;background:var(--cream);border:4px solid var(--ink);border-radius:30px;box-shadow:9px 10px 0 var(--ink);padding:24px 22px 22px;transform:rotate(-.4deg)}.eyebrow{display:inline-block;margin-bottom:10px;padding:5px 11px;border:2px solid var(--ink);border-radius:999px;background:#eee7ff;color:#6842d6;font-size:11px;font-weight:900;letter-spacing:.12em;box-shadow:3px 3px 0 var(--ink)}.title{margin:0;font-family:var(--display);font-size:clamp(38px,8vw,67px);line-height:.95;font-weight:700;letter-spacing:.01em;text-shadow:5px 5px 0 var(--yellow)}.lead{max-width:580px;margin:16px auto 0;color:var(--soft);font-size:15px;line-height:1.7;font-weight:800}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.card{position:relative;display:flex;flex-direction:column;min-height:330px;padding:24px;overflow:hidden;border:4px solid var(--ink);border-radius:28px;color:var(--ink);text-decoration:none;box-shadow:8px 9px 0 var(--ink);transition:transform 120ms,box-shadow 120ms}.card::after{content:"✦";position:absolute;right:18px;top:14px;font-size:24px}.card:hover{transform:translate(-2px,-3px);box-shadow:11px 12px 0 var(--ink)}.card:active{transform:translate(4px,5px);box-shadow:3px 3px 0 var(--ink)}.two{background:#fff3b8}.two::after{color:var(--pink)}.three{background:#eee7ff}.three::after{color:var(--yellow)}.icon{width:92px;height:92px;display:grid;place-items:center;margin-bottom:20px;border:3px solid var(--ink);border-radius:25px;background:#fff;font-size:48px;box-shadow:5px 5px 0 var(--ink);transform:rotate(-4deg)}.three .icon{transform:rotate(4deg)}.label{align-self:flex-start;padding:4px 9px;border:2px solid var(--ink);border-radius:999px;background:var(--pink);color:#fff;font-size:11px;font-weight:900;letter-spacing:.1em}.three .label{background:var(--purple)}.name{margin:9px 0 10px;font-family:var(--display);font-size:clamp(30px,5vw,43px);line-height:1;font-weight:700}.desc{max-width:34ch;color:var(--soft);font-size:14px;line-height:1.65;font-weight:800}.go{margin-top:auto;padding-top:25px;font-size:16px;font-weight:900}.go span{display:inline-block;padding:9px 13px;border:3px solid var(--ink);border-radius:13px;background:#fff;box-shadow:4px 4px 0 var(--ink)}.footer{margin-top:28px;text-align:center;color:rgba(37,33,59,.6);font-size:11px;font-weight:900;letter-spacing:.08em}@media(max-width:700px){body{display:block;padding-top:40px}.hero{padding:21px 17px}.cards{grid-template-columns:1fr;gap:18px}.card{min-height:270px}.icon{width:78px;height:78px;font-size:40px}}
 </style>
 </head>
 <body>
 <main class="wrap">
-  <div class="eyebrow">SELECT A GAME</div>
-  <h1 class="title">どのゲームで遊ぶ？</h1>
-  <p class="lead">同じスマホで遊べる2人用ゲームと、3人で読み合う推理ゲームから選べます。</p>
-
+  <section class="hero">
+    <div class="eyebrow">SELECT A GAME</div>
+    <h1 class="title">どのゲームで遊ぶ？</h1>
+    <p class="lead">同じスマホで遊べる2人用ゲームと、3人で読み合う推理ゲームから選べます。</p>
+  </section>
   <section class="cards">
-    <a class="card two" href="charge-duel.html">
+    <a class="card two" href="charge-duel-pop.html">
       <div class="icon">🔥⚡</div>
       <div class="label">2 PLAYERS</div>
       <div class="name">Charge Fire Duel</div>
       <div class="desc">チャージ、ファイア、カウンターを3秒ごとに選ぶ対戦ゲーム。10ポイント先取で勝利。</div>
-      <div class="go">2人用ゲームを遊ぶ →</div>
+      <div class="go"><span>2人用ゲームを遊ぶ →</span></div>
     </a>
-
     <a class="card three" href="three-player.html">
       <div class="icon">🃏♠️</div>
       <div class="label">3 PLAYERS</div>
       <div class="name">JOKER</div>
       <div class="desc">Normal・Joker・Aceに分かれて、会話と投票で相手を読み合う3人用推理ゲーム。</div>
-      <div class="go">3人用ゲームを遊ぶ →</div>
+      <div class="go"><span>3人用ゲームを遊ぶ →</span></div>
     </a>
   </section>
-
   <div class="footer">takumi morino</div>
 </main>
 </body>
