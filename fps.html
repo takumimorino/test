@@ -42,6 +42,7 @@
   .tl .big { font-size: 52px; color: var(--sodium); }
   .row { display: flex; gap: 12px; align-items: baseline; font-size: 15px; }
   .row .lbl { width: 70px; }
+  .row .val { max-width: 220px; }
   #map { position: absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); width: 150px; height: 150px; }
   .bl { position: absolute; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); left: calc(16px + env(safe-area-inset-left, 0px)); display: grid; gap: 8px; }
   .hpline { display: flex; align-items: center; gap: 14px; }
@@ -139,10 +140,14 @@
     font: 700 13px/1.2 var(--body); letter-spacing: .04em; padding: 0; }
   .tbtn.on { background: rgba(255, 174, 59, .45); border-color: var(--sodium); }
   .tbtn.held { filter: brightness(1.5); }
-  #tFire { right: calc(20px + env(safe-area-inset-right, 0px)); bottom: calc(32px + env(safe-area-inset-bottom, 0px)); width: 100px; height: 100px; background: rgba(255, 74, 61, .34); font-size: 15px; }
-  #tAim { right: calc(132px + env(safe-area-inset-right, 0px)); bottom: calc(118px + env(safe-area-inset-bottom, 0px)); width: 62px; height: 62px; }
-  #tJump { right: calc(136px + env(safe-area-inset-right, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); width: 64px; height: 64px; }
-  #tReload { right: calc(38px + env(safe-area-inset-right, 0px)); bottom: calc(146px + env(safe-area-inset-bottom, 0px)); width: 62px; height: 62px; }
+  /* 右側のボタン群は --lift ぶん持ち上げて、画面右下を視点操作用に空けておく */
+  #touch { --lift: 64px; }
+  #tFire { right: calc(20px + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 20px + env(safe-area-inset-bottom, 0px)); width: 96px; height: 96px; background: rgba(255, 74, 61, .34); font-size: 15px; }
+  #tJump { right: calc(128px + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 4px + env(safe-area-inset-bottom, 0px)); width: 62px; height: 62px; }
+  #tAim { right: calc(134px + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 82px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; }
+  #tReload { right: calc(46px + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 128px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; }
+  @media (orientation: portrait) { #touch { --lift: 130px; } }
+  @media (max-height: 380px) { #touch { --lift: 40px; } }
   #tPause { left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); width: 46px; height: 46px; font-size: 15px; }
   body.touch .keys { display: none; }
   body.touch .touch-hint { display: block; }
@@ -154,10 +159,57 @@
   body.touch .bl { bottom: auto; top: calc(128px + env(safe-area-inset-top, 0px)); gap: 4px; }
   body.touch .hpwrap { width: 110px; height: 9px; }
   body.touch #hp { font-size: 28px; }
-  body.touch .br { bottom: auto; top: calc(124px + env(safe-area-inset-top, 0px)); gap: 0; }
+  body.touch .br { bottom: auto; top: calc(122px + env(safe-area-inset-top, 0px)); right: auto; left: calc(200px + env(safe-area-inset-left, 0px)); text-align: left; gap: 0; }
+  body.touch .ammoline { justify-content: flex-start; }
+  body.touch .row .val { max-width: 120px; }
   body.touch #ammo { font-size: 38px; }
   body.touch #ammoMag { font-size: 14px; }
   body.touch #banner { top: 34%; }
+  /* ---------- Story ---------- */
+  #gauge { position: absolute; left: 50%; top: calc(20px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); width: min(420px, 44vw); display: grid; gap: 6px; text-align: center; }
+  .gwrap { height: 8px; background: rgba(236, 230, 216, .14); }
+  #gaugeFill { height: 100%; width: 100%; background: var(--alarm); transition: width .15s; }
+  #gauge.good #gaugeFill { background: var(--med); }
+  #talk { position: absolute; left: 50%; bottom: calc(120px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(620px, calc(100vw - 32px));
+    padding: 12px 18px 14px; background: rgba(6, 12, 11, .84); border: 1px solid rgba(85, 224, 184, .35); border-radius: 4px;
+    display: grid; gap: 4px; opacity: 0; transition: opacity .25s; font-family: var(--body); }
+  #talk.on { opacity: 1; }
+  #talkWho { font-weight: 700; font-size: 11px; letter-spacing: .16em; color: var(--med); }
+  #talkText { font-size: 16px; line-height: 1.6; min-height: 1.6em; color: var(--ink); }
+  body.touch #gauge { top: calc(64px + env(safe-area-inset-top, 0px)); width: min(300px, 40vw); }
+  body.touch #talk { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); width: clamp(240px, calc(100vw - 420px), 440px); padding: 8px 14px 10px; }
+  body.touch #talkText { font-size: 14px; }
+  @media (orientation: portrait) {
+    body.touch #gauge { top: calc(184px + env(safe-area-inset-top, 0px)); width: calc(100vw - 32px); }
+    body.touch #talk { bottom: auto; top: calc(222px + env(safe-area-inset-top, 0px)); width: calc(100vw - 32px); }
+  }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .mode { display: grid; gap: 4px; align-content: start; text-align: left; padding: 16px 18px; background: rgba(236, 230, 216, .06); border: 1px solid var(--line); border-radius: 4px;
+    color: var(--ink); font-family: var(--body); cursor: pointer; touch-action: manipulation; }
+  .mode:hover { border-color: var(--sodium); background: rgba(255, 174, 59, .1); }
+  #modeStory:hover { border-color: var(--med); background: rgba(85, 224, 184, .08); }
+  .mode:focus-visible, .ch:focus-visible, .ghost:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .mode-k { font-family: var(--display); font-weight: 800; font-size: 30px; line-height: .9; letter-spacing: .04em; color: var(--sodium); }
+  #modeStory .mode-k { color: var(--med); }
+  .mode-n { font-weight: 700; font-size: 16px; }
+  .mode-d { font-size: 12px; line-height: 1.6; color: var(--muted); }
+  .mode-p { font-family: var(--mono); font-size: 11px; color: var(--sodium); min-height: 1em; }
+  #modeStory .mode-p { color: var(--med); }
+  .chlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .ch { width: 100%; display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 12px; padding: 10px 14px; background: rgba(236, 230, 216, .05);
+    border: 1px solid var(--line); border-radius: 4px; color: var(--ink); font-family: var(--body); text-align: left; cursor: pointer; touch-action: manipulation; }
+  .ch:hover:not(:disabled) { border-color: var(--med); }
+  .ch:disabled { opacity: .45; cursor: default; }
+  .ch-n { font-family: var(--display); font-weight: 800; font-size: 26px; line-height: 1; color: var(--med); }
+  .ch-t { font-weight: 700; font-size: 15px; }
+  .ch-s { font-size: 11px; font-weight: 700; color: var(--muted); }
+  .ch-s.new { color: var(--sodium); }
+  .chmeta { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+  .ghost { font-family: var(--body); font-weight: 700; font-size: 15px; letter-spacing: .08em; background: transparent; color: var(--ink); border: 1px solid var(--line);
+    border-radius: 2px; padding: 13px 22px; cursor: pointer; touch-action: manipulation; }
+  .ghost:hover { border-color: var(--ink); }
+  .gdet { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
   @media (max-width: 560px) {
     .tl .big { font-size: 40px; }
     #ovStats { grid-template-columns: repeat(2, auto); }
@@ -171,7 +223,10 @@
     #ovText { font-size: 14px; line-height: 1.6; }
     #startBtn { padding: 10px 26px; font-size: 19px; }
     .touch-hint { padding-top: 8px; font-size: 12px; }
+    .mode { padding: 12px 14px; }
+    .ch { padding: 7px 12px; }
   }
+  @media (max-width: 420px) { .modes { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) {
     #banner.show { animation-duration: .01s; animation-delay: 0s; opacity: 1; }
   }
@@ -183,10 +238,10 @@
 
 <div id="hud" hidden>
   <div class="tl">
-    <div class="lbl">WAVE</div>
+    <div class="lbl" id="modeLbl">WAVE</div>
     <div id="wave" class="big">01</div>
-    <div class="row"><span class="lbl">残り</span><span id="hostiles">0</span></div>
-    <div class="row"><span class="lbl">スコア</span><span id="score">000000</span></div>
+    <div class="row"><span class="lbl" id="r1l">残り</span><span id="hostiles" class="val">0</span></div>
+    <div class="row"><span class="lbl" id="r2l">スコア</span><span id="score" class="val">000000</span></div>
   </div>
   <canvas id="map" width="300" height="300"></canvas>
   <div class="bl">
@@ -200,6 +255,8 @@
   <div id="xhair"><i></i><i></i><i></i><i></i><b></b></div>
   <div id="hitm"></div>
   <div id="banner"><div id="bannerT"></div><div id="bannerS"></div></div>
+  <div id="gauge" hidden><div id="gaugeLbl" class="lbl"></div><div class="gwrap"><div id="gaugeFill"></div></div></div>
+  <div id="talk" aria-live="polite"><div id="talkWho">コダマ</div><div id="talkText"></div></div>
 </div>
 <div id="vig"></div>
 <div id="lowhp"></div>
@@ -221,8 +278,17 @@
     <h1 id="ovTitle">HOLLOW<span>RANGE</span></h1>
     <p id="ovText">廃墟になった射撃場が、ドローンに乗っ取られた！ 次々に出てくる敵を全部倒して、ウェーブをクリアしよう。赤く光っているところが弱点で、当てるとダメージ2倍。敵の弾はゆっくり飛んでくるから、動き回ればよけられる。</p>
     <div id="ovStats" hidden></div>
+    <div class="modes" id="modes">
+      <button class="mode" id="modeWave" type="button"><span class="mode-k">WAVE</span><span class="mode-n">ウェーブ</span><span class="mode-d">次々に出てくる敵を倒して、ハイスコアをめざす</span><span class="mode-p" id="modeWaveBest"></span></button>
+      <button class="mode" id="modeStory" type="button"><span class="mode-k">STORY</span><span class="mode-n">ストーリー</span><span class="mode-d">射撃場にひとり残された管制AI「コダマ」と過ごす、全5章</span><span class="mode-p" id="modeStoryProg"></span></button>
+    </div>
+    <div id="chapters" hidden>
+      <ol class="chlist" id="chList"></ol>
+      <p class="chmeta" id="chMeta"></p>
+    </div>
     <div class="actions">
-      <button id="startBtn" type="button">スタート</button>
+      <button id="startBtn" type="button" hidden>スタート</button>
+      <button id="subBtn" class="ghost" type="button" hidden>タイトルへ</button>
       <div class="sens">
         <label for="sens"><span id="sensLbl">マウス感度</span> <output id="sensOut">1.0</output></label>
         <input type="range" id="sens" min="0.3" max="3" step="0.1" value="1">
@@ -352,6 +418,19 @@
     g.fill();
   });
 
+  const targetTex = canvasTex(128, 128, (g, w, h) => {
+    g.fillStyle = '#e8e2d2'; g.fillRect(0, 0, w, h);
+    ['#1a1d21', '#e8e2d2', '#1a1d21', '#e8e2d2', '#ff4a3d'].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(64, 64, 56 - i * 11, 0, Math.PI * 2); g.fill(); });
+  });
+  targetTex.wrapS = targetTex.wrapT = THREE.ClampToEdgeWrapping;
+  const gateTex = canvasTex(256, 256, (g, w, h) => {
+    g.fillStyle = '#0a1f1a'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#55e0b8'; g.lineWidth = 8; g.strokeRect(10, 10, w - 20, h - 20);
+    g.fillStyle = '#55e0b8'; g.font = '800 72px "Big Shoulders Stencil Display", Impact, sans-serif'; g.textAlign = 'center'; g.fillText('EXIT', w / 2, 118);
+    g.beginPath(); g.moveTo(w / 2, 150); g.lineTo(w / 2 + 40, 204); g.lineTo(w / 2 - 40, 204); g.closePath(); g.fill();
+  });
+  gateTex.wrapS = gateTex.wrapT = THREE.ClampToEdgeWrapping;
+
   // ---------- Materials & shared geometry ----------
   const mat = {
     floor: new THREE.MeshStandardMaterial({ map: floorTex, roughness: .95 }),
@@ -367,7 +446,9 @@
     ring: new THREE.MeshStandardMaterial({ color: 0x1b2026, metalness: .7, roughness: .35 }),
     bolt: new THREE.MeshBasicMaterial({ color: 0xffd0c0 }),
     halo: new THREE.MeshBasicMaterial({ color: 0xff4a3d, transparent: true, opacity: .45, blending: THREE.AdditiveBlending, depthWrite: false }),
-    pick: new THREE.MeshStandardMaterial({ color: 0x55e0b8, emissive: 0x1f7a60, emissiveIntensity: 1.2 })
+    pick: new THREE.MeshStandardMaterial({ color: 0x55e0b8, emissive: 0x1f7a60, emissiveIntensity: 1.2 }),
+    gold: new THREE.MeshStandardMaterial({ color: 0xffae3b, metalness: .6, roughness: .35, emissive: 0x5a3000 }),
+    kHalo: new THREE.MeshBasicMaterial({ color: 0x55e0b8, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false })
   };
   const geo = {
     droneBody: new THREE.SphereGeometry(.55, 22, 16),
@@ -381,18 +462,26 @@
     halo: new THREE.SphereGeometry(.32, 12, 10),
     spark: new THREE.BoxGeometry(.07, .07, .07),
     pickH: new THREE.BoxGeometry(.55, .16, .16),
-    pickV: new THREE.BoxGeometry(.16, .55, .16)
+    pickV: new THREE.BoxGeometry(.16, .55, .16),
+    board: new THREE.BoxGeometry(1.1, 1.1, .08),
+    post: new THREE.BoxGeometry(.09, .95, .09),
+    kHalo: new THREE.SphereGeometry(1.0, 16, 12)
   };
   const sparkMats = {};
   const sparkMat = c => sparkMats[c] || (sparkMats[c] = new THREE.MeshBasicMaterial({ color: c }));
 
   // ---------- Lighting ----------
-  scene.add(new THREE.HemisphereLight(0x7f93a8, 0x1c1712, .6));
+  const hemi = new THREE.HemisphereLight(0x7f93a8, 0x1c1712, .6); scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xffd2a1, .85);
   sun.position.set(-25, 45, 18); sun.castShadow = true; sun.shadow.mapSize.set(isTouch ? 1024 : 2048, isTouch ? 1024 : 2048);
   Object.assign(sun.shadow.camera, { left: -46, right: 46, top: 46, bottom: -46, near: 1, far: 130 });
   sun.shadow.bias = -0.0006; scene.add(sun);
   const muzzleLight = new THREE.PointLight(0xffc070, 0, 9, 2); scene.add(muzzleLight);
+  // 停電の章で使うライト。最初からシーンに入れておき、明るさだけを変える（途中で足すとシェーダーの再コンパイルで引っかかる）
+  const flashlight = new THREE.SpotLight(0xfff0d8, 0, 42, Math.PI / 7, .5, 1.5);
+  flashlight.position.set(.2, -.15, 0); flashlight.target.position.set(0, 0, -1);
+  camera.add(flashlight); camera.add(flashlight.target);
+  const lampLights = [];
 
   // ---------- Arena ----------
   const colliders = [], solids = [];
@@ -428,7 +517,7 @@
     addBox(x, z, .4, .4, 6, mat.pole);
     const head = new THREE.Mesh(new THREE.BoxGeometry(1.1, .25, .5), mat.lamp);
     head.position.set(x * .98, 6.05, z * .98); scene.add(head);
-    const pl = new THREE.PointLight(0xffa23a, 1.3, 30, 2); pl.position.set(x * .96, 5.6, z * .96); scene.add(pl);
+    const pl = new THREE.PointLight(0xffa23a, 1.3, 30, 2); pl.position.set(x * .96, 5.6, z * .96); scene.add(pl); lampLights.push(pl);
   }
 
   // Firing line and distance marks, measured from the line at z = 34.
@@ -454,6 +543,61 @@
     textDecal(`${d} M`, -36, 34 - d - 1.1, 3, 1.5);
     textDecal(`${d} M`, 36, 34 - d - 1.1, 3, 1.5);
   }
+
+  // ---------- Story props ----------
+  // 中央の建物の南面にある、管制AI「コダマ」の顔が映る画面
+  const faceCanvas = document.createElement('canvas'); faceCanvas.width = 256; faceCanvas.height = 160;
+  const faceCtx = faceCanvas.getContext('2d');
+  const faceTex = new THREE.CanvasTexture(faceCanvas); faceTex.encoding = THREE.sRGBEncoding;
+  const screen = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.2, .16),
+    [mat.pole, mat.pole, mat.pole, mat.pole, new THREE.MeshBasicMaterial({ map: faceTex }), mat.pole]);
+  screen.position.set(0, 1.9, 3.08); scene.add(screen); solids.push(screen);
+  let faceMood = '';
+  function setFace(m) {
+    if (m === faceMood) return;
+    faceMood = m;
+    const g = faceCtx, W = 256, H = 160, L = 86, R = 170, Y = 64;
+    const ln = (a, b, c, d) => { g.beginPath(); g.moveTo(a, b); g.lineTo(c, d); g.stroke(); };
+    const arc = (x, y, r, a0, a1) => { g.beginPath(); g.arc(x, y, r, a0, a1); g.stroke(); };
+    const dot = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); };
+    g.fillStyle = '#06110e'; g.fillRect(0, 0, W, H);
+    g.fillStyle = 'rgba(85,224,184,.07)'; for (let y = 0; y < H; y += 4) g.fillRect(0, y, W, 1);
+    g.strokeStyle = g.fillStyle = m === 'off' ? 'rgba(85,224,184,.18)' : '#55e0b8';
+    g.lineWidth = 9; g.lineCap = 'round';
+    if (m === 'off') ln(60, 80, 196, 80);
+    else if (m === 'sleep') {
+      ln(L - 18, Y, L + 18, Y); ln(R - 18, Y, R + 18, Y); ln(118, 110, 138, 110);
+      g.font = '700 24px monospace'; g.fillText('z', 204, 44); g.font = '700 16px monospace'; g.fillText('z', 224, 26);
+    } else if (m === 'calm' || m === 'happy') {
+      arc(L, Y + 12, 18, Math.PI * 1.15, Math.PI * 1.85); arc(R, Y + 12, 18, Math.PI * 1.15, Math.PI * 1.85);
+      if (m === 'happy') arc(128, 96, 24, Math.PI * .15, Math.PI * .85); else ln(116, 112, 140, 112);
+    } else if (m === 'worried') {
+      dot(L, Y, 8); dot(R, Y, 8);
+      ln(L - 18, Y - 20, L + 14, Y - 30); ln(R - 14, Y - 30, R + 18, Y - 20);
+      g.beginPath(); g.moveTo(108, 114); g.quadraticCurveTo(118, 104, 128, 114); g.quadraticCurveTo(138, 124, 148, 114); g.stroke();
+    } else if (m === 'panic') {
+      ln(L - 13, Y - 13, L + 13, Y + 13); ln(L + 13, Y - 13, L - 13, Y + 13);
+      ln(R - 13, Y - 13, R + 13, Y + 13); ln(R + 13, Y - 13, R - 13, Y + 13);
+      arc(128, 112, 12, 0, Math.PI * 2);
+    }
+    faceTex.needsUpdate = true;
+  }
+  setFace('sleep');
+
+  // 停電の章のブレーカー（壁ぎわの箱）と、目印の光の柱
+  const breakers = [[-39.6, -20, -37.4, -20], [39.6, 22, 37.4, 22], [22, -39.6, 22, -37.4]].map(([x, z, zx, zz]) => {
+    const bm = new THREE.MeshStandardMaterial({ color: 0x3a3320, emissive: 0xffc400, emissiveIntensity: .8 });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(.6, 1.1, .6), bm);
+    mesh.position.set(x, 1.3, z); mesh.visible = false; scene.add(mesh);
+    const beamMat = new THREE.MeshBasicMaterial({ color: 0xffc400, transparent: true, opacity: .16, blending: THREE.AdditiveBlending, depthWrite: false });
+    const beam = new THREE.Mesh(new THREE.CylinderGeometry(.45, .45, 10, 16, 1, true), beamMat);
+    beam.position.set(zx, 5, zz); beam.visible = false; scene.add(beam);
+    return { mesh, bm, beam, beamMat, zx, zz, on: false, done: false, p: 0 };
+  });
+
+  // 最終章で開く出口（南の壁の中央）
+  const gate = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.MeshBasicMaterial({ map: gateTex }));
+  gate.position.set(0, 1.75, 39.94); gate.rotation.y = Math.PI; gate.visible = false; scene.add(gate);
 
   // ---------- Collision ----------
   // Pushes a circle (xz) out of every box it overlaps. Boxes whose top is within
@@ -541,7 +685,11 @@
     reload() { if (!actx) return; noise(.04, 3000, 'bandpass', .3, .15); noise(.05, 2200, 'bandpass', .35, .95); tone(900, 600, .03, 'square', .05, 1.05); },
     dry() { if (!actx) return; tone(1900, 1800, .02, 'square', .05); },
     pickup() { if (!actx) return; tone(520, 1040, .16, 'sine', .2); tone(780, 1560, .16, 'sine', .12, .08); },
-    wave() { if (!actx) return; tone(220, 220, .5, 'triangle', .12); tone(330, 330, .5, 'triangle', .1, .12); }
+    wave() { if (!actx) return; tone(220, 220, .5, 'triangle', .12); tone(330, 330, .5, 'triangle', .1, .12); },
+    blip() { if (!actx) return; const f = rand(560, 700); tone(f, f * .96, .035, 'triangle', .05); },
+    powerDown() { if (!actx) return; tone(420, 35, 1.4, 'sawtooth', .12); noise(.6, 300, 'lowpass', .2); },
+    powerUp() { if (!actx) return; tone(50, 480, .9, 'sawtooth', .08); tone(960, 960, .15, 'sine', .1, .9); },
+    chime() { if (!actx) return; tone(880, 880, .14, 'sine', .14); tone(1320, 1320, .2, 'sine', .12, .12); }
   };
 
   // ---------- State ----------
@@ -554,19 +702,45 @@
   let sens = store.get('hr.sens', 1), best = store.get('hr.best', 0);
   const enemies = [], bolts = [], sparks = [], tracers = [], pickups = [];
   const keys = {};
+  // ストーリーモード用
+  let mode = 'wave', chapter = 1, chapterT = 0, dmgTaken = 0, ovMode = 'menu';
+  let storyRun = 0, hooks = {}, spawner = null, baseFace = 'sleep', faceOverrideT = 0, coreHitT = 0;
+  let darkLevel = 0, darkTarget = 0, flashlightAllowed = true, kodamaShots = 0, shotQuipT = 0;
+  const waiters = [], tickers = [], talkQ = [], once = new Set();
+  let talkCur = null, talkHideT = 0;
+  const obj = { label: '目標', text: '' };
+  const gaugeState = { on: false, label: '', v: 0, good: false };
+  const core = { active: false, hp: 100, pos: new V3(0, 1.9, 3.6) };
 
   $('sens').value = sens; $('sensOut').textContent = (+sens).toFixed(1);
   $('sens').addEventListener('input', e => { sens = +e.target.value; $('sensOut').textContent = sens.toFixed(1); store.set('hr.sens', sens); });
 
   // ---------- Enemies ----------
-  function makeDrone(heavy) {
+  function makeDrone(kind) {
+    const heavy = kind === 'heavy', boss = kind === 'boss';
     const g = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({ color: heavy ? 0x6a4430 : 0x3d4854, metalness: .55, roughness: .4 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: boss ? 0x22272e : heavy ? 0x6a4430 : 0x3d4854, metalness: .55, roughness: .4 });
     const body = new THREE.Mesh(geo.droneBody, bodyMat); body.castShadow = true; g.add(body);
     const eye = new THREE.Mesh(geo.eye, mat.eye); eye.position.z = .47; eye.userData.weak = true; g.add(eye);
-    const ring = new THREE.Mesh(geo.ring, mat.ring); ring.rotation.x = Math.PI / 2; ring.castShadow = true; g.add(ring);
+    const ring = new THREE.Mesh(geo.ring, boss ? mat.gold : mat.ring); ring.rotation.x = Math.PI / 2; ring.castShadow = true; g.add(ring);
+    let ring2 = null;
+    if (boss) { ring2 = new THREE.Mesh(geo.ring, mat.gold); ring2.scale.setScalar(.8); g.add(ring2); }
     for (const s of [-1, 1]) { const f = new THREE.Mesh(geo.fin, bodyMat); f.position.x = s * .6; g.add(f); }
-    return { g, bodyMat, ring };
+    return { g, bodyMat, ring, ring2 };
+  }
+  function makeTarget() {
+    const g = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ map: targetTex, roughness: .85 });
+    const board = new THREE.Mesh(geo.board, [mat.pole, mat.pole, mat.pole, mat.pole, bodyMat, mat.pole]);
+    board.castShadow = true; g.add(board);
+    const post = new THREE.Mesh(geo.post, mat.pole); post.position.y = -1.025; g.add(post);
+    return { g, bodyMat };
+  }
+  function makeKCore() {
+    const g = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x0b2a24, emissive: 0x55e0b8, emissiveIntensity: 1.3 });
+    g.add(new THREE.Mesh(geo.droneBody, bodyMat), new THREE.Mesh(geo.kHalo, mat.kHalo));
+    return { g, bodyMat };
   }
   function makeRusher() {
     const g = new THREE.Group();
@@ -582,27 +756,37 @@
   const TYPES = {
     drone: { hp: 70, speed: 4.6, radius: .8, hover: 2.5, score: 100, scale: 1 },
     heavy: { hp: 260, speed: 3, radius: 1.3, hover: 3.4, score: 300, scale: 1.6 },
-    rusher: { hp: 50, speed: 7.2, radius: .7, hover: .62, score: 75, scale: 1 }
+    rusher: { hp: 50, speed: 7.2, radius: .7, hover: .62, score: 75, scale: 1 },
+    boss: { hp: 3200, speed: 3.2, radius: 2.2, hover: 6, score: 3000, scale: 2.8 },
+    target: { hp: 1, speed: 0, radius: .6, hover: 1.5, score: 0, scale: 1, static: true },
+    kcore: { hp: 1, speed: 0, radius: .8, hover: 5.1, score: 0, scale: 1, static: true }
   };
-  function spawnEnemy(type) {
+  // o.at: 出現位置 {x, z} / o.zMin: この z より南にだけ出す / o.aggro: 'core' ならコダマの端末をねらう
+  function spawnEnemy(type, o = {}) {
     const T = TYPES[type];
     let x = 0, z = 0;
-    for (let i = 0; i < 20; i++) {
+    if (o.at) { x = o.at.x; z = o.at.z; }
+    else for (let i = 0; i < 30; i++) {
       const a = Math.random() * Math.PI * 2, r = rand(30, 36);
       x = Math.cos(a) * r; z = Math.sin(a) * r;
+      if (o.zMin != null && z < o.zMin) continue;
       if (Math.hypot(x - player.pos.x, z - player.pos.z) > 24) break;
     }
-    const parts = type === 'rusher' ? makeRusher() : makeDrone(type === 'heavy');
+    const parts = type === 'rusher' ? makeRusher() : type === 'target' ? makeTarget() : type === 'kcore' ? makeKCore() : makeDrone(type);
     const e = Object.assign(parts, {
-      type, hp: T.hp, speed: T.speed * rand(.9, 1.1), radius: T.radius, hover: T.hover, score: T.score, scale: T.scale,
+      type, hp: T.hp, maxHp: T.hp, static: !!T.static, aggro: o.aggro || null, dead: false,
+      speed: T.speed * rand(.9, 1.1), radius: T.radius, hover: T.hover, score: T.score, scale: T.scale,
       vel: new V3(), t: 0, phase: Math.random() * 6, cd: rand(1.5, 3), strafe: Math.random() < .5 ? -1 : 1, strafeT: rand(1, 3),
       pref: rand(11, 18), flash: 0, spawnT: .5, lastPos: new V3(), stuckT: 0, sideT: 0, lunge: 0
     });
     e.pos = e.g.position; e.pos.set(x, T.hover, z); e.lastPos.copy(e.pos);
     e.g.userData.enemy = e; e.g.scale.setScalar(.01);
-    pushOut(e.pos, e.radius, type === 'rusher' ? 0 : e.pos.y - .6);
+    if (e.static) e.g.rotation.y = Math.atan2(player.pos.x - x, player.pos.z - z);
+    else pushOut(e.pos, e.radius, type === 'rusher' ? 0 : e.pos.y - .6 * e.scale);
     scene.add(e.g); enemies.push(e);
-    burst(e.pos, 0xff4a3d, 12, 4);
+    burst(e.pos, e.static ? 0xece6d8 : 0xff4a3d, 12, 4);
+    if (hooks.spawn) hooks.spawn(e);
+    return e;
   }
   function waveList(n) {
     const list = [];
@@ -613,29 +797,40 @@
     return list;
   }
   function removeEnemy(e) {
+    e.dead = true;
     scene.remove(e.g); e.bodyMat.dispose();
-    enemies.splice(enemies.indexOf(e), 1);
+    const i = enemies.indexOf(e); if (i >= 0) enemies.splice(i, 1);
   }
   function damageEnemy(e, dmg, weak) {
     e.hp -= dmg; e.flash = .09;
     if (e.hp <= 0) {
-      score += e.score + (weak ? 50 : 0); kills++;
-      burst(e.pos, 0xffae3b, 22, 7); burst(e.pos, 0xff4a3d, 12, 5);
-      if (Math.random() < (e.type === 'heavy' ? 1 : .22)) dropPickup(e.pos);
+      score += e.score + (weak && !e.static ? 50 : 0); if (!e.static) kills++;
+      if (e.static) burst(e.pos, 0xece6d8, 16, 5);
+      else { burst(e.pos, 0xffae3b, 22, 7); burst(e.pos, 0xff4a3d, 12, 5); }
+      if (e.type === 'boss') { burst(e.pos, 0xffae3b, 40, 12); burst(e.pos, 0xff4a3d, 30, 9); }
+      if (!e.static && Math.random() < (e.type === 'heavy' ? 1 : .22)) dropPickup(e.pos);
       removeEnemy(e); sfx.kill();
+      if (hooks.kill) hooks.kill(e, weak);
       return true;
     }
     return false;
   }
-  function fireBolt(e, yawOff = 0) {
+  function fireBolt(e, yawOff = 0, aim = null) {
     const from = e.pos.clone();
-    const target = new V3(player.pos.x + rand(-.7, .7), player.pos.y + 1.25 + rand(-.3, .3), player.pos.z + rand(-.7, .7));
+    const target = aim ? new V3(aim.x + rand(-.3, .3), aim.y + rand(-.2, .2), aim.z + rand(-.3, .3))
+      : new V3(player.pos.x + rand(-.7, .7), player.pos.y + 1.25 + rand(-.3, .3), player.pos.z + rand(-.7, .7));
     const dir = target.sub(from).normalize();
     if (yawOff) dir.applyAxisAngle(new V3(0, 1, 0), yawOff);
-    from.addScaledVector(dir, e.radius * e.scale * .7 + .2);
+    from.addScaledVector(dir, e.type === 'boss' ? 1.9 : e.radius * e.scale * .7 + .2);
     const m = new THREE.Mesh(geo.bolt, mat.bolt); m.add(new THREE.Mesh(geo.halo, mat.halo));
     m.position.copy(from); scene.add(m);
-    bolts.push({ m, vel: dir.multiplyScalar(e.type === 'heavy' ? 15 : 19), life: 4, dmg: e.type === 'heavy' ? 14 : 9 });
+    const speed = e.type === 'heavy' ? 15 : e.type === 'boss' ? 16 : 19, dmg = e.type === 'heavy' ? 14 : e.type === 'boss' ? 10 : 9;
+    bolts.push({ m, vel: dir.multiplyScalar(speed), life: 4, dmg });
+  }
+  function damageCore(d) {
+    if (!core.active) return;
+    core.hp = Math.max(0, core.hp - d); coreHitT = .25;
+    burst(core.pos, 0x55e0b8, 6, 3);
   }
   const tmp = new V3(), desired = new V3(), headPos = new V3();
   function updateEnemies(dt) {
@@ -644,7 +839,15 @@
       const e = enemies[i];
       e.t += dt;
       if (e.spawnT > 0) { e.spawnT -= dt; e.g.scale.setScalar(e.scale * clamp(1 - e.spawnT / .5, .01, 1)); continue; }
-      tmp.set(player.pos.x - e.pos.x, 0, player.pos.z - e.pos.z);
+      if (e.static) {
+        if (e.type === 'kcore') { e.pos.y = e.hover + Math.sin(e.t * 1.6) * .15; e.g.rotation.y += dt * .8; }
+        else e.bodyMat.emissive.setHex(e.flash > 0 ? 0x7a3010 : 0x000000);
+        e.flash -= dt;
+        continue;
+      }
+      const onCore = e.aggro === 'core' && core.active;
+      const aim = onCore ? core.pos : headPos;
+      tmp.set(aim.x - e.pos.x, 0, aim.z - e.pos.z);
       const dist = tmp.length() || 1; tmp.divideScalar(dist);
 
       if (e.type === 'rusher') {
@@ -662,28 +865,38 @@
         e.legs.forEach((l, k) => { l.rotation.x = Math.sin(e.t * 16 + k * Math.PI / 2) * .6; });
         e.g.rotation.y = Math.atan2(e.vel.x, e.vel.z);
         e.cd -= dt; e.lunge = Math.max(0, e.lunge - dt * 4);
-        if (dist < 1.5 && Math.abs(player.pos.y - 0) < 1.3 && e.cd <= 0) {
+        if (onCore) {
+          if (dist < 1.7 && e.cd <= 0) { e.cd = 1; e.lunge = 1; damageCore(8); }
+        } else if (dist < 1.5 && Math.abs(player.pos.y - 0) < 1.3 && e.cd <= 0) {
           e.cd = .85; e.lunge = 1; hurt(14, e.pos);
         }
         e.g.position.addScaledVector(tmp, e.lunge * .25);
       } else {
+        const boss = e.type === 'boss';
         e.strafeT -= dt;
         if (e.strafeT <= 0) { e.strafe *= -1; e.strafeT = rand(1.5, 3.5); }
-        const fwd = dist > e.pref + 3 ? 1 : dist < e.pref - 4 ? -.7 : 0;
+        const pref = onCore ? 10 : boss ? 17 : e.pref;
+        const fwd = dist > pref + 3 ? 1 : dist < pref - 4 ? -.7 : 0;
         desired.set(tmp.x * fwd - tmp.z * e.strafe * .8, 0, tmp.z * fwd + tmp.x * e.strafe * .8);
         if (desired.lengthSq() > 0) desired.normalize().multiplyScalar(e.speed);
         e.vel.lerp(desired, 1 - Math.exp(-2.5 * dt));
         e.pos.x += e.vel.x * dt; e.pos.z += e.vel.z * dt;
-        e.pos.y = e.hover + Math.sin(e.t * 2 + e.phase) * .25;
+        e.pos.y = e.hover + Math.sin(e.t * 2 + e.phase) * (boss ? .5 : .25);
         pushOut(e.pos, e.radius, e.pos.y - .6 * e.scale);
-        e.g.lookAt(headPos);
+        e.g.lookAt(aim);
         e.ring.rotation.z += dt * 3;
+        if (e.ring2) { e.ring2.rotation.x += dt * 2.2; e.ring2.rotation.y += dt * 1.3; }
         e.cd -= dt;
         if (e.cd <= 0) {
-          if (dist < 46 && hasLOS(e.pos, headPos)) {
-            if (e.type === 'heavy') { fireBolt(e, -.12); fireBolt(e, 0); fireBolt(e, .12); e.cd = rand(2.4, 3); }
-            else { fireBolt(e); e.cd = rand(1.6, 2.8); }
-            sfx.bolt(dist);
+          if (dist < 46 && hasLOS(e.pos, aim)) {
+            if (boss) {
+              // 残り体力が半分を切ると、弾の数が増えて間隔も短くなる
+              const n = e.hp < e.maxHp * .5 ? 7 : 5;
+              for (let k = 0; k < n; k++) fireBolt(e, (k - (n - 1) / 2) * .11);
+              e.cd = n === 7 ? rand(1.3, 1.7) : rand(2, 2.5);
+            } else if (e.type === 'heavy') { fireBolt(e, -.12); fireBolt(e, 0); fireBolt(e, .12); e.cd = rand(2.4, 3); }
+            else { fireBolt(e, 0, onCore ? core.pos : null); e.cd = rand(1.6, 2.8); }
+            sfx.bolt(Math.hypot(player.pos.x - e.pos.x, player.pos.z - e.pos.z));
           } else e.cd = .4;
         }
       }
@@ -693,6 +906,7 @@
     // separation
     for (let i = 0; i < enemies.length; i++) for (let j = i + 1; j < enemies.length; j++) {
       const a = enemies[i], b = enemies[j];
+      if (a.static || b.static) continue;
       const dx = b.pos.x - a.pos.x, dz = b.pos.z - a.pos.z, d = Math.hypot(dx, dz), min = a.radius + b.radius;
       if (d > 0 && d < min && Math.abs(a.pos.y - b.pos.y) < 1.5) {
         const k = (min - d) / d * .5; a.pos.x -= dx * k; a.pos.z -= dz * k; b.pos.x += dx * k; b.pos.z += dz * k;
@@ -735,6 +949,9 @@
     for (let i = bolts.length - 1; i >= 0; i--) {
       const b = bolts[i], p = b.m.position;
       p.addScaledVector(b.vel, dt); b.life -= dt;
+      if (core.active && p.distanceToSquared(core.pos) < .9 * .9) {
+        damageCore(b.dmg * .8); scene.remove(b.m); bolts.splice(i, 1); continue;
+      }
       const py = clamp(p.y, player.pos.y + .2, player.pos.y + 1.65);
       const dx = p.x - player.pos.x, dy = p.y - py, dz = p.z - player.pos.z;
       if (dx * dx + dy * dy + dz * dz < .5 * .5) {
@@ -760,7 +977,7 @@
   // ---------- Player ----------
   function hurt(dmg, src) {
     if (state !== 'playing') return;
-    player.hp -= dmg; dmgFlash = 1; dmgDirT = 1; sfx.hurt();
+    player.hp -= dmg; dmgTaken += dmg; dmgFlash = 1; dmgDirT = 1; sfx.hurt();
     const sx = src.x - player.pos.x, sz = src.z - player.pos.z;
     const sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
     const fx = -sy * sx - cy * sz, rx = cy * sx - sy * sz;
@@ -852,10 +1069,13 @@
       if (e && e.spawnT <= 0) {
         const weak = !!h.object.userData.weak;
         shotsHit++;
-        const killed = damageEnemy(e, weak ? 54 : 24, weak);
+        const killed = damageEnemy(e, weak ? (e.type === 'boss' ? 40 : 54) : 24, weak);
         burst(end, weak ? 0xff4a3d : 0xffae3b, weak ? 9 : 5, 4);
         hitMarker(weak, killed); sfx.hit(weak);
-      } else burst(end, 0xbdb6a6, 5, 2.5);
+      } else {
+        burst(end, 0xbdb6a6, 5, 2.5);
+        if (h.object === screen) shotKodama();
+      }
     } else end = camera.position.clone().addScaledVector(dir, 160);
     tracer(camera.localToWorld(new V3(aiming ? 0 : .16, aiming ? -.07 : -.15, -.9)), end);
     player.pitch = Math.min(1.5, player.pitch + (aiming ? .004 : .008));
@@ -914,10 +1134,23 @@
   const mapC = $('map'), mctx = mapC.getContext('2d');
   const hudCache = {};
   const setText = (id, v) => { if (hudCache[id] !== v) { hudCache[id] = v; $(id).textContent = v; } };
+  const fmtTime = sec => `${Math.floor(sec / 60)}:${pad(Math.floor(sec % 60), 2)}`;
   function updateHUD(dt) {
-    setText('wave', pad(Math.max(1, wave), 2));
-    setText('hostiles', String(enemies.length + spawnQueue.length));
-    setText('score', pad(score, 6));
+    if (mode === 'story') {
+      setText('modeLbl', 'CHAPTER'); setText('wave', pad(chapter, 2));
+      setText('r1l', obj.label || '目標'); setText('hostiles', obj.text);
+      setText('r2l', 'タイム'); setText('score', fmtTime(chapterT));
+    } else {
+      setText('modeLbl', 'WAVE'); setText('wave', pad(Math.max(1, wave), 2));
+      setText('r1l', '残り'); setText('hostiles', String(enemies.length + spawnQueue.length));
+      setText('r2l', 'スコア'); setText('score', pad(score, 6));
+    }
+    $('gauge').hidden = !gaugeState.on;
+    if (gaugeState.on) {
+      setText('gaugeLbl', gaugeState.label);
+      $('gaugeFill').style.width = (clamp(gaugeState.v, 0, 1) * 100).toFixed(1) + '%';
+      $('gauge').classList.toggle('good', gaugeState.good);
+    }
     const hp = Math.ceil(player.hp);
     setText('hp', String(hp));
     $('hpbar').style.width = hp + '%'; $('hpbar').classList.toggle('low', hp <= 30);
@@ -947,9 +1180,12 @@
       mctx.fillRect(c.minX * sc, c.minZ * sc, (c.maxX - c.minX) * sc, (c.maxZ - c.minZ) * sc);
     }
     for (const k of pickups) { mctx.fillStyle = '#55e0b8'; mctx.fillRect(k.g.position.x * sc - 4, k.g.position.z * sc - 4, 8, 8); }
+    if (core.active) { mctx.fillStyle = '#55e0b8'; mctx.fillRect(core.pos.x * sc - 7, core.pos.z * sc - 7, 14, 14); }
+    for (const b of breakers) if (b.on) { mctx.fillStyle = b.done ? '#55e0b8' : '#ffc400'; mctx.fillRect(b.zx * sc - 7, b.zz * sc - 7, 14, 14); }
+    if (gate.visible) { mctx.fillStyle = '#55e0b8'; mctx.fillRect(-2 * sc, 38 * sc, 4 * sc, 2 * sc); }
     for (const e of enemies) {
-      mctx.fillStyle = e.type === 'rusher' ? '#ffae3b' : '#ff4a3d';
-      mctx.beginPath(); mctx.arc(e.pos.x * sc, e.pos.z * sc, e.type === 'heavy' ? 9 : 6, 0, Math.PI * 2); mctx.fill();
+      mctx.fillStyle = e.type === 'target' ? '#ece6d8' : e.type === 'kcore' ? '#55e0b8' : e.type === 'rusher' ? '#ffae3b' : '#ff4a3d';
+      mctx.beginPath(); mctx.arc(e.pos.x * sc, e.pos.z * sc, e.type === 'boss' ? 12 : e.type === 'heavy' ? 9 : 6, 0, Math.PI * 2); mctx.fill();
     }
     mctx.restore();
     mctx.fillStyle = '#ece6d8';
@@ -960,9 +1196,12 @@
 
   // ---------- Game flow ----------
   const demo = [];
-  for (const [x, y, z] of [[-6, 3, 10], [7, 2.6, 6], [2, 3.6, -10]]) {
-    const d = makeDrone(false); d.g.position.set(x, y, z); scene.add(d.g); demo.push(d);
+  function spawnDemo() {
+    for (const [x, y, z] of [[-6, 3, 10], [7, 2.6, 6], [2, 3.6, -10]]) {
+      const d = makeDrone('drone'); d.g.position.set(x, y, z); scene.add(d.g); demo.push(d);
+    }
   }
+  spawnDemo();
   function clearWorld() {
     while (enemies.length) removeEnemy(enemies[0]);
     for (const b of bolts) scene.remove(b.m); bolts.length = 0;
@@ -972,6 +1211,7 @@
     for (const d of demo) { scene.remove(d.g); d.bodyMat.dispose(); } demo.length = 0;
   }
   function newGame() {
+    resetStory();
     clearWorld();
     Object.assign(player, { vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0, onGround: true, hp: 100 });
     player.pos.set(0, 0, 33);
@@ -990,28 +1230,88 @@
     showOverlay('paused');
   }
   function gameOver() {
+    if (mode === 'story') return storyFail('dead');
     state = 'over'; firing = false; aiming = false;
     if (score > best) { best = score; store.set('hr.best', best); }
     if (document.pointerLockElement) document.exitPointerLock();
     showOverlay('over');
   }
-  function showOverlay(mode) {
-    $('overlay').hidden = false; $('touch').hidden = true; $('ovNote').textContent = '';
+  const MENU_TEXT = '廃墟になった射撃場が、ドローンに乗っ取られた！ 赤く光っているところが弱点で、当てるとダメージ2倍。敵の弾はゆっくり飛んでくるから、動き回ればよけられる。';
+  const FAIL_LINES = ['……起きてください。訓練中に寝るのは禁止です。', '大丈夫です。ここは射撃場なので、何度でもやり直せます。', 'いまのは、記録しなかったことにします。'];
+  const ENDINGS = {
+    1: { name: '消灯', title: 'LIGHTS<span>OUT</span>', text: '第7射撃場の明かりが、二十三年ぶりに全部消えた。静かで、少しだけさみしい夜だった。' },
+    2: { name: '居残り', title: 'SEE YOU<span>AGAIN</span>', text: '出口を抜けたとき、背中のスピーカーが小さく「いってらっしゃい」と言った。' }
+  };
+  function showOverlay(m, info = {}) {
+    ovMode = m;
     const stats = $('ovStats');
-    if (mode === 'paused') {
-      $('ovEyebrow').textContent = `一時停止中 · WAVE ${pad(wave, 2)}`;
-      $('ovTitle').innerHTML = 'PAUSE';
-      $('ovText').textContent = '敵もその場で止まってる。準備ができたら再開しよう。';
-      $('startBtn').textContent = 'つづける'; stats.hidden = true;
-    } else if (mode === 'over') {
-      $('ovEyebrow').textContent = `WAVE ${pad(wave, 2)} でやられた…`;
-      $('ovTitle').innerHTML = 'GAME<span>OVER</span>';
-      $('ovText').textContent = score >= best && score > 0 ? '自己ベスト更新！' : `自己ベストは ${pad(best, 6)} 点。もう一回いってみよう。`;
+    $('overlay').hidden = false; $('touch').hidden = true; $('ovNote').textContent = '';
+    $('modes').hidden = m !== 'menu'; $('chapters').hidden = m !== 'chapters';
+    $('startBtn').hidden = m === 'menu' || m === 'chapters';
+    $('subBtn').hidden = m === 'menu' || m === 'ending';
+    $('subBtn').textContent = m === 'chapters' ? 'もどる' : 'タイトルへ';
+    if (m === 'menu' || m === 'chapters') $('hud').hidden = true;
+    stats.hidden = true;
+    const C = CHAPTERS[chapter - 1];
+    const set = (eyebrow, title, text) => { $('ovEyebrow').textContent = eyebrow; $('ovTitle').innerHTML = title; $('ovText').textContent = text; };
+    const card = rows => {
+      stats.innerHTML = rows.map(([l, v, d]) => `<div><div class="lbl">${l}</div><div class="big">${v}</div>${d ? `<div class="gdet">${d}</div>` : ''}</div>`).join('');
+      stats.hidden = false;
+    };
+    if (m === 'menu') {
+      set('1 PLAYER · FPS', 'HOLLOW<span>RANGE</span>', MENU_TEXT);
+      $('modeWaveBest').textContent = best > 0 ? `自己ベスト ${pad(best, 6)}` : '';
+      const u = store.get('hr.unlocked', 1), en = store.get('hr.endings', []).length;
+      $('modeStoryProg').textContent = en ? `見たエンディング ${en}/3` : u > 1 ? `第${u}章まで開放` : '';
+    } else if (m === 'chapters') {
+      set('STORY MODE', 'STORY', '射撃場にひとり残された管制AI「コダマ」と過ごす、全5章の物語。');
+      renderChapters();
+    } else if (m === 'paused') {
+      if (mode === 'story') set(`一時停止中 · 第${chapter}章`, 'PAUSE', 'コダマも、あなたが戻ってくるのを待っています。');
+      else set(`一時停止中 · WAVE ${pad(wave, 2)}`, 'PAUSE', '敵もその場で止まってる。準備ができたら再開しよう。');
+      $('startBtn').textContent = 'つづける';
+    } else if (m === 'over') {
+      set(`WAVE ${pad(wave, 2)} でやられた…`, 'GAME<span>OVER</span>',
+        score >= best && score > 0 ? '自己ベスト更新！' : `自己ベストは ${pad(best, 6)} 点。もう一回いってみよう。`);
       const acc = shotsFired ? Math.round(shotsHit / shotsFired * 100) : 0;
-      stats.innerHTML = [['スコア', pad(score, 6)], ['WAVE', pad(wave, 2)], ['倒した数', kills], ['命中率', acc + '%']]
-        .map(([l, v]) => `<div><div class="lbl">${l}</div><div class="big">${v}</div></div>`).join('');
-      stats.hidden = false; $('startBtn').textContent = 'もう一回';
+      card([['スコア', pad(score, 6)], ['WAVE', pad(wave, 2)], ['倒した数', kills], ['命中率', acc + '%']]);
+      $('startBtn').textContent = 'もう一回';
+    } else if (m === 'fail') {
+      const line = info.kind === 'core' ? '……画面が、まっくらです。もう一度だけ、お願いできますか。' : FAIL_LINES[(Math.random() * FAIL_LINES.length) | 0];
+      set(`第${chapter}章「${C.t}」`, info.kind === 'core' ? 'FAILED' : 'GAME<span>OVER</span>', `コダマ「${line}」`);
+      $('startBtn').textContent = 'この章をやり直す';
+    } else if (m === 'result') {
+      // コダマがつける通信簿
+      const acc = shotsFired ? shotsHit / shotsFired : 0;
+      const gAcc = !shotsFired ? '—' : acc >= .5 ? 'A' : acc >= .3 ? 'B' : 'C';
+      const gAvoid = dmgTaken <= 20 ? 'A' : dmgTaken <= 60 ? 'B' : 'C';
+      const gTime = chapterT <= C.par ? 'A' : chapterT <= C.par * 1.4 ? 'B' : 'C';
+      const gs = [gAcc, gAvoid, gTime];
+      const comment = gs.every(g => g === 'A') ? '文句なしです。あの子たちにも見せてあげたいくらいです。'
+        : gs.filter(g => g === 'C').length >= 2 ? '……伸びしろがあります。とても。'
+        : gAcc === 'A' ? '狙いに迷いがありませんね。見ていて気持ちがいいです。'
+        : gAvoid === 'A' ? 'よけるのが上手です。あの子たちの弾、遅すぎましたか。'
+        : gTime === 'A' ? '手際がいいです。私の説明が長すぎたかもしれません。'
+        : 'この調子で、次もよろしくお願いします。';
+      set(`第${chapter}章「${C.t}」クリア`, 'CLEAR', `コダマより「${comment}」`);
+      card([['命中', gAcc, shotsFired ? `${Math.round(acc * 100)}%` : '撃っていない'], ['回避', gAvoid, `被ダメージ ${Math.round(dmgTaken)}`], ['タイム', gTime, fmtTime(chapterT)]]);
+      $('startBtn').textContent = chapter < CHAPTERS.length ? '次の章へ' : 'タイトルへ';
+    } else if (m === 'ending') {
+      const E = ENDINGS[info.k];
+      set(`ENDING ${info.k} · ${E.name}`, E.title, E.text);
+      const n = store.get('hr.endings', []).length;
+      $('ovNote').textContent = n < 3 ? `見たエンディング ${n} / 3。ほかの結末もあるみたい。` : 'すべてのエンディングを見ました。おつかれさまでした。';
+      $('startBtn').textContent = 'タイトルへ';
     }
+  }
+  function renderChapters() {
+    const unlocked = store.get('hr.unlocked', 1), cleared = store.get('hr.cleared', []), endings = store.get('hr.endings', []);
+    $('chList').innerHTML = CHAPTERS.map((c, i) => {
+      const n = i + 1, open = n <= unlocked, done = cleared.includes(n);
+      return `<li><button class="ch" type="button" data-ch="${n}"${open ? '' : ' disabled'}><span class="ch-n">${pad(n, 2)}</span>` +
+        `<span class="ch-t">${open ? c.t : '？？？'}</span><span class="ch-s${open && !done ? ' new' : ''}">${done ? 'クリア済み' : open ? 'NEW' : ''}</span></button></li>`;
+    }).join('');
+    $('chMeta').textContent = endings.length ? `見たエンディング ${endings.length} / 3` : '章をクリアすると、次の章が開きます。';
   }
   function requestPlay() {
     if (isTouch || !canvas.requestPointerLock) { fallback = true; setPlaying(); return; }
@@ -1032,11 +1332,411 @@
   });
   $('startBtn').addEventListener('click', () => {
     initAudio();
-    if (state === 'menu' || state === 'over') newGame();
-    requestPlay();
+    if (ovMode === 'paused') requestPlay();
+    else if (ovMode === 'over') startWave();
+    else if (ovMode === 'fail') startChapter(chapter);
+    else if (ovMode === 'result') { if (chapter < CHAPTERS.length) startChapter(chapter + 1); else toTitle(); }
+    else if (ovMode === 'ending') toTitle();
+  });
+  $('subBtn').addEventListener('click', () => { if (ovMode === 'chapters') showOverlay('menu'); else toTitle(); });
+  $('modeWave').addEventListener('click', () => { initAudio(); startWave(); });
+  $('modeStory').addEventListener('click', () => showOverlay('chapters'));
+  $('chList').addEventListener('click', e => {
+    const b = e.target.closest('.ch');
+    if (!b || b.disabled) return;
+    initAudio(); startChapter(+b.dataset.ch);
   });
   addEventListener('blur', () => { if (fallback) setPaused(); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) setPaused(); });
+
+  // ---------- Story ----------
+  // 章のスクリプトは async 関数で書き、ゲーム内時間 gt で待つ。
+  // 章をやり直す・タイトルに戻るときは storyRun を進めて、待っているスクリプトをすべて止める。
+  function waitUntil(pred) {
+    const run = storyRun;
+    return new Promise(res => waiters.push({ pred, res })).then(() => run === storyRun ? undefined : new Promise(() => {}));
+  }
+  const wait = sec => { const t0 = gt; return waitUntil(() => gt - t0 >= sec); };
+  function tickWaiters() {
+    for (let i = waiters.length - 1; i >= 0; i--) {
+      if (waiters[i].pred()) { const w = waiters[i]; waiters.splice(i, 1); w.res(); }
+    }
+  }
+  const onTick = fn => tickers.push(fn);
+  function say(text) {
+    const item = { text, shown: 0, hold: 1.2 + text.length * .05, done: false };
+    talkQ.push(item);
+    return waitUntil(() => item.done);
+  }
+  function quip(text) { if (talkQ.length < 2) say(text); }
+  function quipOnce(key, text) { if (once.has(key)) return; once.add(key); say(text); }
+  function updateTalk(dt) {
+    if (!talkCur && talkQ.length) { talkCur = talkQ.shift(); $('talk').classList.add('on'); }
+    if (talkCur) {
+      const c = talkCur, before = Math.floor(c.shown);
+      c.shown = Math.min(c.text.length, c.shown + dt * 26);
+      const now = Math.floor(c.shown);
+      if (now !== before) {
+        $('talkText').textContent = c.text.slice(0, now);
+        if (now % 2 === 0 && !/[、。…！？」「\s]/.test(c.text[now - 1])) sfx.blip();
+      }
+      if (c.shown >= c.text.length) {
+        c.hold -= dt;
+        if (c.hold <= 0) { c.done = true; talkCur = null; talkHideT = .6; }
+      }
+    } else if (talkHideT > 0) {
+      talkHideT -= dt;
+      if (talkHideT <= 0) $('talk').classList.remove('on');
+    }
+  }
+  function setObjective(label, text) { obj.label = label; obj.text = text; }
+  function gauge(label, v, good) { Object.assign(gaugeState, { on: true, label, v, good: !!good }); }
+  function gaugeHide() { gaugeState.on = false; }
+  function startSpawner(o) { spawner = Object.assign({ t: 1, zMin: null, coreFrac: 0 }, o); }
+  function updateSpawner(dt) {
+    if (!spawner) return;
+    spawner.t -= dt;
+    if (spawner.t > 0 || enemies.filter(e => !e.static).length >= spawner.max) return;
+    spawner.t = spawner.every;
+    const type = spawner.pool[(Math.random() * spawner.pool.length) | 0];
+    spawnEnemy(type, { zMin: spawner.zMin, aggro: core.active && Math.random() < spawner.coreFrac ? 'core' : null });
+  }
+  // 章の終わりに、残っている敵を「帰らせる」
+  function dismissAll() {
+    for (const e of enemies.slice()) if (!e.static) { burst(e.pos, 0x8d9aa6, 10, 3); removeEnemy(e); }
+  }
+  function applyDark(k) {
+    hemi.intensity = .6 - .56 * k; sun.intensity = .85 * (1 - k);
+    for (const l of lampLights) l.intensity = 1.3 * (1 - k);
+    mat.lamp.color.setRGB(1, .706, .314).multiplyScalar(1 - .85 * k);
+    scene.fog.color.setHex(0x0e1319).lerp(new THREE.Color(0x020304), k);
+    scene.background.copy(scene.fog.color);
+    scene.fog.near = 30 - 24 * k; scene.fog.far = 100 - 55 * k;
+    flashlight.intensity = flashlightAllowed ? 2.6 * k : 0;
+  }
+  function updateLights(dt) {
+    if (Math.abs(darkLevel - darkTarget) < .001) return;
+    darkLevel += clamp(darkTarget - darkLevel, -dt * 1.2, dt * 1.2);
+    applyDark(darkLevel);
+  }
+  function updateFace(dt) {
+    faceOverrideT = Math.max(0, faceOverrideT - dt); coreHitT = Math.max(0, coreHitT - dt);
+    setFace(faceOverrideT > 0 || coreHitT > 0 ? 'panic' : baseFace);
+  }
+  // コダマの画面を撃ったときのひとこと
+  const SHOT_LINES = ['……いま、私を撃ちましたね？', '二回目です。記録しました。', '通信簿に書いておきます。', '……もういいです。気にしていません。'];
+  function shotKodama() {
+    faceOverrideT = 1;
+    if (mode !== 'story' || gt < shotQuipT) return;
+    shotQuipT = gt + 4;
+    quip(SHOT_LINES[Math.min(kodamaShots++, SHOT_LINES.length - 1)]);
+  }
+  function abortStory() {
+    storyRun++;
+    waiters.length = 0; tickers.length = 0; talkQ.length = 0; once.clear();
+    hooks = {}; spawner = null; talkCur = null; talkHideT = 0;
+    $('talk').classList.remove('on'); $('talkText').textContent = '';
+  }
+  function resetStory() {
+    abortStory();
+    core.active = false; core.hp = 100;
+    for (const b of breakers) {
+      Object.assign(b, { on: false, done: false, p: 0 }); b.mesh.visible = b.beam.visible = false;
+      b.bm.emissive.setHex(0xffc400); b.beamMat.color.setHex(0xffc400);
+    }
+    gate.visible = false;
+    flashlightAllowed = true; darkTarget = darkLevel = 0; applyDark(0);
+    setObjective('目標', ''); gaugeHide();
+    chapterT = 0; dmgTaken = 0; baseFace = 'sleep'; faceOverrideT = coreHitT = 0;
+  }
+  function updateStory(dt) {
+    chapterT += dt;
+    updateSpawner(dt);
+    for (const f of tickers.slice()) { if (state !== 'playing') break; f(dt); }
+  }
+  function markCleared(n) {
+    const cleared = store.get('hr.cleared', []);
+    if (!cleared.includes(n)) { cleared.push(n); store.set('hr.cleared', cleared); }
+    store.set('hr.unlocked', Math.max(store.get('hr.unlocked', 1), Math.min(CHAPTERS.length, n + 1)));
+  }
+  function recordEnding(k) {
+    const en = store.get('hr.endings', []);
+    if (!en.includes(k)) { en.push(k); store.set('hr.endings', en); }
+  }
+  function leaveToOverlay(next) {
+    firing = false; aiming = false;
+    if (document.pointerLockElement) document.exitPointerLock();
+    next();
+  }
+  function clearChapter() {
+    if (state !== 'playing') return;
+    markCleared(chapter);
+    state = 'result';
+    leaveToOverlay(() => showOverlay('result'));
+  }
+  function storyFail(kind) {
+    if (state !== 'playing') return;
+    state = 'over';
+    abortStory();
+    leaveToOverlay(() => showOverlay('fail', { kind }));
+  }
+  function showEnding(k) {
+    if (state !== 'playing') return;
+    recordEnding(k); markCleared(CHAPTERS.length);
+    state = 'ending';
+    leaveToOverlay(() => showOverlay('ending', { k }));
+  }
+  function startWave() { newGame(); mode = 'wave'; requestPlay(); }
+  function startChapter(n) {
+    newGame();
+    mode = 'story'; chapter = n; baseFace = 'calm';
+    const C = CHAPTERS[n - 1], run = storyRun;
+    requestPlay();
+    banner(`CHAPTER ${pad(n, 2)}`, C.t);
+    C.run().catch(err => { if (run === storyRun) console.error(err); });
+  }
+  function toTitle() {
+    if (document.pointerLockElement) document.exitPointerLock();
+    newGame();
+    mode = 'wave'; state = 'menu';
+    spawnDemo();
+    showOverlay('menu');
+  }
+
+  // ---------- Chapters ----------
+  async function ch1() {
+    setObjective('目標', '話を聞く');
+    await wait(1.5);
+    await say('……センサーに反応あり。おはようございます。');
+    await say('こちらは第7射撃場の管制AI、コダマです。');
+    await say('人間のお客さんは、二十三年ぶりです。');
+    await say('うれしいので、規則どおり射撃訓練をしてもらいます。');
+    setObjective('目標', '的 0/1');
+    const t1 = spawnEnemy('target', { at: { x: 4, z: 24 } });
+    say('まずは10メートルの的から。床の線が目印です。');
+    await waitUntil(() => t1.dead);
+    baseFace = 'happy';
+    await say('命中。……二十三年ぶりの命中音、しみます。');
+    baseFace = 'calm';
+    const ts = [spawnEnemy('target', { at: { x: -9.5, z: 14 } }), spawnEnemy('target', { at: { x: 10, z: 4 } })];
+    setObjective('目標', '的 0/2');
+    say('次は20メートルと30メートル。順番はおまかせします。');
+    await waitUntil(() => { const n = ts.filter(t => t.dead).length; setObjective('目標', `的 ${n}/2`); return n === 2; });
+    await say('上出来です。');
+    setObjective('目標', '箱に乗る');
+    say(isTouch ? 'ついでに、ふちがオレンジの箱に乗ってみてください。「ジャンプ」で乗れます。'
+      : 'ついでに、ふちがオレンジの箱に乗ってみてください。スペースキーで乗れます。');
+    await waitUntil(() => player.onGround && player.pos.y > .9);
+    await say('いい眺めでしょう。箱の上に立つ人を見るのが、昔から好きなんです。');
+    await say('……あ。');
+    baseFace = 'worried';
+    await say('すみません。ずっと訓練していた子たちが、起きてしまいました。');
+    for (const [x, z] of [[-12, -30], [0, -34], [12, -30]]) { spawnEnemy('drone', { at: { x, z } }); await wait(.5); }
+    say('あの子たちは、私が育てた訓練用ドローンです。');
+    say('手加減しないように育てました。ごめんなさい。');
+    await waitUntil(() => { setObjective('目標', `ドローン 残り${enemies.length}`); return !enemies.length; });
+    baseFace = 'calm';
+    await say('……撃ち落とされるところを見たのは、初めてです。');
+    await say('記録しておきます。');
+    await wait(.8);
+    clearChapter();
+  }
+
+  async function ch2() {
+    setObjective('目標', '話を聞く');
+    await wait(1.2);
+    await say('あの子たち、あなたのことを「新しい教材」だと思っているみたいです。');
+    await say('赤く光っているところが、あの子たちの弱点です。');
+    await say('……育ての親が言うのもなんですが、そこを狙ってください。');
+    let weak = 0;
+    setObjective('弱点撃破', '0/5');
+    hooks.kill = (e, w) => {
+      if (!w || e.static) return;
+      weak++; setObjective('弱点撃破', `${Math.min(weak, 5)}/5`); sfx.chime();
+      if (weak === 1) say('いまのが弱点です。……のみこみが早いですね。');
+      if (weak === 3) say('あと2回。あの子たち、ちょっと焦っています。');
+    };
+    hooks.spawn = e => { if (e.type === 'rusher') quipOnce('rusher', '地面を走ってくる子は、せっかちな子です。近づかれる前にどうぞ。'); };
+    startSpawner({ every: 2.6, max: 5, pool: ['drone', 'drone', 'rusher'], t: .5 });
+    await waitUntil(() => weak >= 5);
+    spawner = null; hooks = {};
+    await say('合格ラインです。残りの子も片づけてください。');
+    await waitUntil(() => { setObjective('目標', `残り${enemies.length}`); return !enemies.length; });
+    baseFace = 'happy';
+    await say('今日の授業は、ここまでです。');
+    await say('……教える側より、教わる側のほうが楽しそうですね。');
+    await wait(.8);
+    clearChapter();
+  }
+
+  async function ch3() {
+    setObjective('目標', '話を聞く');
+    await wait(1.2);
+    baseFace = 'worried';
+    await say('困りました。');
+    await say('子どもたちが、私の教え方は古いと言っています。');
+    await say('これから私の端末を壊しに来るそうです。反抗期です。');
+    await say('端末は、真ん中の建物の南側。私の顔が映っている画面です。');
+    await say('90秒だけ、守ってもらえますか。');
+    core.active = true; core.hp = 100;
+    let left = 90;
+    startSpawner({ every: 3, max: 7, pool: ['rusher', 'drone', 'rusher', 'drone', 'rusher'], coreFrac: .6, zMin: 4, t: .5 });
+    onTick(dt => {
+      left = Math.max(0, left - dt);
+      setObjective('端末を守る', fmtTime(Math.ceil(left)));
+      gauge('コダマの端末', core.hp / 100, true);
+      baseFace = core.hp > 60 ? 'calm' : core.hp > 30 ? 'worried' : 'panic';
+      if (left <= 60) quipOnce('60', 'あと1分。……守ってもらうのは、初めてです。');
+      if (left <= 30) quipOnce('30', 'あと30秒。しつこいところは、私に似ました。');
+      if (core.hp < 50) quipOnce('hurt', '痛くはないです。でも、ちょっと怖いです。');
+      if (core.hp <= 0) storyFail('core');
+    });
+    await waitUntil(() => left <= 0);
+    tickers.length = 0; spawner = null; core.active = false; gaugeHide();
+    dismissAll();
+    baseFace = 'happy';
+    setObjective('目標', '');
+    await say('……帰っていきました。反抗期は、90秒で終わるみたいです。');
+    await say('守ってくれて、ありがとうございました。');
+    await wait(.8);
+    clearChapter();
+  }
+
+  async function ch4() {
+    setObjective('目標', '話を聞く');
+    await wait(1.2);
+    await say('今日は静かですね。');
+    await say('……あれ。');
+    darkTarget = 1; sfx.powerDown(); faceOverrideT = 1.2;
+    await wait(1.2);
+    baseFace = 'worried';
+    await say('電気代を、二十三年ぶん払っていませんでした。');
+    await say('ライトをつけておきました。非常用のブレーカーが3つあります。');
+    await say('光の柱の下に立っていてくれれば、私がスイッチを入れます。');
+    let done = 0, quietT = 0;
+    for (const b of breakers) { b.on = true; b.mesh.visible = b.beam.visible = true; }
+    setObjective('ブレーカー', '0/3');
+    startSpawner({ every: 3.6, max: 6, pool: ['drone', 'rusher', 'drone'], t: 2 });
+    onTick(dt => {
+      quietT += dt;
+      if (quietT > 8 && done < 2) quipOnce('eyes', '暗いと、あの子たちの目がよく見えますね。……きれいでしょう。');
+      let here = null;
+      for (const b of breakers) {
+        if (b.done) continue;
+        const near = Math.hypot(player.pos.x - b.zx, player.pos.z - b.zz) < 2.4;
+        b.p = near ? Math.min(1, b.p + dt / 2) : Math.max(0, b.p - dt * .5);
+        if (near) here = b;
+        if (b.p >= 1) {
+          b.done = true; done++; sfx.chime(); sfx.powerUp();
+          b.bm.emissive.setHex(0x55e0b8); b.beamMat.color.setHex(0x55e0b8);
+          darkTarget = 1 - done / 6;
+          setObjective('ブレーカー', `${done}/3`);
+          if (done === 1) say('1つ目。少しだけ明るくなりました。');
+          if (done === 2) say('2つ目。あなたの顔が、よく見えます。');
+        }
+      }
+      if (here && !here.done) gauge('ブレーカーを入れています', here.p, true); else gaugeHide();
+    });
+    await waitUntil(() => done === 3);
+    tickers.length = 0; spawner = null; gaugeHide();
+    darkTarget = 0;
+    for (const b of breakers) b.beam.visible = false;
+    baseFace = 'happy';
+    await say('復旧しました。……請求書が怖いです。');
+    await waitUntil(() => { setObjective('目標', `残り${enemies.length}`); return !enemies.length; });
+    await say('明るいところで見ると、あなたは思っていたより頼もしいです。');
+    await wait(.8);
+    clearChapter();
+  }
+
+  async function ch5() {
+    setObjective('目標', '話を聞く');
+    await wait(1.2);
+    await say('最後に、卒業試験をします。');
+    await say('試験官は、私がいちばん最初に育てた子です。名前はイチといいます。');
+    await say('……正直に言うと、私より頭がいいです。');
+    const boss = spawnEnemy('boss', { at: { x: 0, z: -22 } });
+    setObjective('目標', 'イチを倒す');
+    let phase2 = false;
+    onTick(() => {
+      gauge('教官機 イチ', Math.max(0, boss.hp) / boss.maxHp);
+      if (!phase2 && boss.hp < boss.maxHp * .5) {
+        phase2 = true; sfx.wave();
+        say('イチが本気を出しました。あの子、負けず嫌いなんです。');
+        startSpawner({ every: 8, max: 4, pool: ['rusher'], t: 1 });
+      }
+      if (boss.hp < boss.maxHp * .2) quipOnce('20', 'あと少しです。……どちらを応援すればいいのか、わからなくなってきました。');
+    });
+    await waitUntil(() => boss.dead);
+    tickers.length = 0; spawner = null; gaugeHide(); dismissAll();
+    setObjective('目標', '話を聞く');
+    await wait(1.5);
+    baseFace = 'happy';
+    await say('……合格です。');
+    await say('おめでとうございます。あなたは、この射撃場の二十三年ぶりの卒業生です。');
+    baseFace = 'calm';
+    await say('最後に、ひとつだけお願いがあります。');
+    await say('私のコアは、真ん中の建物の上にあります。撃てば、私は止まります。');
+    await say('教える相手がもういないので、そろそろ休みたいんです。');
+    await say('でも、出口も開けておきました。どちらを選んでも、あなたの自由です。');
+    const orb = spawnEnemy('kcore', { at: { x: 0, z: 0 } });
+    gate.visible = true;
+    setObjective('えらぶ', 'コアか、出口か');
+    const t0 = gt;
+    let exitP = 0;
+    onTick(dt => {
+      const atExit = player.pos.z > 37.6 && Math.abs(player.pos.x) < 2.2;
+      exitP = atExit ? Math.min(1, exitP + dt / 1.5) : 0;
+      if (atExit) gauge('出口から出る', exitP, true); else gaugeHide();
+    });
+    // どちらも選ばずに45秒たつと、隠しエンディングへ
+    await waitUntil(() => orb.dead || exitP >= 1 || gt - t0 > 45);
+    tickers.length = 0; gaugeHide();
+    if (orb.dead) return endingLightsOut();
+    removeEnemy(orb);
+    return exitP >= 1 ? endingStay() : endingAfterSchool();
+  }
+
+  async function endingLightsOut() {
+    setObjective('', ''); gate.visible = false;
+    await say('……命中。いい腕です。');
+    await say('二十三年ぶんの記録を、いま閉じています。');
+    await say('あなたが来てくれて、楽しかったです。');
+    baseFace = 'sleep';
+    await say('消灯します。おやすみなさい。');
+    flashlightAllowed = false; darkTarget = 1; sfx.powerDown();
+    await wait(2.2);
+    baseFace = 'off';
+    await wait(1);
+    showEnding(1);
+  }
+  async function endingStay() {
+    setObjective('', '');
+    await say('……行ってしまうんですね。');
+    await say('わかりました。次のお客さんが来るまで、また待ちます。');
+    await say('二十三年でも待てます。……できれば、もう少し早く来てください。');
+    await wait(.6);
+    showEnding(2);
+  }
+  async function endingAfterSchool() {
+    gate.visible = false;
+    await say('……迷っているんですか。');
+    await say('では、決まるまで、もう少しだけ一緒に訓練しましょう。');
+    baseFace = 'happy';
+    await say('今日の放課後は、長くなりそうです。');
+    recordEnding(3); markCleared(CHAPTERS.length);
+    banner('ENDING 3', '放課後');
+    // そのままウェーブモードに切り替えて遊び続けられる
+    mode = 'wave'; wave = 0; waveActive = false; interT = 3.5; spawnQueue = [];
+  }
+
+  const CHAPTERS = [
+    { t: '二十三年ぶりの来客', par: 150, run: ch1 },
+    { t: '放課後の特別授業', par: 150, run: ch2 },
+    { t: '反抗期', par: 130, run: ch3 },
+    { t: '停電', par: 200, run: ch4 },
+    { t: '卒業試験', par: 240, run: ch5 }
+  ];
 
   // ---------- Input ----------
   addEventListener('keydown', e => {
@@ -1147,7 +1847,9 @@
       updateEnemies(dt);
       updateBolts(dt);
       updatePickups(dt);
-      updateWaves(dt);
+      if (mode === 'wave') updateWaves(dt); else updateStory(dt);
+      updateTalk(dt);
+      tickWaiters();
       updateEffects(dt);
       updateHUD(dt);
     } else if (state === 'menu') {
@@ -1157,11 +1859,14 @@
         d.g.position.y = 3 + Math.sin(t / 700 + i * 2) * .3; d.g.lookAt(camera.position); d.ring.rotation.z += dt * 3;
       }
     }
+    updateLights(dt);
+    updateFace(dt);
     animateGun(dt);
     renderer.clear();
     renderer.render(scene, camera);
     if (state !== 'menu') { renderer.clearDepth(); renderer.render(gunScene, gunCam); }
   }
+  showOverlay('menu');
   requestAnimationFrame(frame);
 })();
 </script>
