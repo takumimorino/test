@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Bomb Relay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pop.css?v=1">
+<style>
+  .wrap { width: min(100cqw, 460px); height: 100cqh; display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: 12px; }
+  .players { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .pl { --pc: var(--pink); --ps: var(--pink-soft); display: grid; justify-items: center; gap: 2px; padding: 8px 4px; background: var(--cream);
+    border: 3px solid var(--ink); border-radius: 16px; box-shadow: 3px 4px 0 var(--ink); transition: transform .15s, background-color .15s; }
+  .pl.p1 { --pc: var(--blue); --ps: var(--blue-soft); } .pl.p2 { --pc: var(--yellow); --ps: var(--yellow-soft); }
+  .pl .dot { width: 22px; height: 22px; border-radius: 50%; background: var(--pc); border: 3px solid var(--ink); }
+  .pl .nm { font-weight: 900; font-size: 13px; }
+  .pl .lv { font-size: 13px; letter-spacing: 1px; color: var(--pink); min-height: 1.2em; }
+  .pl .tag { font-size: 10px; font-weight: 900; min-height: 1.2em; }
+  .pl.hold { background: var(--ps); transform: translateY(-4px); }
+  .pl.out { opacity: .4; }
+  .center { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; padding: 0 4px; }
+  .bomb { position: relative; width: 92px; height: 92px; }
+  .bomb .ball { position: absolute; inset: 14px 0 0 0; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #5d5878 0 18%, var(--ink) 19%); border: 4px solid var(--ink); }
+  .bomb .cap { position: absolute; left: 48px; top: 8px; width: 24px; height: 16px; background: #6d6884; border: 3px solid var(--ink); border-radius: 4px; transform: rotate(30deg); }
+  .bomb .fuse { position: absolute; left: 66px; top: -2px; width: 16px; height: 16px; border-top: 4px solid #a07a4f; border-right: 4px solid #a07a4f; border-radius: 0 14px 0 0; }
+  .bomb .spark { position: absolute; left: 76px; top: -12px; width: 18px; height: 18px; border-radius: 50%; background: var(--yellow); border: 3px solid var(--orange); opacity: 0; }
+  .lit .spark { opacity: 1; animation: spark .18s steps(2) infinite; }
+  .lit .ball { animation: wobble var(--tick, .5s) ease-in-out infinite; }
+  @keyframes spark { 50% { transform: scale(1.5) rotate(45deg); } }
+  @keyframes wobble { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg) scale(1.03); } }
+  .who { display: grid; gap: 2px; }
+  .who small { font-size: 12px; font-weight: 800; color: var(--soft); }
+  .who b { font-family: var(--display); font-size: clamp(24px, 8cqw, 34px); line-height: 1.1; }
+  .task { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 10px; padding: 14px; min-height: 0; }
+  .q { text-align: center; font-weight: 900; font-size: 17px; line-height: 1.4; }
+  .q .big { display: block; font-family: var(--display); font-size: clamp(34px, 12cqw, 52px); margin-top: 2px; }
+  .choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; min-height: 0; }
+  .choices.six { grid-template-columns: repeat(3, 1fr); }
+  .ch { font-family: var(--display); font-weight: 700; font-size: clamp(22px, 8cqw, 34px); color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 16px;
+    box-shadow: 3px 4px 0 var(--ink); cursor: pointer; touch-action: manipulation; min-height: 56px; }
+  .ch:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  .ch:disabled { opacity: .5; }
+  .task.shake { animation: shake .3s; }
+  @keyframes shake { 25% { translate: -8px 0; } 75% { translate: 8px 0; } }
+  .pass { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 6px; border-radius: 22px; background: var(--pc, var(--yellow)); }
+  .pass b { font-family: var(--display); font-size: clamp(34px, 12cqw, 50px); line-height: 1; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; color: #fff; text-shadow: 3px 4px 0 var(--ink); }
+  .pass span { font-weight: 900; font-size: 16px; }
+  .flash { position: fixed; inset: 0; z-index: 12; background: #fff; pointer-events: none; opacity: 0; }
+  .flash.on { animation: flash .6s ease-out; }
+  @keyframes flash { 0% { opacity: 1; background: var(--yellow); } 30% { opacity: .9; background: var(--orange); } 100% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .lit .ball, .lit .spark, .task.shake { animation: none; } }
+</style>
+</head>
+<body class="pop">
+<header class="pop-top">
+  <a class="pop-back" href="index.html" aria-label="ゲーム選択へ">←</a>
+  <h1 class="pop-title">BOMB RELAY</h1>
+  <div class="pop-chips"><div class="pop-chip"><span>ROUND</span><b id="round">1</b></div></div>
+</header>
+<main class="pop-stage">
+  <div class="wrap">
+    <div class="players" id="players"></div>
+    <div class="center">
+      <div class="bomb" id="bomb" aria-hidden="true"><div class="ball"></div><div class="cap"></div><div class="fuse"></div><div class="spark"></div></div>
+      <div class="who"><small>爆弾を持っているのは</small><b id="holder">—</b></div>
+    </div>
+    <div class="task pop-card" id="task">
+      <div class="q" id="q">スタートを押すと始まります</div>
+      <div class="choices" id="choices"></div>
+    </div>
+  </div>
+</main>
+<div class="flash" id="flash"></div>
+<script src="pop.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const { sfx, buzz, dialog, toast, confetti } = Pop;
+  const $ = id => document.getElementById(id);
+  const ri = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = ri(0, i); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const NAMES = ['ピンク', 'ブルー', 'イエロー'], PCOL = ['var(--pink)', 'var(--blue)', 'var(--yellow)'];
+  const LIVES = 2;
+
+  // ---------- ミニ問題（どれも1〜2秒で答えられるもの） ----------
+  function distinctNums(n, lo, hi) { const s = new Set(); while (s.size < n) s.add(ri(lo, hi)); return [...s]; }
+  const COLORS = [['あか', '#ff4a5e'], ['あお', '#3d7bff'], ['きいろ', '#e6b800'], ['みどり', '#2fae74']];
+  const PAIRS = [['🐶', '🐱'], ['🍙', '🍣'], ['⭐', '🌙'], ['🚗', '🚲'], ['🍓', '🍒'], ['⚽', '🏀'], ['🐟', '🐙'], ['🌷', '🌻']];
+  const TASKS = [
+    () => { const n = distinctNums(4, 1, 99), m = Math.max(...n); return { q: 'いちばん<b>大きい</b>数は？', ch: n.map(v => ({ t: v, ok: v === m })) }; },
+    () => { const n = distinctNums(4, 1, 99), m = Math.min(...n); return { q: 'いちばん<b>小さい</b>数は？', ch: n.map(v => ({ t: v, ok: v === m })) }; },
+    () => {
+      const op = ri(0, 2); let a = ri(2, 12), b = ri(2, 9), ans, sym;
+      if (op === 0) { ans = a + b; sym = '+'; } else if (op === 1) { if (b > a) [a, b] = [b, a]; ans = a - b; sym = '−'; } else { a = ri(2, 9); ans = a * b; sym = '×'; }
+      const opts = new Set([ans]); while (opts.size < 4) { const d = ans + ri(-4, 4); if (d >= 0 && d !== ans) opts.add(d); }
+      return { q: `<span class="big">${a} ${sym} ${b} = ?</span>`, ch: shuffle([...opts]).map(v => ({ t: v, ok: v === ans })) };
+    },
+    () => {
+      // 文字の「色」を答える（書いてある言葉にだまされない）
+      const word = COLORS[ri(0, 3)], ink = shuffle(COLORS.filter(c => c !== word))[0];
+      return { q: `文字の<b>色</b>は？<span class="big" style="color:${ink[1]}">${word[0]}</span>`, ch: shuffle(COLORS.slice()).map(c => ({ t: c[0], ok: c === ink })) };
+    },
+    () => {
+      const [a, b] = PAIRS[ri(0, PAIRS.length - 1)], odd = ri(0, 5);
+      return { q: 'ひとつだけ<b>ちがう</b>のは？', six: true, ch: Array.from({ length: 6 }, (_, k) => ({ t: k === odd ? b : a, ok: k === odd })) };
+    },
+    () => {
+      const n = ri(3, 9), opts = shuffle([n, ...distinctNums(6, 2, 10).filter(v => v !== n).slice(0, 3)]);
+      return { q: `★はいくつ？<span class="big" style="font-size:30px;letter-spacing:2px;line-height:1.25">${'★'.repeat(n)}</span>`, ch: opts.map(v => ({ t: v, ok: v === n })) };
+    }
+  ];
+
+  // ---------- ゲームの進行 ----------
+  let lives, out, holder, round, fuse, t0, phase = 'idle', lastType = -1, nextTick = 0;
+  const alive = () => [0, 1, 2].filter(i => lives[i] > 0);
+  const nextAlive = i => { for (let k = 1; k <= 3; k++) { const j = (i + k) % 3; if (lives[j] > 0) return j; } return i; };
+  function renderPlayers() {
+    $('players').innerHTML = [0, 1, 2].map(i => `<div class="pl p${i}${i === holder && phase !== 'idle' ? ' hold' : ''}${lives[i] <= 0 ? ' out' : ''}">
+      <span class="dot"></span><span class="nm">${NAMES[i]}</span><span class="lv">${lives[i] > 0 ? '♥'.repeat(lives[i]) + '♡'.repeat(LIVES - lives[i]) : '✕'}</span>
+      <span class="tag">${lives[i] <= 0 ? 'リタイア' : i === holder && phase !== 'idle' ? '持ってる！' : ''}</span></div>`).join('');
+    const h = $('holder');
+    h.textContent = phase === 'idle' ? '—' : NAMES[holder];
+    h.style.color = phase === 'idle' ? 'var(--ink)' : PCOL[holder];
+    h.style.webkitTextStroke = phase === 'idle' ? '0' : '2px var(--ink)';
+    h.style.paintOrder = 'stroke fill';
+    $('round').textContent = round;
+  }
+  function newTask() {
+    let k; do { k = ri(0, TASKS.length - 1); } while (k === lastType); lastType = k;
+    const t = TASKS[k]();
+    $('q').innerHTML = t.q;
+    const box = $('choices'); box.className = 'choices' + (t.six ? ' six' : ''); box.innerHTML = '';
+    for (const c of t.ch) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ch'; b.textContent = c.t;
+      b.addEventListener('pointerdown', e => { e.preventDefault(); answer(c.ok); });
+      box.append(b);
+    }
+  }
+  function answer(ok) {
+    if (phase !== 'task') return;
+    if (!ok) {
+      // まちがえたら1秒間おあずけ（爆弾は止まらない）
+      phase = 'penalty'; sfx.bad(); buzz(80);
+      const task = $('task'); task.classList.remove('shake'); void task.offsetWidth; task.classList.add('shake');
+      for (const b of $('choices').children) b.disabled = true;
+      setTimeout(() => { if (phase !== 'penalty') return; phase = 'task'; for (const b of $('choices').children) b.disabled = false; }, 1000);
+      return;
+    }
+    sfx.good(); buzz(15);
+    holder = nextAlive(holder); phase = 'pass'; renderPlayers();
+    const p = document.createElement('div');
+    p.className = 'pass'; p.style.setProperty('--pc', PCOL[holder]);
+    p.innerHTML = `<b>パス！</b><span>次は ${NAMES[holder]}。スマホを渡して！</span>`;
+    $('task').append(p);
+    setTimeout(() => { p.remove(); if (phase === 'pass') { phase = 'task'; newTask(); } }, 750);
+  }
+  function startRound(starter) {
+    holder = starter; phase = 'idle'; renderPlayers();
+    $('q').textContent = 'スタートを押すと始まります'; $('choices').innerHTML = '';
+    dialog({
+      eyebrow: `ROUND ${round}`, title: `${NAMES[starter]}からスタート`,
+      text: `${NAMES[starter]}がスマホを持って、スタートを押してね。爆発までの時間はだれにもわかりません。`,
+      buttons: [{ label: 'スタート', on: go }]
+    });
+  }
+  function go() {
+    fuse = 14 + Math.random() * 18; t0 = performance.now(); nextTick = 0;
+    phase = 'task'; $('bomb').classList.add('lit'); renderPlayers(); newTask();
+  }
+  function boom() {
+    phase = 'boom'; $('bomb').classList.remove('lit');
+    for (const el of $('task').querySelectorAll('.pass')) el.remove();
+    const f = $('flash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+    sfx.boom(); buzz([220, 80, 220]); toast('BOOM!');
+    const h = holder; lives[h]--;
+    if (lives[h] <= 0) out.push(h);
+    renderPlayers();
+    $('q').textContent = `${NAMES[h]}の手の中で爆発！`; $('choices').innerHTML = '';
+    setTimeout(() => {
+      if (alive().length <= 1) return endGame();
+      dialog({
+        eyebrow: `ROUND ${round}`, title: `${NAMES[h]}がドカン！`,
+        text: lives[h] > 0 ? `${NAMES[h]}のライフは残り ${lives[h]}。` : `${NAMES[h]}はリタイア。ここからは2人で勝負！`,
+        buttons: [{ label: '次のラウンドへ', on: () => { round++; startRound(lives[h] > 0 ? h : nextAlive(h)); } }]
+      });
+    }, 1300);
+  }
+  function endGame() {
+    const w = alive()[0], rank = [w, ...out.slice().reverse()];
+    confetti(); sfx.win();
+    dialog({
+      eyebrow: 'GAME SET', title: `${NAMES[w]}の勝ち！`, text: '最後まで爆弾をかわしきりました。',
+      stats: rank.map((p, k) => [`${k + 1}位`, NAMES[p], k === 0]),
+      buttons: [{ label: 'もう一回', on: newGame }, { label: 'ゲーム選択へ', ghost: true, on: () => { location.href = 'index.html'; } }]
+    });
+  }
+  function newGame() { lives = [LIVES, LIVES, LIVES]; out = []; round = 1; startRound(ri(0, 2)); }
+  function loop(now) {
+    requestAnimationFrame(loop);
+    if (phase !== 'task' && phase !== 'pass' && phase !== 'penalty') return;
+    const el = (now - t0) / 1000;
+    if (el >= fuse) return boom();
+    // 時間がたつほど、カチカチが速くなる（残り時間はわからない）
+    const period = Math.max(.24, .62 - el * .014);
+    $('bomb').style.setProperty('--tick', period + 's');
+    if (el >= nextTick) { sfx.tick(1 + Math.min(el, 30) * .01); nextTick = el + period; }
+  }
+
+  lives = [LIVES, LIVES, LIVES]; out = []; round = 1; holder = 0; renderPlayers();
+  requestAnimationFrame(loop);
+  dialog({
+    eyebrow: '3 PLAYERS', title: 'BOMB RELAY',
+    text: '爆弾を持っている人は、画面の問題に答えたら次の人にスマホを渡す。まちがえると1秒おあずけ。いつ爆発するかはだれにもわかりません。爆発したときに持っていた人はライフが1つ減って、最後まで残った人の勝ち。',
+    buttons: [{ label: 'あそぶ', on: newGame }, { label: 'ゲーム選択へ', ghost: true, on: () => { location.href = 'index.html'; } }]
+  });
+})();
+</script>
+</body>
+</html>

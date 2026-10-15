@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Yacht</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pop.css?v=1">
+<style>
+  .wrap { width: min(100cqw, 460px); height: 100cqh; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 10px; }
+  .turn { --pc: var(--pink); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 900; font-size: 15px; }
+  .turn .dot { width: 20px; height: 20px; border-radius: 50%; background: var(--pc); border: 3px solid var(--ink); }
+  .dice { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .die { position: relative; aspect-ratio: 1; padding: 12%; display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); background: #fff; border: 3px solid var(--ink);
+    border-radius: 18%; box-shadow: 3px 4px 0 var(--ink); cursor: pointer; transition: transform .12s; touch-action: manipulation; }
+  .die i { width: 70%; aspect-ratio: 1; margin: auto; border-radius: 50%; background: var(--ink); visibility: hidden; }
+  .die.d1 i:nth-child(5), .die.d2 i:nth-child(1), .die.d2 i:nth-child(9), .die.d3 i:nth-child(1), .die.d3 i:nth-child(5), .die.d3 i:nth-child(9),
+  .die.d4 i:nth-child(1), .die.d4 i:nth-child(3), .die.d4 i:nth-child(7), .die.d4 i:nth-child(9),
+  .die.d5 i:nth-child(1), .die.d5 i:nth-child(3), .die.d5 i:nth-child(5), .die.d5 i:nth-child(7), .die.d5 i:nth-child(9),
+  .die.d6 i:nth-child(1), .die.d6 i:nth-child(3), .die.d6 i:nth-child(4), .die.d6 i:nth-child(6), .die.d6 i:nth-child(7), .die.d6 i:nth-child(9) { visibility: visible; }
+  .die.d1 i:nth-child(5) { background: var(--pink); }
+  .die.blank { background: var(--cream); }
+  .die.blank::after { content: "?"; position: absolute; inset: 0; display: grid; place-items: center; font: 700 22px var(--display); color: #b9b4c6; }
+  .die.held { background: var(--yellow); transform: translateY(-6px); }
+  .die.held::before { content: "キープ"; position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%); font-size: 10px; font-weight: 900; white-space: nowrap; }
+  .die.rolling { animation: roll .09s linear infinite; }
+  @keyframes roll { 50% { transform: rotate(14deg) scale(.92); } }
+  .acts { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; padding-top: 18px; }
+  .acts .pop-btn { flex: 1 1 0; min-width: 0; padding: 10px 8px; font-size: 15px; }
+  .sheetwrap { min-height: 0; overflow-y: auto; padding: 0; }
+  .sheet { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sheet th, .sheet td { border-bottom: 2px solid rgba(37, 33, 59, .12); padding: 0 4px; height: 29px; text-align: center; font-variant-numeric: tabular-nums; }
+  .sheet th:first-child, .sheet td:first-child { text-align: left; padding-left: 12px; font-weight: 800; white-space: nowrap; }
+  .sheet thead th { position: sticky; top: 0; z-index: 1; background: var(--cream); font-weight: 900; font-size: 12px; height: 34px; border-bottom: 3px solid var(--ink); }
+  .sheet thead th .nm { display: inline-flex; align-items: center; gap: 4px; }
+  .sheet thead th .nm::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: var(--pc); border: 2px solid var(--ink); }
+  .c0 { --pc: var(--pink); --ps: var(--pink-soft); } .c1 { --pc: var(--blue); --ps: var(--blue-soft); } .c2 { --pc: var(--yellow); --ps: var(--yellow-soft); }
+  .sheet .cur { background: var(--ps); }
+  .sheet td b { font-family: var(--display); font-weight: 700; font-size: 15px; }
+  .sheet .sub td { font-size: 11px; color: var(--soft); background: rgba(139, 92, 246, .06); }
+  .sheet tfoot td { border-top: 3px solid var(--ink); border-bottom: 0; height: 36px; font-family: var(--display); font-weight: 700; font-size: 18px; }
+  .pick { width: 100%; height: 25px; padding: 0; border: 2px dashed rgba(37, 33, 59, .35); border-radius: 8px; background: #fff; color: var(--soft);
+    font: 700 13px var(--display); cursor: pointer; touch-action: manipulation; }
+  .pick.zero { color: #c8c3d4; }
+  .pick.sel { background: var(--yellow); color: var(--ink); border: 2px solid var(--ink); }
+  @media (prefers-reduced-motion: reduce) { .die.rolling { animation: none; } }
+</style>
+</head>
+<body class="pop">
+<header class="pop-top">
+  <a class="pop-back" href="index.html" aria-label="ゲーム選択へ">←</a>
+  <h1 class="pop-title">YACHT</h1>
+  <div class="pop-chips"><div class="pop-chip"><span>ROUND</span><b id="round">1/12</b></div></div>
+</header>
+<main class="pop-stage">
+  <div class="wrap">
+    <div class="turn" id="turn"><span class="dot"></span><span id="turnTxt"></span></div>
+    <div class="dice" id="dice"></div>
+    <div class="acts"><button class="pop-btn" id="roll" type="button">ふる</button><button class="pop-btn ghost" id="ok" type="button" hidden>記入する</button></div>
+    <div class="sheetwrap pop-card"><table class="sheet" id="sheet" aria-label="点数表"></table></div>
+  </div>
+</main>
+<script src="pop.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const { sfx, buzz, store, dialog, toast, confetti } = Pop;
+  const $ = id => document.getElementById(id);
+  const NAMES = ['ピンク', 'ブルー', 'イエロー'], PCOL = ['var(--pink)', 'var(--blue)', 'var(--yellow)'];
+  const sum = d => d.reduce((a, b) => a + b, 0);
+  const counts = d => { const c = Array(7).fill(0); for (const v of d) c[v]++; return c; };
+  const run = (d, len) => { const s = new Set(d); return [[1, 2, 3, 4, 5, 6]].flatMap(a => a.slice(0, 7 - len).map((_, i) => a.slice(i, i + len))).some(r => r.every(v => s.has(v))); };
+  const UPPER = [1, 2, 3, 4, 5, 6].map(n => ({ k: 'u' + n, n: `${n}の目`, f: d => d.filter(v => v === n).length * n }));
+  const LOWER = [
+    { k: 'choice', n: 'チョイス', f: d => sum(d) },
+    { k: 'four', n: 'フォーカード', f: d => counts(d).some(c => c >= 4) ? sum(d) : 0 },
+    { k: 'full', n: 'フルハウス', f: d => { const c = counts(d).filter(Boolean).sort(); return c.length === 2 && c[0] === 2 ? sum(d) : 0; } },
+    { k: 'ss', n: 'S.ストレート', f: d => run(d, 4) ? 15 : 0 },
+    { k: 'bs', n: 'B.ストレート', f: d => run(d, 5) ? 30 : 0 },
+    { k: 'yacht', n: 'ヨット', f: d => counts(d).some(c => c === 5) ? 50 : 0 }
+  ];
+  const ALL = [...UPPER, ...LOWER];
+  let sheets, cur, dice, held, rollsLeft, rolling = false, sel = null, round, best = store.get('yacht.best', 0);
+
+  const upper = p => UPPER.reduce((a, c) => a + (sheets[p][c.k] ?? 0), 0);
+  const bonus = p => upper(p) >= 63 ? 35 : 0;
+  const total = p => ALL.reduce((a, c) => a + (sheets[p][c.k] ?? 0), 0) + bonus(p);
+
+  function renderDice() {
+    $('dice').innerHTML = dice.map((v, i) => `<button type="button" class="die ${v ? 'd' + v : 'blank'}${held[i] ? ' held' : ''}${rolling && !held[i] ? ' rolling' : ''}" data-i="${i}" aria-label="${v ? v + 'の目' : 'まだふっていない'}${held[i] ? '、キープ中' : ''}">${'<i></i>'.repeat(9)}</button>`).join('');
+  }
+  function renderSheet() {
+    const rolled = dice[0] > 0 && !rolling;
+    const head = `<thead><tr><th>役</th>${[0, 1, 2].map(p => `<th class="c${p}${p === cur ? ' cur' : ''}"><span class="nm">${NAMES[p]}</span></th>`).join('')}</tr></thead>`;
+    const cell = (p, c) => {
+      const v = sheets[p][c.k];
+      if (v != null) return `<td class="c${p}${p === cur ? ' cur' : ''}"><b>${v}</b></td>`;
+      if (p === cur && rolled) { const s = c.f(dice); return `<td class="c${p} cur"><button type="button" class="pick${s ? '' : ' zero'}${sel === c.k ? ' sel' : ''}" data-k="${c.k}">${s}</button></td>`; }
+      return `<td class="c${p}${p === cur ? ' cur' : ''}"></td>`;
+    };
+    const row = c => `<tr><td>${c.n}</td>${[0, 1, 2].map(p => cell(p, c)).join('')}</tr>`;
+    const sub = `<tr class="sub"><td>ボーナス（63点で+35）</td>${[0, 1, 2].map(p => `<td class="c${p}${p === cur ? ' cur' : ''}">${bonus(p) ? '+35' : upper(p) + '/63'}</td>`).join('')}</tr>`;
+    const foot = `<tfoot><tr><td>合計</td>${[0, 1, 2].map(p => `<td class="c${p}${p === cur ? ' cur' : ''}">${total(p)}</td>`).join('')}</tr></tfoot>`;
+    $('sheet').innerHTML = head + '<tbody>' + UPPER.map(row).join('') + sub + LOWER.map(row).join('') + '</tbody>' + foot;
+  }
+  function renderControls() {
+    const t = $('turn'); t.style.setProperty('--pc', PCOL[cur]);
+    $('turnTxt').textContent = dice[0] ? `${NAMES[cur]}の番` : `${NAMES[cur]}の番。サイコロをふろう`;
+    const roll = $('roll');
+    roll.textContent = rollsLeft === 3 ? 'ふる' : rollsLeft > 0 ? `ふりなおす（あと${rollsLeft}回）` : 'もうふれません';
+    roll.disabled = rollsLeft === 0 || rolling || (rollsLeft < 3 && held.every(Boolean));
+    const ok = $('ok');
+    if (sel) { const c = ALL.find(x => x.k === sel); ok.hidden = false; ok.textContent = `${c.n}に ${c.f(dice)}点`; }
+    else ok.hidden = true;
+    $('round').textContent = `${Math.min(round, 12)}/12`;
+  }
+  function render() { renderDice(); renderSheet(); renderControls(); }
+
+  function roll() {
+    if (rolling || rollsLeft === 0) return;
+    sel = null; rolling = true; rollsLeft--;
+    sfx.roll(); buzz(20);
+    let n = 0;
+    const iv = setInterval(() => {
+      dice = dice.map((v, i) => held[i] && v ? v : 1 + Math.floor(Math.random() * 6));
+      renderDice();
+      if (++n >= 7) {
+        clearInterval(iv); rolling = false; render();
+        const c = counts(dice);
+        if (c.some(x => x === 5)) { toast('YACHT!'); sfx.win(); }
+        else if (run(dice, 5)) toast('B.ストレート！', 'blue');
+      }
+    }, 70);
+    render();
+  }
+  function commit() {
+    if (!sel || rolling) return;
+    const c = ALL.find(x => x.k === sel), v = c.f(dice), p = cur;
+    const hadBonus = bonus(p) > 0;
+    sheets[p][sel] = v;
+    sfx.place(); buzz(15);
+    if (!hadBonus && bonus(p)) toast('ボーナス +35', 'mint');
+    // 次の人へ。全員が12個埋めたら終わり
+    const next = (p + 1) % 3;
+    if (next === 0) round++;
+    if (round > 12) return finish();
+    cur = next; dice = Array(5).fill(0); held = Array(5).fill(false); rollsLeft = 3; sel = null;
+    render();
+    toast(`次は${NAMES[cur]}`, ['pink', 'blue', ''][cur]);
+  }
+  function finish() {
+    sel = null; render();
+    const rank = [0, 1, 2].map(p => [p, total(p)]).sort((a, b) => b[1] - a[1]);
+    const top = rank[0][1], winners = rank.filter(r => r[1] === top).map(r => NAMES[r[0]]);
+    if (top > best) { best = top; store.set('yacht.best', best); }
+    confetti(); sfx.win();
+    dialog({
+      eyebrow: 'GAME SET', title: winners.length > 1 ? `${winners.join('と')}が同点で1位！` : `${winners[0]}の勝ち！`,
+      text: `この端末での最高点は ${best} 点です。`,
+      stats: rank.map(([p, s], k) => [`${k + 1}位 ${NAMES[p]}`, s, k === 0]),
+      buttons: [{ label: 'もう一回', on: newGame }, { label: 'ゲーム選択へ', ghost: true, on: () => { location.href = 'index.html'; } }]
+    });
+  }
+  function newGame() {
+    sheets = [{}, {}, {}]; cur = 0; dice = Array(5).fill(0); held = Array(5).fill(false); rollsLeft = 3; sel = null; round = 1;
+    render();
+  }
+  $('dice').addEventListener('click', e => {
+    const b = e.target.closest('.die');
+    if (!b || rolling || !dice[0] || rollsLeft === 0) return;
+    const i = +b.dataset.i; held[i] = !held[i]; sfx.tap(); render();
+  });
+  $('sheet').addEventListener('click', e => {
+    const b = e.target.closest('.pick'); if (!b || rolling) return;
+    // 1回目のタップで選んで、もう一度タップか「記入する」で確定
+    if (sel === b.dataset.k) return commit();
+    sel = b.dataset.k; sfx.tap(); render();
+  });
+  $('roll').addEventListener('click', roll);
+  $('ok').addEventListener('click', commit);
+
+  newGame();
+  dialog({
+    eyebrow: '3 PLAYERS', title: 'YACHT',
+    text: '順番にスマホを回して遊ぶサイコロゲーム。1回の番でサイコロを3回までふれて、残したいサイコロはタップでキープ。最後に表の中から役を1つ選んで点を記入します。12個の役を全部埋めたとき、合計点が一番高い人の勝ち。',
+    stats: [['この端末の最高点', best]],
+    buttons: [{ label: 'あそぶ' }, { label: 'ゲーム選択へ', ghost: true, on: () => { location.href = 'index.html'; } }]
+  });
+})();
+</script>
+</body>
+</html>

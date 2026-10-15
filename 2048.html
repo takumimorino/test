@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>2048</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="pop.css?v=1">
+<style>
+  body.pop { touch-action: none; }
+  .bd { --gap: 2.6%; --cell: calc((100% - 5 * var(--gap)) / 4); position: relative; width: min(100cqw - 8px, 100cqh - 8px, 460px); aspect-ratio: 1;
+    background: var(--purple-soft); container-type: size; touch-action: none; }
+  .slot, .tile { position: absolute; width: var(--cell); height: var(--cell); left: calc(var(--gap) + var(--c) * (var(--cell) + var(--gap)));
+    top: calc(var(--gap) + var(--r) * (var(--cell) + var(--gap))); border-radius: 14px; }
+  .slot { background: rgba(255, 255, 255, .55); border: 2px dashed rgba(37, 33, 59, .18); }
+  .tile { display: grid; place-items: center; border: 3px solid var(--ink); box-shadow: 3px 4px 0 var(--ink); font-family: var(--display); font-weight: 700;
+    font-size: 11cqw; line-height: 1; transition: left .11s ease-out, top .11s ease-out; z-index: 2; }
+  .tile.d3 { font-size: 8.6cqw; } .tile.d4 { font-size: 6.8cqw; } .tile.d5 { font-size: 5.4cqw; }
+  .tile.new { animation: appear .16s ease-out .06s both; }
+  .tile.merge { animation: merge .18s ease-out; z-index: 3; }
+  @keyframes appear { from { transform: scale(.1); } }
+  @keyframes merge { 50% { transform: scale(1.18); } }
+  .v2 { background: #fffaf0; } .v4 { background: #fff3bd; } .v8 { background: #ffd447; } .v16 { background: #ff934f; }
+  .v32 { background: #ff7ab0; } .v64 { background: #ff5f9e; } .v128 { background: #b197fc; } .v256 { background: #8b5cf6; }
+  .v512 { background: #7fb2ff; } .v1024 { background: #4d96ff; } .v2048 { background: #70e1b2; box-shadow: 0 0 0 4px var(--yellow), 3px 4px 0 4px var(--ink); }
+  .vbig { background: var(--ink); color: var(--yellow); }
+  .v32, .v64, .v128, .v256, .v512, .v1024, .v2048 { color: #fff; -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; }
+  @media (prefers-reduced-motion: reduce) { .tile { transition: none; } .tile.new, .tile.merge { animation: none; } }
+</style>
+</head>
+<body class="pop">
+<header class="pop-top">
+  <a class="pop-back" href="index.html" aria-label="ゲーム選択へ">←</a>
+  <h1 class="pop-title">2048</h1>
+  <div class="pop-chips"><div class="pop-chip"><span>SCORE</span><b id="score">0</b></div><div class="pop-chip"><span>BEST</span><b id="best">0</b></div></div>
+</header>
+<main class="pop-stage"><div class="bd pop-card" id="bd" aria-label="2048の盤。上下左右にスワイプ"></div></main>
+<footer class="pop-foot">
+  <button class="pop-btn ghost" id="undo" type="button" disabled>↶ 1手もどす</button>
+  <button class="pop-btn" id="newg" type="button">新しいゲーム</button>
+</footer>
+<script src="pop.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const { sfx, buzz, store, dialog, confetti, isOpen } = Pop;
+  const bd = document.getElementById('bd');
+  for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+    const s = document.createElement('div'); s.className = 'slot'; s.style.setProperty('--r', r); s.style.setProperty('--c', c); bd.append(s);
+  }
+  let grid, score, best = store.get('2048.best', 0), won, undo = null, busy = false, nextId = 1;
+  const $ = id => document.getElementById(id);
+  $('best').textContent = best;
+
+  function tileEl(t) {
+    const el = document.createElement('div');
+    el.style.setProperty('--r', t.r); el.style.setProperty('--c', t.c);
+    t.el = el; paint(t); bd.append(el);
+    return el;
+  }
+  function paint(t) {
+    const d = String(t.v).length;
+    t.el.className = `tile ${t.v > 2048 ? 'vbig' : 'v' + t.v}${d >= 3 ? ' d' + Math.min(d, 5) : ''}`;
+    t.el.textContent = t.v;
+  }
+  function addRandom() {
+    const empty = [];
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (!grid[r][c]) empty.push([r, c]);
+    if (!empty.length) return;
+    const [r, c] = empty[(Math.random() * empty.length) | 0];
+    const t = { id: nextId++, v: Math.random() < .9 ? 2 : 4, r, c };
+    grid[r][c] = t; tileEl(t); t.el.classList.add('new');
+  }
+  function load(values, sc) {
+    for (const el of bd.querySelectorAll('.tile')) el.remove();
+    grid = Array.from({ length: 4 }, () => Array(4).fill(null));
+    values.forEach((v, k) => { if (v) { const t = { id: nextId++, v, r: (k / 4) | 0, c: k % 4 }; grid[t.r][t.c] = t; tileEl(t); } });
+    score = sc; setScore();
+  }
+  const values = () => grid.flat().map(t => t ? t.v : 0);
+  function save() { store.set('2048.state', { cells: values(), score, won }); }
+  function setScore() {
+    $('score').textContent = score;
+    if (score > best) { best = score; store.set('2048.best', best); $('best').textContent = best; }
+  }
+  function newGame() {
+    load(Array(16).fill(0), 0); won = false; undo = null; $('undo').disabled = true;
+    addRandom(); addRandom(); save();
+  }
+  const VEC = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] };
+  function canMove() {
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) {
+      const t = grid[r][c];
+      if (!t) return true;
+      if (c < 3 && grid[r][c + 1] && grid[r][c + 1].v === t.v) return true;
+      if (r < 3 && grid[r + 1][c] && grid[r + 1][c].v === t.v) return true;
+    }
+    return false;
+  }
+  function move(dir) {
+    if (busy || isOpen()) return;
+    const [dr, dc] = VEC[dir];
+    const rows = dr > 0 ? [3, 2, 1, 0] : [0, 1, 2, 3], cols = dc > 0 ? [3, 2, 1, 0] : [0, 1, 2, 3];
+    const before = { cells: values(), score };
+    const merged = new Set(), dead = [];
+    let moved = false, gained = 0;
+    for (const r of rows) for (const c of cols) {
+      const t = grid[r][c]; if (!t) continue;
+      let nr = r, nc = c;
+      while (nr + dr >= 0 && nr + dr < 4 && nc + dc >= 0 && nc + dc < 4 && !grid[nr + dr][nc + dc]) { nr += dr; nc += dc; }
+      const br = nr + dr, bc = nc + dc, other = br >= 0 && br < 4 && bc >= 0 && bc < 4 ? grid[br][bc] : null;
+      if (other && other.v === t.v && !merged.has(other.id)) {
+        grid[r][c] = null; t.r = br; t.c = bc; dead.push(t);
+        other.v *= 2; merged.add(other.id); gained += other.v; moved = true;
+      } else if (nr !== r || nc !== c) {
+        grid[r][c] = null; grid[nr][nc] = t; t.r = nr; t.c = nc; moved = true;
+      }
+    }
+    if (!moved) return;
+    undo = before; $('undo').disabled = false;
+    busy = true;
+    for (const t of [...grid.flat().filter(Boolean), ...dead]) { t.el.style.setProperty('--r', t.r); t.el.style.setProperty('--c', t.c); t.el.classList.remove('new'); }
+    score += gained; setScore();
+    if (gained) { sfx.pop(1 + Math.min(Math.log2(gained) - 2, 9) * .06); buzz(10); } else sfx.tap();
+    setTimeout(() => {
+      for (const t of dead) t.el.remove();
+      for (const t of grid.flat()) if (t && merged.has(t.id)) { paint(t); void t.el.offsetWidth; t.el.classList.add('merge'); }
+      addRandom(); save(); busy = false;
+      if (!won && grid.flat().some(t => t && t.v >= 2048)) {
+        won = true; save(); confetti(); sfx.win();
+        dialog({ eyebrow: 'すごい！', title: '2048 達成！', text: 'まだ続けて、もっと大きな数をめざせます。', stats: [['スコア', score, true]],
+          buttons: [{ label: 'つづける' }, { label: '新しいゲーム', ghost: true, on: newGame }] });
+      } else if (!canMove()) {
+        store.set('2048.state', null); sfx.bad(); buzz([50, 40, 90]);
+        const top = Math.max(...values());
+        dialog({ eyebrow: 'GAME OVER', title: 'もう動かせません', text: score >= best ? '自己ベスト更新！' : '同じ数どうしを、できるだけ隅に集めるのがコツ。',
+          stats: [['スコア', score, score >= best], ['ベスト', best], ['最大のタイル', top]],
+          buttons: [{ label: 'もう一回', on: newGame }, { label: '1手もどす', ghost: true, on: doUndo }] });
+      }
+    }, 120);
+  }
+  function doUndo() {
+    if (!undo || busy) return;
+    load(undo.cells, undo.score); undo = null; $('undo').disabled = true; save(); sfx.tap();
+  }
+  // スワイプ（指でもマウスでも）
+  let sx = 0, sy = 0, sid = null;
+  bd.addEventListener('pointerdown', e => { e.preventDefault(); sid = e.pointerId; sx = e.clientX; sy = e.clientY; });
+  addEventListener('pointerup', e => {
+    if (e.pointerId !== sid) return; sid = null;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+    move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+  });
+  addEventListener('keydown', e => {
+    const d = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', KeyW: 'up', KeyS: 'down', KeyA: 'left', KeyD: 'right' }[e.code];
+    if (d) { e.preventDefault(); move(d); }
+  });
+  $('undo').addEventListener('click', doUndo);
+  $('newg').addEventListener('click', () => dialog({ title: '新しいゲーム？', text: 'いまの盤面は消えます。', buttons: [{ label: 'はじめる', on: newGame }, { label: 'やめる', ghost: true }] }));
+
+  const saved = store.get('2048.state', null);
+  if (saved && saved.cells && saved.cells.some(Boolean)) { load(saved.cells, saved.score || 0); won = !!saved.won; }
+  else {
+    newGame();
+    dialog({ eyebrow: '1 PLAYER', title: '2048', text: '上下左右にスワイプすると、全部のタイルが動きます。同じ数どうしがぶつかると合体。2048のタイルを作ろう！',
+      stats: [['ベスト', best]], buttons: [{ label: 'スタート' }] });
+  }
+})();
+</script>
+</body>
+</html>
