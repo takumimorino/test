@@ -1,0 +1,114 @@
+/* 2人用ゲームの共通スタイル。トップページ／JOKER と同じポップな見た目にそろえる。
+   手前（画面の下）の人はピンク、奥（画面の上）の人はブルー。奥側の表示は180°回して、向かい合って読めるようにする。 */
+:root {
+  --sky: #7bdff2; --cream: #fffaf0; --paper: #fff; --ink: #25213b; --soft: #665f7a;
+  --pink: #ff5f9e; --pink-soft: #ffd3e5; --blue: #4d96ff; --blue-soft: #d6e6ff;
+  --yellow: #ffd447; --mint: #70e1b2; --purple: #8b5cf6; --orange: #ff934f;
+  --display: "Fredoka", "Hiragino Maru Gothic ProN", "Hiragino Sans", sans-serif;
+  --body: "Nunito", "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+  color-scheme: light;
+}
+*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body.duo {
+  height: 100vh; height: 100dvh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+  font-family: var(--body); color: var(--ink); background: var(--sky); overflow: hidden; position: relative;
+  touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+body.duo::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle at 9% 14%, rgba(255,255,255,.8) 0 5px, transparent 6px),
+    radial-gradient(circle at 88% 20%, rgba(255,212,71,.9) 0 7px, transparent 8px),
+    radial-gradient(circle at 18% 74%, rgba(255,95,158,.45) 0 9px, transparent 10px),
+    radial-gradient(circle at 92% 83%, rgba(112,225,178,.75) 0 11px, transparent 12px),
+    linear-gradient(145deg, #95e7f4, var(--sky) 42%, #8ed7ff);
+}
+
+/* ---------- プレイヤーバー（画面の上下の端） ---------- */
+.duo-bar {
+  --pc: var(--pink); --ps: var(--pink-soft);
+  position: relative; z-index: 3; margin: 8px 10px; min-height: 56px; padding: 7px 12px;
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: 10px;
+  background: var(--cream); border: 3px solid var(--ink); border-radius: 18px; box-shadow: 4px 5px 0 var(--ink);
+  transition: background-color .2s, transform .2s;
+}
+.duo-bar.p1 { margin-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+.duo-bar.p2 { --pc: var(--blue); --ps: var(--blue-soft); margin-top: calc(8px + env(safe-area-inset-top, 0px)); transform: rotate(180deg); }
+.duo-bar.active { background: var(--ps); }
+.duo-who { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 15px; }
+.duo-dot { width: 28px; height: 28px; border-radius: 50%; background: var(--pc); border: 3px solid var(--ink); flex: none; display: grid; place-items: center; font-size: 13px; line-height: 1; }
+.duo-bar.active .duo-dot { animation: duo-bob .9s ease-in-out infinite; }
+.duo-status { text-align: center; font-weight: 900; font-size: 15px; line-height: 1.3; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.duo-bar:not(.active) .duo-status { color: var(--soft); font-weight: 800; }
+.duo-score { font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1; min-width: 1.6ch; text-align: right; font-variant-numeric: tabular-nums; }
+.duo-score:empty { display: none; }
+@keyframes duo-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+
+/* ---------- 中央のゲーム領域 ---------- */
+.duo-stage { position: relative; z-index: 1; min-height: 0; min-width: 0; display: grid; place-items: center; padding: 4px 10px; container-type: size; }
+.duo-card { background: var(--cream); border: 4px solid var(--ink); border-radius: 26px; box-shadow: 7px 8px 0 var(--ink); }
+
+/* ---------- 大きな文字（GOAL! や 3・2・1） ---------- */
+.duo-flash { position: fixed; left: 0; right: 0; height: 50%; z-index: 6; display: grid; place-content: center; justify-items: center; gap: 8px; text-align: center; pointer-events: none; opacity: 0; }
+.duo-flash.p1 { bottom: 0; }
+.duo-flash.p2 { top: 0; transform: rotate(180deg); }
+.duo-flash.show { animation: duo-pop 1.4s ease-out forwards; }
+.duo-ft { font-family: var(--display); font-weight: 700; font-size: clamp(52px, 17vw, 110px); line-height: 1; color: var(--yellow);
+  -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 5px 6px 0 var(--ink); }
+.duo-flash.pink .duo-ft { color: var(--pink); }
+.duo-flash.blue .duo-ft { color: var(--blue); }
+.duo-flash.gray .duo-ft { color: #fff; }
+.duo-fs { font-weight: 900; font-size: 15px; background: var(--cream); border: 3px solid var(--ink); border-radius: 999px; padding: 4px 14px; box-shadow: 3px 3px 0 var(--ink); }
+.duo-fs:empty { display: none; }
+@keyframes duo-pop { 0% { opacity: 0; transform: scale(1.4); } 12% { opacity: 1; transform: scale(1); } 75% { opacity: 1; } 100% { opacity: 0; } }
+.duo-flash.p2.show { animation-name: duo-pop2; }
+@keyframes duo-pop2 { 0% { opacity: 0; transform: rotate(180deg) scale(1.4); } 12% { opacity: 1; transform: rotate(180deg) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: rotate(180deg); } }
+
+/* ---------- メニューボタン（各プレイヤーのバーの右端） ---------- */
+.duo-mbtn { width: 36px; height: 36px; padding: 0; border-radius: 50%; background: #fff; border: 3px solid var(--ink); box-shadow: 2px 2px 0 var(--ink);
+  font: 700 17px/1 var(--display); color: var(--ink); cursor: pointer; }
+.duo-mbtn:active { transform: translate(1px, 2px); box-shadow: 0 0 0 var(--ink); }
+.duo-mbtn:focus-visible, .duo-btn:focus-visible, .duo-chip:focus-visible { outline: 3px solid var(--purple); outline-offset: 2px; }
+
+/* ---------- スタート／結果／メニュー（上下に1枚ずつ） ---------- */
+.duo-ov { position: fixed; inset: 0; z-index: 8; display: grid; grid-template-rows: 1fr 1fr; background: rgba(37, 33, 59, .5); }
+.duo-half { --pc: var(--pink); --ps: var(--pink-soft); min-height: 0; overflow-y: auto; display: grid; place-items: center; padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); }
+.duo-half.p2 { --pc: var(--blue); --ps: var(--blue-soft); transform: rotate(180deg); padding-bottom: calc(10px + env(safe-area-inset-top, 0px)); }
+/* 結果のときは、最後の盤面が見えるようにパネルを各自の手前に寄せて背景を薄くする */
+.duo-ov.result { background: rgba(37, 33, 59, .18); }
+.duo-ov.result .duo-half { align-items: end; }
+.duo-ov.result .duo-panel { gap: 7px; padding: 12px 16px; }
+.duo-panel { width: min(400px, 100%); display: grid; gap: 9px; padding: 15px 18px; background: var(--cream); border: 3px solid var(--ink);
+  border-radius: 24px; box-shadow: 6px 7px 0 var(--ink); animation: duo-in .25s ease-out; }
+@keyframes duo-in { from { transform: scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+.duo-eyebrow { justify-self: start; font-size: 10px; font-weight: 900; letter-spacing: .1em; background: var(--ps); border: 2px solid var(--ink); border-radius: 999px; padding: 3px 10px; }
+.duo-title { margin: 0; font-family: var(--display); font-weight: 700; font-size: clamp(28px, 8vw, 40px); line-height: 1.05; text-shadow: 3px 3px 0 var(--yellow); }
+.duo-title.win { color: var(--pc); -webkit-text-stroke: 2px var(--ink); paint-order: stroke fill; text-shadow: 4px 4px 0 var(--ink); font-size: clamp(40px, 12vw, 58px); }
+.duo-title.lose { color: var(--soft); text-shadow: none; font-size: clamp(36px, 11vw, 50px); }
+.duo-text { margin: 0; font-size: 13px; line-height: 1.6; font-weight: 700; color: var(--soft); }
+.duo-text:empty { display: none; }
+.duo-opts { display: grid; gap: 7px; }
+.duo-opts:empty { display: none; }
+.duo-opt { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.duo-opt-l { width: 100%; font-size: 11px; font-weight: 900; color: var(--soft); }
+.duo-chip { font: 800 13px var(--body); color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.duo-chip.on { background: var(--yellow); box-shadow: 2px 2px 0 var(--ink); }
+.duo-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.duo-btn { font: 900 16px var(--body); color: var(--ink); background: var(--pc); border: 3px solid var(--ink); border-radius: 14px; padding: 10px 20px;
+  box-shadow: 3px 4px 0 var(--ink); cursor: pointer; }
+.duo-btn:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+.duo-btn.wait, .duo-btn.ghost { background: #fff; }
+.duo-note { margin: 0; justify-self: start; font-size: 12px; font-weight: 900; background: var(--yellow); border: 2px solid var(--ink); border-radius: 999px; padding: 2px 10px; }
+.duo-note:empty { display: none; }
+.duo-links { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 11px; font-weight: 800; color: var(--soft); }
+.duo-links a, .duo-links button { color: var(--soft); font: inherit; background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+@media (max-height: 640px) {
+  .duo-panel { gap: 7px; padding: 12px 14px; }
+  .duo-text { font-size: 12px; line-height: 1.5; }
+  .duo-btn { padding: 8px 16px; font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .duo-bar.active .duo-dot, .duo-panel { animation: none; }
+  .duo-flash.show, .duo-flash.p2.show { animation-duration: .01s; opacity: 1; }
+}

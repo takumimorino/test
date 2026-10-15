@@ -1,40 +1,217 @@
-<!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no"><title>Air Hockey | 2 Players</title>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Air Hockey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="duo.css?v=1">
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#10192c;color:white;font-family:system-ui,sans-serif;touch-action:none}canvas{display:block;width:100%;height:100%;touch-action:none}.hud{position:fixed;inset:0;pointer-events:none}.topbar{position:absolute;left:12px;right:12px;top:max(10px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center}.back,.reset{pointer-events:auto;background:#ffffff22;border:1px solid #ffffff66;color:#fff;border-radius:12px;padding:9px 13px;font-weight:700;text-decoration:none;font-size:13px}.score{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:24px;font-weight:900;letter-spacing:8px;text-shadow:0 2px 8px #000}.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#071322a8;pointer-events:auto}.panel{max-width:310px;width:85%;text-align:center;padding:28px 20px;background:#1d2e48;border:2px solid #91ddff;border-radius:24px;box-shadow:0 12px 40px #0009}.panel h1{font-size:30px;margin:0 0 12px}.panel p{line-height:1.7;font-size:14px}.panel button{background:#ffd447;border:0;border-radius:14px;padding:13px 28px;font-size:18px;font-weight:900;margin-top:12px}.hidden{display:none!important}
-</style></head><body><canvas id="rink"></canvas><div class="hud"><div class="topbar"><a class="back" href="index.html">← ゲーム選択</a><button class="reset" id="reset">リスタート</button></div><div class="score" id="score">0 : 0</div><div class="overlay" id="overlay"><div class="panel"><h1 id="heading">🏒 AIR HOCKEY</h1><p id="message">スマホの上下に分かれて対戦！<br>自分の陣地でパドルを指で動かそう。<br>先に7点で勝利！</p><button id="start">スタート</button></div></div></div>
+  body.duo { touch-action: none; }
+  #rink { display: block; width: 100cqw; height: 100cqh; touch-action: none; background: #eef8ff; }
+</style>
+</head>
+<body>
+<main class="duo-stage">
+  <canvas id="rink" class="duo-card" aria-label="エアホッケーのリンク"></canvas>
+</main>
+<script src="duo.js?v=1"></script>
 <script>
-(()=>{'use strict';
-const canvas=document.getElementById('rink'),ctx=canvas.getContext('2d'),scoreEl=document.getElementById('score'),overlay=document.getElementById('overlay'),heading=document.getElementById('heading'),message=document.getElementById('message'),start=document.getElementById('start');
-let W=0,H=0,scale=1,playing=false,last=0,serve=0,points=[0,0],puck,players=[],pointers=new Map();
-const clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),rand=(a,b)=>a+Math.random()*(b-a);
-function size(){const oldW=W,oldH=H;W=innerWidth;H=innerHeight;scale=devicePixelRatio||1;canvas.width=Math.round(W*scale);canvas.height=Math.round(H*scale);ctx.setTransform(scale,0,0,scale,0,0);if(!players.length){players=[{x:W/2,y:H*.18,color:'#ff789d'},{x:W/2,y:H*.82,color:'#6be7ff'}];puck={x:W/2,y:H/2,vx:0,vy:0};}else{for(const p of players){p.x*=W/oldW;p.y*=H/oldH;}puck.x*=W/oldW;puck.y*=H/oldH;} }
-const radius=()=>clamp(W*.075,21,35),ballR=()=>clamp(W*.034,11,17),goalW=()=>W*.43;
-function resetPuck(dir){puck.x=W/2;puck.y=H/2;puck.vx=rand(-95,95);puck.vy=dir*clamp(H*.39,260,430);serve=.65;}
-function newGame(){points=[0,0];players[0].x=players[1].x=W/2;players[0].y=H*.18;players[1].y=H*.82;scoreEl.textContent='0 : 0';resetPuck(Math.random()<.5?-1:1);playing=true;overlay.classList.add('hidden');last=performance.now();}
-function show(title,msg,button){playing=false;heading.textContent=title;message.textContent=msg;start.textContent=button;overlay.classList.remove('hidden');}
-start.addEventListener('click',newGame);document.getElementById('reset').addEventListener('click',()=>show('もう一度？','先に7点取った方が勝ち！','リスタート'));
-function move(i,x,y){const r=radius(),half=H/2;players[i].x=clamp(x,r+5,W-r-5);players[i].y=i===0?clamp(y,r+54,half-r-6):clamp(y,half+r+6,H-r-12);}
-function locate(e){const rect=canvas.getBoundingClientRect();return {x:e.clientX-rect.left,y:e.clientY-rect.top};}
-canvas.addEventListener('pointerdown',e=>{e.preventDefault();if(!playing)return;const p=locate(e),i=p.y<H/2?0:1;if([...pointers.values()].includes(i))return;pointers.set(e.pointerId,i);canvas.setPointerCapture(e.pointerId);move(i,p.x,p.y);});
-canvas.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;e.preventDefault();const p=locate(e);move(pointers.get(e.pointerId),p.x,p.y);});
-for(const type of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(type,e=>pointers.delete(e.pointerId));
-function goal(i){points[i]++;scoreEl.textContent=points[0]+' : '+points[1];if(points[i]>=7){show(i===0?'上プレイヤーの勝利！':'下プレイヤーの勝利！','おめでとう！もう一度対戦しよう。','もう一度遊ぶ');return;}resetPuck(i===0?1:-1);}
-function step(dt){if(!playing)return;if(serve>0){serve-=dt;return;}const br=ballR(),pr=radius();const ox=puck.x,oy=puck.y;puck.x+=puck.vx*dt;puck.y+=puck.vy*dt;
-if(puck.x<br){puck.x=br;puck.vx=Math.abs(puck.vx);}if(puck.x>W-br){puck.x=W-br;puck.vx=-Math.abs(puck.vx);}
-if(puck.y<br){if(Math.abs(puck.x-W/2)<goalW()/2){goal(1);return;}puck.y=br;puck.vy=Math.abs(puck.vy);}
-if(puck.y>H-br){if(Math.abs(puck.x-W/2)<goalW()/2){goal(0);return;}puck.y=H-br;puck.vy=-Math.abs(puck.vy);}
-for(const p of players){let dx=puck.x-p.x,dy=puck.y-p.y,dist=Math.hypot(dx,dy),min=br+pr;if(dist<min){if(dist<.001){dx=0;dy=p.y<H/2?1:-1;dist=1;}const nx=dx/dist,ny=dy/dist;puck.x=p.x+nx*(min+.5);puck.y=p.y+ny*(min+.5);const speed=clamp(Math.hypot(puck.vx,puck.vy)*1.045+25,310,Math.max(550,H*.85));puck.vx=nx*speed;puck.vy=ny*speed;}}
-const max=clamp(H*.9,480,850),v=Math.hypot(puck.vx,puck.vy);if(v>max){puck.vx*=max/v;puck.vy*=max/v;}
-}
-function circle(x,y,r,fill,stroke,line=2){ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=line;ctx.stroke();}}
-function draw(){ctx.fillStyle='#10253b';ctx.fillRect(0,0,W,H);ctx.fillStyle='#162f4a';ctx.fillRect(9,9,W-18,H-18);ctx.strokeStyle='#8ddaff88';ctx.lineWidth=3;ctx.strokeRect(9,9,W-18,H-18);ctx.beginPath();ctx.moveTo(9,H/2);ctx.lineTo(W-9,H/2);ctx.stroke();circle(W/2,H/2,Math.min(W*.23,85),'#ffffff05','#8ddaff88',3);
-const g=goalW();ctx.fillStyle='#ff789d';ctx.fillRect((W-g)/2,0,g,10);ctx.fillStyle='#6be7ff';ctx.fillRect((W-g)/2,H-10,g,10);
-ctx.textAlign='center';ctx.font='bold 15px system-ui';ctx.fillStyle='#ffabc4';ctx.save();ctx.translate(W/2,H*.29);ctx.rotate(Math.PI);ctx.fillText('TOP PLAYER',0,0);ctx.restore();ctx.fillStyle='#a4f3ff';ctx.fillText('BOTTOM PLAYER',W/2,H*.71);
-for(const p of players){circle(p.x,p.y,radius()+4,'#0005');circle(p.x,p.y,radius(),p.color,'#ffffffaa',3);circle(p.x,p.y,radius()*.52,'#ffffff55');}
-circle(puck.x+2,puck.y+3,ballR()+2,'#0008');circle(puck.x,puck.y,ballR(),'#f7fbff','#85cfff',3);
-}
-function frame(now){const dt=Math.min((now-last)/1000||0,.035);last=now;const slices=Math.max(1,Math.ceil(dt/.008));for(let i=0;i<slices;i++)step(dt/slices);draw();requestAnimationFrame(frame);}
-addEventListener('resize',size);size();requestAnimationFrame(frame);
+(() => {
+  'use strict';
+  const cv = document.getElementById('rink'), ctx = cv.getContext('2d');
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const COL = { ink: '#25213b', pink: '#ff5f9e', blue: '#4d96ff', yellow: '#ffd447', purple: '#8b5cf6', rink: '#eef8ff' };
+  let W = 300, H = 500, dpr = 1, PR = 30, BR = 14, GOAL_W = 120;
+  // paddles[0] = 手前（ピンク、下の半分）、paddles[1] = 奥（ブルー、上の半分）
+  const paddles = [0, 1].map(i => ({ x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, pid: null }));
+  const puck = { x: 0, y: 0, vx: 0, vy: 0 };
+  let points = [0, 0], target = 7, freeze = 0, trail = [], sparks = [], last = performance.now(), wallT = 0;
+
+  function size() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    const ow = W, oh = H;
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    PR = clamp(W * .085, 22, 42); BR = clamp(W * .042, 11, 20); GOAL_W = W * .42;
+    const sx = W / ow, sy = H / oh;
+    for (const p of paddles) { p.x *= sx; p.y *= sy; p.tx *= sx; p.ty *= sy; }
+    puck.x *= sx; puck.y *= sy;
+  }
+  function home() {
+    paddles[0].x = paddles[0].tx = W / 2; paddles[0].y = paddles[0].ty = H * .84;
+    paddles[1].x = paddles[1].tx = W / 2; paddles[1].y = paddles[1].ty = H * .16;
+    for (const p of paddles) { p.vx = p.vy = 0; p.pid = null; }
+  }
+  function placePuck(side) {
+    puck.x = W / 2; puck.y = side === 0 ? H * .66 : side === 1 ? H * .34 : H / 2;
+    puck.vx = puck.vy = 0; trail = [];
+  }
+  function reset(t) {
+    target = +t; points = [0, 0];
+    home(); placePuck(-1); freeze = 0;
+    for (const i of [0, 1]) { duo.score(i, 0); duo.status(i, `${target}点先取`); }
+  }
+  // 自分の半分の中だけでパドルを動かせる
+  function aim(i, x, y) {
+    const p = paddles[i], m = 3;
+    p.tx = clamp(x, PR + m, W - PR - m);
+    p.ty = i === 0 ? clamp(y, H / 2 + PR, H - PR - m) : clamp(y, PR + m, H / 2 - PR);
+  }
+  const local = e => { const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left - cv.clientLeft, y: e.clientY - r.top - cv.clientTop }; };
+  cv.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (!duo.playing && duo.state !== 'countdown') return;
+    const p = local(e), i = p.y > H / 2 ? 0 : 1;
+    if (paddles[i].pid !== null) return;
+    paddles[i].pid = e.pointerId; cv.setPointerCapture(e.pointerId); aim(i, p.x, p.y);
+  });
+  cv.addEventListener('pointermove', e => {
+    const i = paddles.findIndex(p => p.pid === e.pointerId);
+    if (i < 0) return;
+    const p = local(e); aim(i, p.x, p.y);
+  });
+  for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+    cv.addEventListener(t, e => { for (const p of paddles) if (p.pid === e.pointerId) p.pid = null; });
+  }
+
+  function burst(x, y, color, n, sp) {
+    for (let k = 0; k < n; k++) {
+      const a = Math.random() * Math.PI * 2, s = sp * (.4 + Math.random() * .8);
+      sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: .35 + Math.random() * .25, color });
+    }
+  }
+  function goal(scorer) {
+    points[scorer]++;
+    duo.score(scorer, points[scorer]);
+    duo.sfx.goal(); duo.buzz([40, 30, 80]);
+    burst(puck.x, scorer === 0 ? 0 : H, scorer === 0 ? COL.blue : COL.pink, 30, 420);
+    if (points[scorer] >= target) {
+      placePuck(-1);
+      return duo.end(scorer, `${Math.max(...points)} 対 ${Math.min(...points)}`, 1200);
+    }
+    duo.flash(scorer, 'GOAL!', `${points[scorer]} 点目`, scorer === 0 ? 'pink' : 'blue');
+    duo.flash(1 - scorer, '失点…', '', 'gray');
+    for (const i of [0, 1]) duo.status(i, points[i] === target - 1 ? 'マッチポイント！' : `${target}点先取`);
+    placePuck(1 - scorer); freeze = .8;
+  }
+  function step(h) {
+    for (const p of paddles) {
+      const ox = p.x, oy = p.y, max = 3200 * h;
+      const dx = p.tx - p.x, dy = p.ty - p.y, d = Math.hypot(dx, dy);
+      const k = d > max ? max / d : 1;
+      p.x += dx * k; p.y += dy * k;
+      p.vx = (p.x - ox) / h; p.vy = (p.y - oy) / h;
+    }
+    if (freeze > 0) { freeze -= h; return; }
+    const damp = Math.exp(-.35 * h);
+    puck.vx *= damp; puck.vy *= damp;
+    puck.x += puck.vx * h; puck.y += puck.vy * h;
+    const inMouth = Math.abs(puck.x - W / 2) < GOAL_W / 2 - BR * .3;
+    if (puck.x < BR) { puck.x = BR; puck.vx = Math.abs(puck.vx) * .9; wallHit(); }
+    if (puck.x > W - BR) { puck.x = W - BR; puck.vx = -Math.abs(puck.vx) * .9; wallHit(); }
+    if (puck.y < BR && !inMouth) { puck.y = BR; puck.vy = Math.abs(puck.vy) * .9; wallHit(); }
+    if (puck.y > H - BR && !inMouth) { puck.y = H - BR; puck.vy = -Math.abs(puck.vy) * .9; wallHit(); }
+    if (puck.y < -BR) return goal(0);
+    if (puck.y > H + BR) return goal(1);
+    for (const p of paddles) {
+      let dx = puck.x - p.x, dy = puck.y - p.y, dist = Math.hypot(dx, dy);
+      const min = PR + BR;
+      if (dist >= min) continue;
+      if (dist < 1e-6) { dx = 0; dy = p === paddles[0] ? -1 : 1; dist = 1; }
+      const nx = dx / dist, ny = dy / dist;
+      puck.x = p.x + nx * min; puck.y = p.y + ny * min;
+      // パドルの速さを打球に乗せる（相対速度で反射）
+      const vr = (puck.vx - p.vx) * nx + (puck.vy - p.vy) * ny;
+      if (vr < 0) {
+        puck.vx -= 1.9 * vr * nx; puck.vy -= 1.9 * vr * ny;
+        const power = clamp(-vr / 1400, .15, 1);
+        duo.sfx.hit(power); burst(puck.x - nx * BR, puck.y - ny * BR, COL.yellow, 6 + (power * 10 | 0), 160 + power * 300);
+      }
+      puck.x = clamp(puck.x, BR, W - BR);
+    }
+    const vmax = clamp(H * 2.6, 900, 2200), v = Math.hypot(puck.vx, puck.vy);
+    if (v > vmax) { puck.vx *= vmax / v; puck.vy *= vmax / v; }
+  }
+  function wallHit() { if (performance.now() - wallT > 60) { wallT = performance.now(); duo.sfx.hit(.1); } }
+
+  function circle(x, y, r, fill, stroke, lw) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+    if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+    if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+  }
+  function draw() {
+    ctx.fillStyle = COL.rink; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(77,150,255,.12)';
+    for (let y = 14; y < H; y += 24) for (let x = 14; x < W; x += 24) { ctx.beginPath(); ctx.arc(x, y, 1.6, 0, Math.PI * 2); ctx.fill(); }
+    // 陣地の色
+    ctx.fillStyle = 'rgba(77,150,255,.08)'; ctx.fillRect(0, 0, W, H / 2);
+    ctx.fillStyle = 'rgba(255,95,158,.08)'; ctx.fillRect(0, H / 2, W, H / 2);
+    ctx.strokeStyle = COL.purple; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(0, H / 2); ctx.lineTo(W, H / 2); ctx.stroke();
+    circle(W / 2, H / 2, Math.min(W, H) * .17, null, COL.purple, 4);
+    circle(W / 2, H / 2, 6, COL.purple);
+    // ゴール前の半円とゴール口
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(77,150,255,.55)'; ctx.beginPath(); ctx.arc(W / 2, 0, GOAL_W / 2, 0, Math.PI); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,95,158,.55)'; ctx.beginPath(); ctx.arc(W / 2, H, GOAL_W / 2, Math.PI, Math.PI * 2); ctx.stroke();
+    for (const [y, c] of [[0, COL.blue], [H - 10, COL.pink]]) {
+      ctx.fillStyle = c; ctx.fillRect((W - GOAL_W) / 2, y, GOAL_W, 10);
+      ctx.strokeStyle = COL.ink; ctx.lineWidth = 3; ctx.strokeRect((W - GOAL_W) / 2, y, GOAL_W, 10);
+    }
+    // パックの軌跡
+    for (let k = 0; k < trail.length; k++) {
+      const t = trail[k], a = (k + 1) / trail.length;
+      circle(t.x, t.y, BR * (.4 + .5 * a), `rgba(139,92,246,${.18 * a})`);
+    }
+    for (const s of sparks) circle(s.x, s.y, 3 * Math.max(.2, s.life / .6), s.color, COL.ink, 1);
+    // パドル
+    paddles.forEach((p, i) => {
+      const c = i === 0 ? COL.pink : COL.blue;
+      circle(p.x + 3, p.y + 5, PR, 'rgba(37,33,59,.28)');
+      circle(p.x, p.y, PR, c, COL.ink, 4);
+      circle(p.x, p.y, PR * .62, null, 'rgba(255,255,255,.55)', 4);
+      circle(p.x, p.y, PR * .3, '#fff', COL.ink, 3);
+    });
+    // パック
+    circle(puck.x + 2, puck.y + 4, BR, 'rgba(37,33,59,.3)');
+    circle(puck.x, puck.y, BR, COL.ink);
+    circle(puck.x, puck.y, BR * .62, null, COL.yellow, 3);
+    if (freeze > 0) { ctx.globalAlpha = .5 + .5 * Math.sin(performance.now() / 90); circle(puck.x, puck.y, BR + 6, null, COL.yellow, 3); ctx.globalAlpha = 1; }
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(.04, (now - last) / 1000); last = now;
+    if (duo.playing) {
+      const n = Math.max(1, Math.ceil(dt / .004));
+      for (let k = 0; k < n && duo.playing; k++) step(dt / n);
+      trail.push({ x: puck.x, y: puck.y }); if (trail.length > 10) trail.shift();
+    } else if (duo.state === 'countdown') {
+      for (const p of paddles) { p.x = p.tx; p.y = p.ty; }
+    }
+    for (let k = sparks.length - 1; k >= 0; k--) {
+      const s = sparks[k]; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= .9; s.vy *= .9; s.life -= dt;
+      if (s.life <= 0) sparks.splice(k, 1);
+    }
+    draw();
+  }
+
+  const duo = Duo({
+    id: 'airhockey', title: 'AIR HOCKEY', realtime: true,
+    rules: '自分の陣地の中で、指でパドルを動かそう。パドルを速く振るほど強く打てます。相手のゴールにパックを入れたら1点。',
+    options: [{ key: 'target', label: '何点先取？', value: 7, choices: [[5, '5点'], [7, '7点'], [10, '10点']] }],
+    onPrepare(opts, starter) { reset(opts.target); placePuck(-1); puck.vy = starter === 0 ? 160 : -160; },
+    onStart() { last = performance.now(); },
+    onResume() { last = performance.now(); },
+    onMenu() { reset(duo.opts.target); }
+  });
+  new ResizeObserver(size).observe(cv);
+  size(); home(); placePuck(-1);
+  requestAnimationFrame(frame);
 })();
-</script></body></html>
+</script>
+</body>
+</html>

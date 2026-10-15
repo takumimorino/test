@@ -1,1 +1,96 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>⭕ Tic Tac Toe</title><style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;min-height:100dvh;background:#131a32;color:white;font-family:system-ui,sans-serif;text-align:center;padding:calc(env(safe-area-inset-top) + 18px) 14px 24px}a{color:#b9d8ff}button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:12px 20px;font-weight:800}h1{margin:18px 0 8px}p{line-height:1.6}.wrap{max-width:500px;margin:auto}.back{display:block;text-align:left}.status{font-size:22px;font-weight:900;min-height:60px;margin:20px 0}.reset{background:#ffd447;color:#171a2d;margin:20px} .board{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:390px;margin:22px auto}.cell{aspect-ratio:1;background:#263653;color:#fff;font-size:clamp(48px,15vw,82px);border:2px solid #526a8d;padding:0}.cell.x{color:#ff8fab}.cell.o{color:#75e5f4}.turn{color:#ffd447}</style></head><body><main class="wrap"><a class="back" href="index.html">← ゲーム選択</a><h1>⭕ Tic Tac Toe</h1><p>1台のスマホで交互にマスをタップ。<br>縦・横・斜めに3つ並べたら勝ち！</p><div id="status" class="status turn"></div><div id="board" class="board"></div><button id="reset" class="reset">もう一度</button></main><script>let cells=Array(9).fill(''),turn='X',over=false;const board=document.getElementById('board'),status=document.getElementById('status');const wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];function render(){board.innerHTML='';cells.forEach((v,i)=>{const b=document.createElement('button');b.className='cell '+(v==='X'?'x':v==='O'?'o':'');b.textContent=v==='X'?'×':v==='O'?'○':'';b.setAttribute('aria-label',(i+1)+'番のマス');b.onclick=()=>play(i);board.append(b)});}function play(i){if(over||cells[i])return;cells[i]=turn;const won=wins.some(line=>line.every(j=>cells[j]===turn));if(won){status.textContent=(turn==='X'?'ピンク ×':'ブルー ○')+' の勝ち！';over=true;}else if(cells.every(Boolean)){status.textContent='引き分け！';over=true;}else{turn=turn==='X'?'O':'X';status.textContent=(turn==='X'?'ピンク ×':'ブルー ○')+' の番';}render();}function reset(){cells=Array(9).fill('');turn='X';over=false;status.textContent='ピンク × の番';render()}document.getElementById('reset').onclick=reset;reset();</script></body></html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Tic Tac Toe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="duo.css?v=1">
+<style>
+  .ttt { width: min(100cqw - 8px, 100cqh - 8px, 440px); aspect-ratio: 1; padding: clamp(8px, 3cqmin, 14px);
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(6px, 2.4cqmin, 12px); }
+  .cell { display: grid; place-items: center; padding: 10%; background: #fff; border: 3px solid var(--ink); border-radius: 18px;
+    box-shadow: 3px 4px 0 var(--ink); cursor: pointer; transition: background-color .15s; }
+  .cell:active { transform: translate(2px, 3px); box-shadow: 1px 1px 0 var(--ink); }
+  .cell svg { width: 100%; height: 100%; overflow: visible; }
+  .mk { transform-origin: 50px 50px; animation: mk-in .24s cubic-bezier(.3, 1.6, .6, 1); }
+  @keyframes mk-in { from { transform: scale(.2); opacity: 0; } }
+  .ink { stroke: var(--ink); stroke-width: 24; stroke-linecap: round; fill: none; }
+  .pk { stroke: var(--pink); stroke-width: 13; stroke-linecap: round; fill: none; }
+  .bl { stroke: var(--blue); stroke-width: 13; stroke-linecap: round; fill: none; }
+  .cell.old svg { opacity: .32; }
+  .cell.win { background: var(--yellow); animation: win .5s ease-in-out infinite alternate; }
+  @keyframes win { to { transform: scale(1.05); } }
+  @media (prefers-reduced-motion: reduce) { .mk, .cell.win { animation: none; } }
+</style>
+</head>
+<body>
+<main class="duo-stage">
+  <div class="ttt duo-card" id="board" role="grid" aria-label="三目並べの盤"></div>
+</main>
+<script src="duo.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+  const MARK = [
+    '<g class="mk"><path class="ink" d="M27 27 L73 73 M73 27 L27 73"/><path class="pk" d="M27 27 L73 73 M73 27 L27 73"/></g>',
+    '<g class="mk"><circle class="ink" cx="50" cy="50" r="25"/><circle class="bl" cx="50" cy="50" r="25"/></g>'
+  ];
+  const board = document.getElementById('board');
+  const cellsEl = [];
+  for (let i = 0; i < 9; i++) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'cell'; b.setAttribute('aria-label', `${i + 1}番のマス`);
+    b.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true"></svg>';
+    b.addEventListener('click', () => play(i));
+    board.append(b); cellsEl.push(b);
+  }
+  let cells, queue, cur, over, fade;
+
+  const duo = Duo({
+    id: 'tictactoe', title: 'TIC TAC TOE',
+    rules: '交互にマスをタップして、縦・横・斜めに3つそろえたら勝ち。手前のピンクが ×、奥のブルーが ○。負けた人が次の先攻です。',
+    options: [{ key: 'mode', label: 'ルール', value: 'classic', choices: [['classic', 'ふつう'], ['fade', '3つまで（4つ目を置くと一番古い印が消える）']] }],
+    onStart(opts, starter) { reset(opts.mode === 'fade'); cur = starter; duo.turn(cur, '先攻！あなたの番'); draw(); },
+    onMenu() { reset(false); draw(); }
+  });
+  duo.dot(0, '✕'); duo.dot(1, '◯');
+
+  function reset(f) {
+    cells = Array(9).fill(-1); queue = [[], []]; over = false; fade = f;
+    for (const i of [0, 1]) duo.score(i, duo.tally[i]);
+  }
+  function draw(winLine) {
+    cellsEl.forEach((b, i) => {
+      const v = cells[i], svg = b.firstChild;
+      const want = v < 0 ? '' : MARK[v];
+      if (svg.dataset.v !== String(v)) { svg.innerHTML = want; svg.dataset.v = String(v); }
+      b.classList.toggle('old', fade && !over && queue[cur].length === 3 && queue[cur][0] === i);
+      b.classList.toggle('win', !!winLine && winLine.includes(i));
+      b.setAttribute('aria-label', `${i + 1}番のマス` + (v < 0 ? '' : v === 0 ? ' ×' : ' ○'));
+    });
+  }
+  function play(i) {
+    if (!duo.playing || over || cells[i] >= 0) return;
+    if (fade && queue[cur].length === 3) cells[queue[cur].shift()] = -1;
+    cells[i] = cur; queue[cur].push(i);
+    duo.sfx.place(); duo.buzz(15);
+    const line = LINES.find(l => l.every(k => cells[k] === cur));
+    if (line) {
+      over = true; draw(line);
+      duo.end(cur, '3つそろいました！');
+      for (const k of [0, 1]) duo.score(k, duo.tally[k]);
+      return;
+    }
+    if (!fade && cells.every(v => v >= 0)) { over = true; draw(); duo.end(-1, 'マスが全部うまりました。'); return; }
+    cur = 1 - cur;
+    duo.turn(cur, fade && queue[cur].length === 3 ? 'あなたの番（薄い印が消える）' : null);
+    draw();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,1 +1,115 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>⚡ Tap Battle</title><style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;min-height:100dvh;background:#131a32;color:white;font-family:system-ui,sans-serif;text-align:center;padding:calc(env(safe-area-inset-top) + 18px) 14px 24px}a{color:#b9d8ff}button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:12px 20px;font-weight:800}h1{margin:18px 0 8px}p{line-height:1.6}.wrap{max-width:500px;margin:auto}.back{display:block;text-align:left}.status{font-size:22px;font-weight:900;min-height:60px;margin:20px 0}.reset{background:#ffd447;color:#171a2d;margin:20px} .arena{height:min(65dvh,600px);min-height:370px;display:flex;flex-direction:column;border-radius:22px;overflow:hidden;border:3px solid #fff4;margin:15px auto;touch-action:manipulation}.zone{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;user-select:none;touch-action:manipulation;font-weight:900;font-size:27px;cursor:pointer}.zone strong{font-size:62px}.top{background:#a83e69;transform:rotate(180deg)}.bottom{background:#197a9a}.middle{background:#111b35;padding:9px;font-size:21px;font-weight:900}.zone:active{filter:brightness(1.2)}.status{min-height:35px;margin:8px}</style></head><body><main class="wrap"><a class="back" href="index.html">← ゲーム選択</a><h1>⚡ Tap Battle</h1><p>スマホの上下で連打勝負！<br>10秒間で多くタップした人が勝ち。</p><div id="status" class="status">スタートを押して準備！</div><div class="arena"><div id="top" class="zone top">上プレイヤー<strong id="a">0</strong>連打！</div><div id="timer" class="middle">10.0 秒</div><div id="bottom" class="zone bottom">下プレイヤー<strong id="b">0</strong>連打！</div></div><button class="reset" id="start">スタート</button></main><script>let score=[0,0],running=false,end=0,raf=0;const status=document.getElementById('status'),timer=document.getElementById('timer'),start=document.getElementById('start');function hit(i){if(!running)return;score[i]++;document.getElementById(i===0?'a':'b').textContent=score[i];}document.getElementById('top').addEventListener('pointerdown',e=>{e.preventDefault();hit(0)});document.getElementById('bottom').addEventListener('pointerdown',e=>{e.preventDefault();hit(1)});function tick(){const remain=Math.max(0,(end-performance.now())/1000);timer.textContent=remain.toFixed(1)+' 秒';if(remain<=0){running=false;status.textContent=score[0]===score[1]?'引き分け！':score[0]>score[1]?'上プレイヤーの勝利！':'下プレイヤーの勝利！';start.textContent='もう一度';return;}raf=requestAnimationFrame(tick)}start.onclick=()=>{cancelAnimationFrame(raf);score=[0,0];document.getElementById('a').textContent='0';document.getElementById('b').textContent='0';running=true;end=performance.now()+10000;status.textContent='連打スタート！';start.textContent='やり直す';tick()};</script></body></html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Tap Battle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="duo.css?v=1">
+<style>
+  body.duo { touch-action: none; }
+  .tug { position: relative; width: 100cqw; height: 100cqh; overflow: hidden; border-radius: 26px; }
+  .zone { position: absolute; left: 0; right: 0; display: grid; place-content: center; text-align: center; transition: height .08s linear; overflow: hidden; }
+  .zone.top { top: 0; background: var(--blue-soft); }
+  .zone.bot { bottom: 0; background: var(--pink-soft); }
+  .zone .in { display: grid; gap: 2px; justify-items: center; }
+  .zone.top .in { transform: rotate(180deg); }
+  .cnt { font-family: var(--display); font-weight: 700; font-size: clamp(54px, 18cqw, 96px); line-height: 1; -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; text-shadow: 4px 5px 0 var(--ink); }
+  .zone.top .cnt { color: var(--blue); }
+  .zone.bot .cnt { color: var(--pink); }
+  .msg { font-weight: 900; font-size: 15px; }
+  .tps { font-size: 12px; font-weight: 800; color: var(--soft); min-height: 1.2em; }
+  .rope { position: absolute; left: -10px; right: -10px; height: 0; border-top: 6px solid var(--ink); transition: top .08s linear; z-index: 2; }
+  .knot { position: absolute; left: 50%; top: -3px; transform: translate(-50%, -50%); display: flex; gap: 8px; align-items: center; }
+  .flag { width: 34px; height: 34px; border-radius: 50%; background: var(--yellow); border: 4px solid var(--ink); box-shadow: 2px 3px 0 var(--ink); }
+  .time { font-family: var(--display); font-weight: 700; font-size: 16px; background: var(--cream); border: 3px solid var(--ink); border-radius: 999px; padding: 1px 10px; min-width: 52px; text-align: center; }
+  .time.b { transform: rotate(180deg); }
+  .ripple { position: absolute; width: 70px; height: 70px; margin: -35px; border-radius: 50%; border: 4px solid var(--ink); pointer-events: none; animation: rip .35s ease-out forwards; z-index: 3; }
+  @keyframes rip { from { transform: scale(.3); opacity: .9; } to { transform: scale(1.3); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .ripple { display: none; } }
+</style>
+</head>
+<body>
+<main class="duo-stage">
+  <div class="tug duo-card" id="tug">
+    <div class="zone top" id="z1"><div class="in"><div class="cnt" id="c1">0</div><div class="msg">連打で押し返せ！</div><div class="tps" id="t1"></div></div></div>
+    <div class="zone bot" id="z0"><div class="in"><div class="cnt" id="c0">0</div><div class="msg">連打で押し返せ！</div><div class="tps" id="t0"></div></div></div>
+    <div class="rope" id="rope"><div class="knot"><span class="time b" id="tm1">20.0</span><span class="flag"></span><span class="time" id="tm0">20.0</span></div></div>
+  </div>
+</main>
+<script src="duo.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const STEP = .022;
+  const $ = id => document.getElementById(id);
+  const tug = $('tug');
+  // pos は手前（ピンク）の陣地の割合。1 になればピンク、0 になればブルーの勝ち
+  let pos = .5, taps = [0, 0], recent = [[], []], limit = 20, left = 20, last = 0, raf = 0;
+
+  const duo = Duo({
+    id: 'tug', title: 'TAP BATTLE', realtime: true,
+    rules: '自分の側の画面を連打して、真ん中の線を相手側へ押し込もう。相手の端まで押し切るか、時間切れのときに陣地が広いほうの勝ち。',
+    options: [{ key: 'limit', label: '制限時間', value: 20, choices: [[20, '20秒'], [30, '30秒'], [0, 'なし（押し切るまで）']] }],
+    onPrepare(opts) { reset(opts.limit); },
+    onStart() { last = performance.now(); loop(); },
+    onResume() { last = performance.now(); loop(); },
+    onMenu() { reset(duo.opts.limit); }
+  });
+
+  function reset(lim) {
+    pos = .5; taps = [0, 0]; recent = [[], []]; limit = +lim; left = limit;
+    draw();
+  }
+  function draw() {
+    $('z0').style.height = (pos * 100) + '%';
+    $('z1').style.height = ((1 - pos) * 100) + '%';
+    $('rope').style.top = ((1 - pos) * 100) + '%';
+    $('c0').textContent = taps[0]; $('c1').textContent = taps[1];
+    const t = limit ? left.toFixed(1) : '∞';
+    $('tm0').textContent = t; $('tm1').textContent = t;
+    const now = performance.now();
+    for (const i of [0, 1]) {
+      recent[i] = recent[i].filter(s => now - s < 1000);
+      $('t' + i).textContent = duo.playing && recent[i].length ? `1秒に ${recent[i].length} 回` : '';
+      duo.score(i, taps[i]);
+    }
+  }
+  function loop() {
+    cancelAnimationFrame(raf);
+    const tick = now => {
+      if (!duo.playing) return;
+      const dt = Math.min(.1, (now - last) / 1000); last = now;
+      if (limit) {
+        left = Math.max(0, left - dt);
+        if (left <= 0) {
+          draw();
+          const w = Math.abs(pos - .5) < 1e-9 ? -1 : pos > .5 ? 0 : 1;
+          return duo.end(w, w < 0 ? '陣地がちょうど半分ずつ！' : `時間切れ。陣地 ${Math.round(Math.max(pos, 1 - pos) * 100)}% で勝ち`);
+        }
+      }
+      draw();
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  }
+  tug.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (!duo.playing) return;
+    const i = e.clientY < innerHeight / 2 ? 1 : 0;
+    taps[i]++; recent[i].push(performance.now());
+    pos = Math.min(1, Math.max(0, pos + (i === 0 ? STEP : -STEP)));
+    const r = tug.getBoundingClientRect(), rp = document.createElement('span');
+    rp.className = 'ripple'; rp.style.left = (e.clientX - r.left) + 'px'; rp.style.top = (e.clientY - r.top) + 'px';
+    rp.style.background = i ? 'var(--blue)' : 'var(--pink)';
+    tug.append(rp); setTimeout(() => rp.remove(), 360);
+    duo.sfx.tap();
+    draw();
+    if (pos >= 1 || pos <= 0) duo.end(i, `${taps[i]} 回の連打で押し切りました！`);
+  });
+})();
+</script>
+</body>
+</html>

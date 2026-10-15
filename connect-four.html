@@ -1,1 +1,102 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>🔴 Connect Four</title><style>*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;min-height:100dvh;background:#131a32;color:white;font-family:system-ui,sans-serif;text-align:center;padding:calc(env(safe-area-inset-top) + 18px) 14px 24px}a{color:#b9d8ff}button{font:inherit;cursor:pointer;border:0;border-radius:14px;padding:12px 20px;font-weight:800}h1{margin:18px 0 8px}p{line-height:1.6}.wrap{max-width:500px;margin:auto}.back{display:block;text-align:left}.status{font-size:22px;font-weight:900;min-height:60px;margin:20px 0}.reset{background:#ffd447;color:#171a2d;margin:20px} .board{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;background:#2467c9;border-radius:16px;padding:9px;margin:24px auto;max-width:470px}.hole{aspect-ratio:1;border-radius:50%;background:#111a31;border:2px solid #ffffff44;padding:0;min-width:0}.hole.red{background:#ff6287}.hole.yellow{background:#ffda4b}.hole:disabled{opacity:1}.status{color:#fff}</style></head><body><main class="wrap"><a class="back" href="index.html">← ゲーム選択</a><h1>🔴 Connect Four</h1><p>列をタップしてコマを落とそう！<br>縦・横・斜めに4つ並べたら勝ち。</p><div class="status" id="status"></div><div class="board" id="board"></div><button class="reset" id="reset">もう一度</button></main><script>let grid,turn,over;const board=document.getElementById('board'),status=document.getElementById('status');function reset(){grid=Array.from({length:6},()=>Array(7).fill(0));turn=1;over=false;status.textContent='🔴 赤の番';render()}function win(r,c){for(const [dr,dc] of [[1,0],[0,1],[1,1],[1,-1]]){let count=1;for(const sign of [-1,1]){let y=r+dr*sign,x=c+dc*sign;while(y>=0&&y<6&&x>=0&&x<7&&grid[y][x]===turn){count++;y+=dr*sign;x+=dc*sign;}}if(count>=4)return true;}return false;}function play(c){if(over)return;let r=5;while(r>=0&&grid[r][c])r--;if(r<0)return;grid[r][c]=turn;if(win(r,c)){over=true;status.textContent=(turn===1?'🔴 赤':'🟡 黄')+'の勝ち！';}else if(grid[0].every(Boolean)){over=true;status.textContent='引き分け！';}else{turn=3-turn;status.textContent=turn===1?'🔴 赤の番':'🟡 黄の番';}render();}function render(){board.innerHTML='';for(let r=0;r<6;r++)for(let c=0;c<7;c++){const b=document.createElement('button');b.className='hole '+(grid[r][c]===1?'red':grid[r][c]===2?'yellow':'');b.setAttribute('aria-label',(c+1)+'列');b.onclick=()=>play(c);board.append(b);}}document.getElementById('reset').onclick=reset;reset();</script></body></html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Connect Four</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="duo.css?v=1">
+<style>
+  .c4 { width: min(100cqw - 8px, (100cqh - 8px) * 7 / 6, 480px); aspect-ratio: 7 / 6; padding: 2.4%; background: var(--purple);
+    display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 1.6%; }
+  .hole { position: relative; padding: 0; border-radius: 50%; background: var(--cream); border: 3px solid var(--ink); cursor: pointer; min-width: 0; }
+  .hole.hi { background: #fff3bd; }
+  .disc { position: absolute; inset: 5%; border-radius: 50%; border: 3px solid var(--ink); }
+  .disc.p0 { background: var(--pink); }
+  .disc.p1 { background: var(--blue); }
+  .disc::after { content: ""; position: absolute; inset: 22%; border-radius: 50%; border: 3px solid rgba(255, 255, 255, .5); }
+  .disc.drop { animation: drop calc(.12s + var(--fall) * .045s) cubic-bezier(.45, 0, 1, 1); }
+  @keyframes drop { from { transform: translateY(calc(var(--fall) * -117%)); } }
+  .disc.win { animation: win .45s ease-in-out infinite alternate; box-shadow: 0 0 0 4px var(--yellow); }
+  @keyframes win { to { transform: scale(1.12); } }
+  .hole.last .disc::after { border-color: var(--yellow); }
+  @media (prefers-reduced-motion: reduce) { .disc.drop, .disc.win { animation: none; } }
+</style>
+</head>
+<body>
+<main class="duo-stage">
+  <div class="c4 duo-card" id="board" role="grid" aria-label="コネクトフォーの盤"></div>
+</main>
+<script src="duo.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const R = 6, C = 7;
+  const board = document.getElementById('board');
+  const holes = [];
+  for (let r = 0; r < R; r++) {
+    holes.push([]);
+    for (let c = 0; c < C; c++) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'hole'; b.setAttribute('aria-label', `${c + 1}列目`);
+      b.addEventListener('click', () => play(c));
+      b.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') highlight(c); });
+      b.addEventListener('pointerleave', () => highlight(-1));
+      board.append(b); holes[r].push(b);
+    }
+  }
+  let grid, cur, over, moves;
+
+  const duo = Duo({
+    id: 'connect4', title: 'CONNECT FOUR',
+    rules: '列をタップしてコマを落とし、縦・横・斜めに4つそろえたら勝ち。コマは手前（ピンク側）に向かって落ちます。負けた人が次の先攻です。',
+    onStart(opts, starter) { reset(); cur = starter; duo.turn(cur, '先攻！あなたの番'); },
+    onMenu() { reset(); }
+  });
+
+  function reset() {
+    grid = Array.from({ length: R }, () => Array(C).fill(-1)); over = false; moves = 0;
+    for (const row of holes) for (const h of row) { h.innerHTML = ''; h.classList.remove('last', 'hi'); }
+    for (const i of [0, 1]) duo.score(i, duo.tally[i]);
+  }
+  function highlight(c) { for (const row of holes) row.forEach((h, k) => h.classList.toggle('hi', k === c && duo.playing && !over)); }
+  function line(r, c) {
+    for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+      const cells = [[r, c]];
+      for (const s of [-1, 1]) {
+        let y = r + dr * s, x = c + dc * s;
+        while (y >= 0 && y < R && x >= 0 && x < C && grid[y][x] === cur) { cells.push([y, x]); y += dr * s; x += dc * s; }
+      }
+      if (cells.length >= 4) return cells;
+    }
+    return null;
+  }
+  function play(c) {
+    if (!duo.playing || over) return;
+    let r = R - 1;
+    while (r >= 0 && grid[r][c] >= 0) r--;
+    if (r < 0) { duo.sfx.bad(); return; }
+    grid[r][c] = cur; moves++;
+    for (const row of holes) for (const h of row) h.classList.remove('last');
+    const d = document.createElement('span');
+    d.className = `disc p${cur} drop`; d.style.setProperty('--fall', r + 1);
+    holes[r][c].append(d); holes[r][c].classList.add('last');
+    holes[r][c].setAttribute('aria-label', `${c + 1}列目 ${duo.names[cur]}`);
+    setTimeout(() => { duo.sfx.place(); duo.buzz(12); }, 120 + (r + 1) * 45);
+    const won = line(r, c);
+    if (won) {
+      over = true; highlight(-1);
+      setTimeout(() => { for (const [y, x] of won) holes[y][x].firstChild.classList.add('win'); }, 380);
+      duo.end(cur, '4つそろいました！', 1300);
+      for (const i of [0, 1]) duo.score(i, duo.tally[i]);
+      return;
+    }
+    if (moves === R * C) { over = true; duo.end(-1, '盤がいっぱいになりました。', 1100); return; }
+    cur = 1 - cur; duo.turn(cur);
+  }
+})();
+</script>
+</body>
+</html>

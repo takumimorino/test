@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Light Cycles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="duo.css?v=1">
+<style>
+  body.duo { touch-action: none; }
+  .lc { width: 100cqw; height: 100cqh; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px; }
+  .ctl { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ctl.p2 { transform: rotate(180deg); }
+  .turn { font: 900 18px var(--body); color: var(--ink); background: #fff; border: 3px solid var(--ink); border-radius: 18px; box-shadow: 3px 4px 0 var(--ink);
+    padding: 14px 8px; touch-action: none; cursor: pointer; }
+  .ctl.p1 .turn { background: var(--pink-soft); } .ctl.p2 .turn { background: var(--blue-soft); }
+  .turn.held { transform: translate(2px, 3px); box-shadow: 1px 1px 0 var(--ink); filter: brightness(.95); }
+  #arena { display: block; width: 100%; height: 100%; touch-action: none; background: var(--cream); }
+</style>
+</head>
+<body>
+<main class="duo-stage">
+  <div class="lc">
+    <div class="ctl p2"><button class="turn" data-p="1" data-t="L" type="button">↶ 左</button><button class="turn" data-p="1" data-t="R" type="button">右 ↷</button></div>
+    <canvas id="arena" class="duo-card" aria-label="光の軌跡バトルのフィールド"></canvas>
+    <div class="ctl p1"><button class="turn" data-p="0" data-t="L" type="button">↶ 左</button><button class="turn" data-p="0" data-t="R" type="button">右 ↷</button></div>
+  </div>
+</main>
+<script src="duo.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const cv = document.getElementById('arena'), ctx = cv.getContext('2d');
+  const DIRS = [[0, -1], [1, 0], [0, 1], [-1, 0]];  // 上・右・下・左
+  const COL = { ink: '#25213b', pink: '#ff5f9e', blue: '#4d96ff', pinkS: '#ffd3e5', blueS: '#d6e6ff', cream: '#fffaf0', yellow: '#ffd447' };
+  let W = 300, H = 400, dpr = 1, cell = 12, cols = 24, rows = 30, ox = 0, oy = 0;
+  let grid, bikes, points = [0, 0], target = 3, phase = 'idle', acc = 0, elapsed = 0, pauseT = 0, sparks = [], last = performance.now(), crash = null;
+
+  function size() {
+    dpr = Math.min(devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (phase === 'idle' || !grid) { newRound(); phase = 'idle'; }
+  }
+  function layout() {
+    cell = Math.max(9, Math.min(16, Math.floor(Math.min(W, H) / 26)));
+    cols = Math.floor((W - 8) / cell); rows = Math.floor((H - 8) / cell);
+    ox = (W - cols * cell) / 2; oy = (H - rows * cell) / 2;
+  }
+  // 手前と奥で点対称の位置からスタート
+  function newRound() {
+    layout();
+    grid = new Uint8Array(cols * rows);
+    const x0 = Math.floor(cols * .3), y0 = rows - 3;
+    bikes = [
+      { x: x0, y: y0, dir: 0, alive: true, q: [] },
+      { x: cols - 1 - x0, y: rows - 1 - y0, dir: 2, alive: true, q: [] }
+    ];
+    bikes.forEach((b, i) => { grid[b.y * cols + b.x] = i + 1; });
+    acc = 0; elapsed = 0; crash = null; phase = 'run';
+  }
+  function step() {
+    const next = bikes.map(b => {
+      if (b.q.length) b.dir = (b.dir + (b.q.shift() === 'L' ? 3 : 1)) % 4;
+      return [b.x + DIRS[b.dir][0], b.y + DIRS[b.dir][1]];
+    });
+    const dead = next.map(([x, y]) => x < 0 || y < 0 || x >= cols || y >= rows || grid[y * cols + x] !== 0);
+    if (next[0][0] === next[1][0] && next[0][1] === next[1][1]) dead[0] = dead[1] = true;  // 正面衝突
+    bikes.forEach((b, i) => {
+      if (dead[i]) { b.alive = false; return; }
+      b.x = next[i][0]; b.y = next[i][1]; grid[b.y * cols + b.x] = i + 1;
+    });
+    if (dead[0] || dead[1]) endRound(dead);
+    else duo.sfx.hit(.05);
+  }
+  function endRound(dead) {
+    phase = 'pause'; pauseT = 1.8;
+    bikes.forEach((b, i) => {
+      if (!dead[i]) return;
+      const [dx, dy] = DIRS[b.dir];
+      burst(ox + (b.x + .5 + dx * .5) * cell, oy + (b.y + .5 + dy * .5) * cell, i ? COL.blue : COL.pink);
+    });
+    duo.sfx.bad(); duo.buzz(90);
+    if (dead[0] && dead[1]) { duo.flash('both', 'DRAW', '相打ち。もう一回！', 'gray'); return; }
+    const w = dead[0] ? 1 : 0;
+    points[w]++;
+    for (const i of [0, 1]) { duo.score(i, points[i]); duo.status(i, points[i] === target - 1 ? 'マッチポイント！' : `${target}本先取`); }
+    if (points[w] >= target) { phase = 'over'; return duo.end(w, `${points[w]} 対 ${points[1 - w]}`, 1000); }
+    duo.flash(w, 'ROUND!', `${points[w]} 本目`, w ? 'blue' : 'pink');
+    duo.flash(1 - w, 'CRASH', 'ぶつかった…', 'gray');
+  }
+  function burst(x, y, color) {
+    for (let k = 0; k < 26; k++) {
+      const a = Math.random() * Math.PI * 2, s = 60 + Math.random() * 220;
+      sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: .5 + Math.random() * .4, color });
+    }
+  }
+  function roundRect(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+  function draw() {
+    ctx.fillStyle = COL.cream; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(37,33,59,.07)'; ctx.lineWidth = 1;
+    for (let x = 0; x <= cols; x++) { ctx.beginPath(); ctx.moveTo(ox + x * cell, oy); ctx.lineTo(ox + x * cell, oy + rows * cell); ctx.stroke(); }
+    for (let y = 0; y <= rows; y++) { ctx.beginPath(); ctx.moveTo(ox, oy + y * cell); ctx.lineTo(ox + cols * cell, oy + y * cell); ctx.stroke(); }
+    ctx.strokeStyle = COL.ink; ctx.lineWidth = 3; ctx.strokeRect(ox - 1.5, oy - 1.5, cols * cell + 3, rows * cell + 3);
+    if (!grid) return;
+    for (let k = 0; k < grid.length; k++) {
+      const v = grid[k]; if (!v) continue;
+      const x = ox + (k % cols) * cell, y = oy + ((k / cols) | 0) * cell;
+      ctx.fillStyle = v === 1 ? COL.pink : COL.blue;
+      roundRect(x + 1, y + 1, cell - 2, cell - 2, cell * .3); ctx.fill();
+      ctx.strokeStyle = COL.ink; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+    bikes.forEach((b, i) => {
+      const cx = ox + (b.x + .5) * cell, cy = oy + (b.y + .5) * cell, r = cell * .82;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = b.alive ? (i ? COL.blue : COL.pink) : '#b9b4c6'; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = COL.ink; ctx.stroke();
+      const [dx, dy] = DIRS[b.dir], px = -dy, py = dx;  // 進む向きに目をつける
+      for (const s of [-1, 1]) {
+        ctx.beginPath(); ctx.arc(cx + dx * r * .35 + px * s * r * .38, cy + dy * r * .35 + py * s * r * .38, r * .2, 0, Math.PI * 2);
+        ctx.fillStyle = '#fff'; ctx.fill(); ctx.lineWidth = 1.5; ctx.stroke();
+      }
+    });
+    for (const s of sparks) {
+      ctx.beginPath(); ctx.arc(s.x, s.y, 3.5 * Math.max(.2, s.life), 0, Math.PI * 2);
+      ctx.fillStyle = s.color; ctx.fill(); ctx.strokeStyle = COL.ink; ctx.lineWidth = 1; ctx.stroke();
+    }
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (duo.playing) {
+      if (phase === 'run') {
+        elapsed += dt; acc += dt;
+        const interval = Math.max(.055, .115 - elapsed * .002);  // だんだん速くなる
+        while (acc >= interval && phase === 'run') { acc -= interval; step(); }
+      } else if (phase === 'pause') {
+        pauseT -= dt;
+        if (pauseT <= 0) newRound();
+      }
+    }
+    for (let k = sparks.length - 1; k >= 0; k--) {
+      const s = sparks[k]; s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= .92; s.vy *= .92; s.life -= dt;
+      if (s.life <= 0) sparks.splice(k, 1);
+    }
+    draw();
+  }
+  function turn(i, t) {
+    if (!duo.playing || phase !== 'run') return;
+    const b = bikes[i];
+    if (b.alive && b.q.length < 2) { b.q.push(t); duo.sfx.tap(); }
+  }
+  for (const btn of document.querySelectorAll('.turn')) {
+    btn.addEventListener('pointerdown', e => { e.preventDefault(); btn.classList.add('held'); turn(+btn.dataset.p, btn.dataset.t); });
+    for (const t of ['pointerup', 'pointercancel', 'pointerleave']) btn.addEventListener(t, () => btn.classList.remove('held'));
+  }
+  // PCで試すとき用：手前は A / D、奥は J / L
+  addEventListener('keydown', e => {
+    if (e.repeat) return;
+    const m = { KeyA: [0, 'L'], KeyD: [0, 'R'], KeyJ: [1, 'L'], KeyL: [1, 'R'] }[e.code];
+    if (m) turn(m[0], m[1]);
+  });
+
+  const duo = Duo({
+    id: 'lightcycles', title: 'LIGHT CYCLES', realtime: true,
+    rules: '光の軌跡を残しながら、自動で前に進みます。「左」「右」で曲がって、壁や軌跡にぶつからないように。先にぶつかったほうの負け。だんだん速くなります。',
+    options: [{ key: 'target', label: '何本先取？', value: 3, choices: [[3, '3本'], [5, '5本']] }],
+    onPrepare(opts) {
+      target = +opts.target; points = [0, 0];
+      for (const i of [0, 1]) { duo.score(i, 0); duo.status(i, `${target}本先取`); }
+      newRound(); phase = 'idle';
+    },
+    onStart() { last = performance.now(); phase = 'run'; },
+    onResume() { last = performance.now(); },
+    onMenu() { points = [0, 0]; newRound(); phase = 'idle'; for (const i of [0, 1]) { duo.score(i, 0); duo.status(i, ''); } }
+  });
+  new ResizeObserver(size).observe(cv);
+  size(); newRound(); phase = 'idle';
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

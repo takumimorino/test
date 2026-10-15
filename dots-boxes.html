@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Dots and Boxes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="duo.css?v=1">
+<style>
+  .db { position: relative; width: min(100cqw - 8px, 100cqh - 8px, 470px); aspect-ratio: 1; }
+  .box, .edge, .dot { position: absolute; }
+  .box { display: grid; place-items: center; border-radius: 10px; }
+  .box.p0 { background: var(--pink-soft); } .box.p1 { background: var(--blue-soft); }
+  .box i { width: 38%; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--ink); animation: claim .3s cubic-bezier(.3, 1.6, .6, 1); }
+  .box.p0 i { background: var(--pink); } .box.p1 i { background: var(--blue); }
+  @keyframes claim { from { transform: scale(0); } }
+  .edge { padding: 0; border: 0; background: none; cursor: pointer; display: grid; place-items: center; z-index: 2; }
+  .edge.h { height: 34px; transform: translateY(-50%); }
+  .edge.v { width: 34px; transform: translateX(-50%); }
+  .edge span { display: block; border-radius: 999px; background: repeating-linear-gradient(90deg, rgba(37,33,59,.16) 0 6px, transparent 6px 11px); }
+  .edge.v span { background: repeating-linear-gradient(0deg, rgba(37,33,59,.16) 0 6px, transparent 6px 11px); }
+  .edge.h span { width: 100%; height: 8px; }
+  .edge.v span { width: 8px; height: 100%; }
+  .edge:not(.on):hover span { background: var(--hc); opacity: .5; }
+  .edge.on { cursor: default; }
+  .edge.on span { background: var(--ink); }
+  .edge.on.last span { background: var(--lc); box-shadow: 0 0 0 2px var(--ink); }
+  .dot { width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--ink); z-index: 3; pointer-events: none; }
+  @media (prefers-reduced-motion: reduce) { .box i { animation: none; } }
+</style>
+</head>
+<body>
+<main class="duo-stage">
+  <div class="db duo-card" id="board" aria-label="陣取りドットの盤"></div>
+</main>
+<script src="duo.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const board = document.getElementById('board');
+  const PAD = 9;  // 盤の端からの余白（%）
+  let n = 4, sp, H, V, owner, cur, scores, over, lastEdge = null;
+
+  const duo = Duo({
+    id: 'dotsboxes', title: 'DOTS & BOXES',
+    rules: '交互に点と点のあいだに線を1本ずつ引こう。四角形の4辺目を引いた人がそのマスを取って、もう1回続けて引けます。マスを多く取ったほうの勝ち。',
+    options: [{ key: 'size', label: '盤の大きさ', value: 4, choices: [[3, '3×3'], [4, '4×4'], [5, '5×5']] }],
+    onStart(opts, starter) { build(+opts.size); cur = starter; duo.turn(cur, '先攻！あなたの番'); paint(); },
+    onMenu() { build(+duo.opts.size); paint(); }
+  });
+
+  const P = k => PAD + k * sp;
+  function build(size) {
+    n = size; sp = (100 - PAD * 2) / n;
+    H = Array.from({ length: n + 1 }, () => Array(n).fill(false));
+    V = Array.from({ length: n }, () => Array(n + 1).fill(false));
+    owner = Array.from({ length: n }, () => Array(n).fill(-1));
+    scores = [0, 0]; over = false; lastEdge = null;
+    let html = '';
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++)
+      html += `<div class="box" id="b${r}-${c}" style="left:${P(c) + .8}%;top:${P(r) + .8}%;width:${sp - 1.6}%;height:${sp - 1.6}%"></div>`;
+    for (let r = 0; r <= n; r++) for (let c = 0; c < n; c++)
+      html += `<button type="button" class="edge h" data-t="h" data-r="${r}" data-c="${c}" aria-label="横の線" style="left:${P(c) + 2.2}%;top:${P(r)}%;width:${sp - 4.4}%"><span></span></button>`;
+    for (let r = 0; r < n; r++) for (let c = 0; c <= n; c++)
+      html += `<button type="button" class="edge v" data-t="v" data-r="${r}" data-c="${c}" aria-label="縦の線" style="left:${P(c)}%;top:${P(r) + 2.2}%;height:${sp - 4.4}%"><span></span></button>`;
+    for (let r = 0; r <= n; r++) for (let c = 0; c <= n; c++) html += `<i class="dot" style="left:${P(c)}%;top:${P(r)}%"></i>`;
+    board.innerHTML = html;
+    for (const i of [0, 1]) duo.score(i, 0);
+  }
+  function paint() {
+    board.style.setProperty('--hc', cur === 0 ? 'var(--pink)' : 'var(--blue)');
+    for (const e of board.querySelectorAll('.edge')) {
+      const t = e.dataset.t, r = +e.dataset.r, c = +e.dataset.c, on = t === 'h' ? H[r][c] : V[r][c];
+      e.classList.toggle('on', on);
+      e.classList.toggle('last', !!lastEdge && lastEdge.t === t && lastEdge.r === r && lastEdge.c === c);
+    }
+    if (lastEdge) board.style.setProperty('--lc', lastEdge.p === 0 ? 'var(--pink)' : 'var(--blue)');
+  }
+  const done = (r, c) => r >= 0 && c >= 0 && r < n && c < n && H[r][c] && H[r + 1][c] && V[r][c] && V[r][c + 1];
+  board.addEventListener('click', e => {
+    const el = e.target.closest('.edge');
+    if (!el || !duo.playing || over) return;
+    const t = el.dataset.t, r = +el.dataset.r, c = +el.dataset.c;
+    if (t === 'h' ? H[r][c] : V[r][c]) return;
+    if (t === 'h') H[r][c] = true; else V[r][c] = true;
+    lastEdge = { t, r, c, p: cur };
+    const around = t === 'h' ? [[r - 1, c], [r, c]] : [[r, c - 1], [r, c]];
+    let got = 0;
+    for (const [y, x] of around) {
+      if (!done(y, x) || owner[y][x] >= 0) continue;
+      owner[y][x] = cur; got++;
+      const b = document.getElementById(`b${y}-${x}`); b.className = `box p${cur}`; b.innerHTML = '<i></i>';
+    }
+    if (got) { scores[cur] += got; duo.score(cur, scores[cur]); duo.sfx.pop(); duo.buzz(25); }
+    else duo.sfx.place();
+    if (scores[0] + scores[1] === n * n) {
+      over = true; paint();
+      const w = scores[0] === scores[1] ? -1 : scores[0] > scores[1] ? 0 : 1;
+      return duo.end(w, w < 0 ? `${scores[0]} 対 ${scores[1]} で引き分け` : `${scores[w]} マス 対 ${scores[1 - w]} マス`, 900);
+    }
+    if (got) duo.turn(cur, 'マスを取った！もう1本');
+    else { cur = 1 - cur; duo.turn(cur); }
+    paint();
+  });
+})();
+</script>
+</body>
+</html>

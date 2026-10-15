@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Quick Draw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="duo.css?v=1">
+<style>
+  body.duo { touch-action: none; }
+  .qd { width: 100cqw; height: 100cqh; display: grid; grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; }
+  .pad { display: grid; place-content: center; justify-items: center; gap: 6px; text-align: center; padding: 12px; border-radius: 26px;
+    background: var(--cream); transition: background-color .08s; }
+  .pad.p2 { transform: rotate(180deg); }
+  .big { font-family: var(--display); font-weight: 700; font-size: clamp(40px, 15cqw, 84px); line-height: 1; -webkit-text-stroke: 3px var(--ink); paint-order: stroke fill; color: #fff; text-shadow: 4px 5px 0 var(--ink); }
+  .small { font-weight: 900; font-size: 15px; min-height: 1.3em; }
+  .pad.wait { background: var(--cream); }
+  .pad.wait .big { color: var(--cream); }
+  .pad.feint { background: var(--blue-soft); }
+  .pad.feint .big { color: var(--blue); }
+  .pad.go { background: var(--yellow); animation: shake .12s linear 3; }
+  .pad.go .big { color: #fff; }
+  .pad.win.p1 { background: var(--pink-soft); } .pad.win.p1 .big { color: var(--pink); }
+  .pad.win.p2 { background: var(--blue-soft); } .pad.win.p2 .big { color: var(--blue); }
+  .pad.lose, .pad.foul { background: #e4e1ea; } .pad.lose .big, .pad.foul .big { color: #b9b4c6; }
+  @keyframes shake { 0%, 100% { translate: 0; } 50% { translate: 0 -4px; } }
+  .mid { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; padding: 0 4px; }
+  .pips { display: flex; gap: 6px; }
+  .pips.p2 { transform: rotate(180deg); justify-content: flex-start; }
+  .pips.p1 { justify-content: flex-end; }
+  .pip { width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--ink); background: #fff; }
+  .pips.p1 .pip.on { background: var(--pink); } .pips.p2 .pip.on { background: var(--blue); }
+  .vs { font-family: var(--display); font-weight: 700; font-size: 15px; background: var(--cream); border: 3px solid var(--ink); border-radius: 999px; padding: 2px 10px; }
+  @media (prefers-reduced-motion: reduce) { .pad.go { animation: none; } }
+</style>
+</head>
+<body>
+<main class="duo-stage">
+  <div class="qd" id="qd">
+    <div class="pad p2 duo-card wait" id="pad1"><div class="big">WAIT</div><div class="small"></div></div>
+    <div class="mid"><div class="pips p2" id="pips1"></div><div class="vs" id="round">ROUND 1</div><div class="pips p1" id="pips0"></div></div>
+    <div class="pad p1 duo-card wait" id="pad0"><div class="big">WAIT</div><div class="small"></div></div>
+  </div>
+</main>
+<script src="duo.js?v=1"></script>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const pads = [$('pad0'), $('pad1')];
+  // phase: 'wait'（合図待ち）→ 'go'（合図）→ 'done'（決着、次の回を待つ）
+  let loserTimed = false, phase = 'idle', t = 0, goAt = 0, feintAt = -1, goWall = 0, nextAt = 0, points = [0, 0], target = 3, feintOn = true, round = 0, winnerOf = -1, raf = 0, last = 0;
+
+  function setPad(i, cls, big, small) {
+    pads[i].className = `pad p${i + 1} duo-card ${cls}`;
+    pads[i].querySelector('.big').textContent = big;
+    pads[i].querySelector('.small').textContent = small || '';
+  }
+  function pips() {
+    for (const i of [0, 1]) {
+      $('pips' + i).innerHTML = Array.from({ length: target }, (_, k) => `<span class="pip${k < points[i] ? ' on' : ''}"></span>`).join('');
+      duo.score(i, points[i]);
+    }
+    $('round').textContent = `ROUND ${Math.max(1, round)}`;
+  }
+  function reset(opts) {
+    target = +opts.target; feintOn = opts.feint === 'on'; points = [0, 0]; round = 0; phase = 'idle';
+    for (const i of [0, 1]) { setPad(i, 'wait', 'WAIT', '準備ができたら始まります'); duo.status(i, `${target}本先取`); }
+    pips();
+  }
+  function startRound() {
+    round++; phase = 'wait'; t = 0; winnerOf = -1; loserTimed = false;
+    goAt = rand(1.6, 4.2);
+    feintAt = feintOn && Math.random() < .45 ? rand(.7, goAt - .7) : -1;
+    for (const i of [0, 1]) setPad(i, 'wait', 'かまえて…', '「TAP!」が出たらすぐタップ');
+    pips();
+  }
+  function tick(now) {
+    const dt = Math.min(.05, (now - last) / 1000); last = now;
+    if (duo.playing) {
+      t += dt;
+      if (phase === 'wait') {
+        const inFeint = feintAt > 0 && t >= feintAt && t < feintAt + .45;
+        for (const i of [0, 1]) {
+          if (inFeint && !pads[i].classList.contains('feint')) { setPad(i, 'feint', 'まだ！', 'つられないで'); if (i === 0) duo.sfx.tap(); }
+          if (!inFeint && pads[i].classList.contains('feint')) setPad(i, 'wait', 'かまえて…', '「TAP!」が出たらすぐタップ');
+        }
+        if (t >= goAt) {
+          phase = 'go'; goWall = performance.now();
+          for (const i of [0, 1]) setPad(i, 'go', 'TAP!', '');
+          duo.sfx.beep(true); duo.buzz(30);
+        }
+      } else if (phase === 'go' && t - goAt > 3) {
+        phase = 'done'; nextAt = t + 1.4;
+        for (const i of [0, 1]) setPad(i, 'lose', 'おそい！', 'どちらも押さなかった…');
+      } else if (phase === 'done' && t >= nextAt) {
+        const w = points.findIndex(p => p >= target);
+        if (w >= 0) { phase = 'idle'; return duo.end(w, `${points[w]} 対 ${points[1 - w]}`, 300); }
+        startRound();
+      }
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  function tap(i) {
+    if (!duo.playing) return;
+    const o = 1 - i;
+    if (phase === 'wait') {
+      phase = 'done'; nextAt = t + 1.8; points[o]++; winnerOf = o;
+      setPad(i, 'foul', 'フライング！', `相手に1点`);
+      setPad(o, `win`, '1点！', '相手のフライング');
+      duo.sfx.bad(); duo.buzz(80); pips();
+    } else if (phase === 'go') {
+      const ms = performance.now() - goWall;
+      phase = 'done'; nextAt = t + 2; points[i]++; winnerOf = i;
+      setPad(i, 'win', 'WIN!', `${(ms / 1000).toFixed(3)} 秒`);
+      setPad(o, 'lose', 'おそい…', '');
+      duo.sfx.pop(); duo.buzz(40); pips();
+      for (const k of [0, 1]) duo.status(k, points[k] === target - 1 ? 'マッチポイント！' : `${target}本先取`);
+    } else if (phase === 'done' && i !== winnerOf && pads[i].classList.contains('lose') && !loserTimed) {
+      // 負けた側の反応時間も見せる
+      const ms = performance.now() - goWall;
+      if (ms < 3000) { loserTimed = true; pads[i].querySelector('.small').textContent = `${(ms / 1000).toFixed(3)} 秒`; }
+    }
+  }
+  $('qd').addEventListener('pointerdown', e => { e.preventDefault(); tap(e.clientY < innerHeight / 2 ? 1 : 0); });
+
+  const duo = Duo({
+    id: 'quickdraw', title: 'QUICK DRAW', realtime: true,
+    rules: '画面が黄色の「TAP!」に変わった瞬間に、自分の側をタップ。先に押したほうが1点。合図の前に触るとフライングで相手に1点。',
+    options: [
+      { key: 'target', label: '何本先取？', value: 3, choices: [[3, '3本'], [5, '5本']] },
+      { key: 'feint', label: 'フェイント', value: 'on', choices: [['on', 'あり（青い「まだ！」にだまされないで）'], ['off', 'なし']] }
+    ],
+    onPrepare(opts) { reset(opts); },
+    onStart() { last = performance.now(); startRound(); },
+    onResume() { last = performance.now(); if (phase !== 'done') { round--; startRound(); } },
+    onMenu() { reset(duo.opts); }
+  });
+  last = performance.now();
+  raf = requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
