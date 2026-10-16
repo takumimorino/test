@@ -135,6 +135,24 @@
   .ptext { margin: 0; font-size: 13px; line-height: 1.65; color: #cfc9bc; white-space: pre-line; }
   .pstats { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 4px 22px; font-family: var(--mono); }
   .pstats .big { font-family: var(--display); font-weight: 800; font-size: 28px; line-height: 1; }
+  .look { display: flex; align-items: center; gap: 12px; }
+  .pvc { width: 84px; height: 105px; flex: none; border-radius: 6px; border: 1px solid var(--line);
+    background: radial-gradient(circle at 50% 40%, rgba(236, 230, 216, .16), rgba(236, 230, 216, .03) 70%); }
+  .skins { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .skins-l { grid-column: 1 / -1; font-weight: 700; font-size: 11px; color: var(--muted); }
+  .skin { display: flex; align-items: center; gap: 6px; padding: 7px 9px; font: 700 13px var(--body); color: var(--ink); background: rgba(236, 230, 216, .06);
+    border: 1px solid var(--line); border-radius: 4px; cursor: pointer; touch-action: manipulation; }
+  .skin .em { font-size: 18px; line-height: 1; }
+  .skin.on { color: var(--c); border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
+  .skin:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  /* 1台を2人で使うときは画面の高さが半分なので、準備画面を少し詰める */
+  .half { container-type: size; }
+  @container (max-height: 560px) {
+    .pin { gap: 8px; }
+    .ptitle { font-size: 40px; }
+    .ptitle span { display: inline; }
+    .ptext { font-size: 12px; line-height: 1.55; }
+  }
   .prow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
   .ready { font-family: var(--body); font-weight: 700; font-size: 17px; letter-spacing: .08em; background: var(--c); color: #12100a; border: 1px solid var(--c);
     border-radius: 2px; padding: 12px 26px; cursor: pointer; touch-action: manipulation; }
@@ -494,23 +512,94 @@
     const flash = new THREE.Mesh(new THREE.PlaneGeometry(.34, .34),
       new THREE.MeshBasicMaterial({ map: flashTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
     flash.position.set(0, .02, -.72); flash.visible = false; gun.add(flash);
-    return { gun, mag, flash };
+    // 銃を持つ手。選んだ動物の毛の色になる
+    const pawMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: .85 });
+    part(new THREE.SphereGeometry(.052, 12, 10), pawMat, 0, -.15, .15).scale.set(1.1, .9, 1.3);
+    part(new THREE.SphereGeometry(.05, 12, 10), pawMat, 0, -.085, -.3).scale.set(1.25, .85, 1.2);
+    return { gun, mag, flash, pawMat };
   }
-  // 相手から見える体。前は -z 向き（カメラと同じ）。頭とバイザーは弱点
-  function makeSoldier(color) {
+  // 相手から見える体。前は -z 向き（カメラと同じ）。頭とバイザーは弱点。
+  // 体（胴）の色はプレイヤーの色のまま。頭・耳・しっぽ・手は、選んだ動物になる
+  function makeSoldier(color, target = scene) {
     const g = new THREE.Group();
     const team = new THREE.MeshStandardMaterial({ color, roughness: .5, emissive: color, emissiveIntensity: .25 });
     const visor = new THREE.MeshBasicMaterial({ color });
+    const fur = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: .85 });
     const add = (gm, m, x, y, z, weak) => { const s = new THREE.Mesh(gm, m); s.position.set(x, y, z); s.castShadow = true; if (weak) s.userData.weak = true; g.add(s); return s; };
     add(new THREE.BoxGeometry(.52, .8, .34), mat.suit, 0, .4, 0);
     add(new THREE.BoxGeometry(.68, .72, .42), team, 0, 1.15, 0);
     add(new THREE.BoxGeometry(.2, .62, .22), mat.suit, -.45, 1.1, -.04);
     add(new THREE.BoxGeometry(.2, .62, .22), mat.suit, .45, 1.1, -.04);
-    add(new THREE.SphereGeometry(.23, 16, 12), mat.suit, 0, 1.7, 0, true);
-    add(new THREE.BoxGeometry(.34, .09, .08), visor, 0, 1.72, -.2, true);
+    add(new THREE.SphereGeometry(.23, 16, 12), fur, 0, 1.7, 0, true);
+    add(new THREE.BoxGeometry(.34, .09, .08), visor, 0, 1.72, -.2, true);  // ゴーグル
     add(new THREE.BoxGeometry(.08, .11, .66), mat.suit, .28, 1.22, -.34);
-    scene.add(g);
-    return { g, team };
+    const acc = new THREE.Group(); g.add(acc);  // 耳・鼻・しっぽ・手（飾り。当たり判定なし）
+    target.add(g);
+    return { g, team, fur, acc, ears: [], skin: -1,
+      snout: new THREE.MeshStandardMaterial({ roughness: .85 }), nose: new THREE.MeshStandardMaterial({ roughness: .4 }),
+      inner: new THREE.MeshStandardMaterial({ roughness: .85 }) };
+  }
+  // 見た目は4種類の動物。耳やしっぽは飾りなので、動物によって弾の当たりやすさは変わらない
+  const ANIMALS = [
+    { id: 'cat', name: 'ネコ', emoji: '🐱', fur: 0x8e8983, snout: 0xf2ede4, nose: 0xff8fa8, inner: 0xffb3c6 },
+    { id: 'dog', name: 'イヌ', emoji: '🐶', fur: 0xd39a5c, snout: 0xf6e3c6, nose: 0x231c18, inner: 0x8a5a32 },
+    { id: 'rabbit', name: 'ウサギ', emoji: '🐰', fur: 0xf0ede6, snout: 0xffffff, nose: 0xff8fa8, inner: 0xffb3c6 },
+    { id: 'bear', name: 'クマ', emoji: '🐻', fur: 0x7b5236, snout: 0xc89b6d, nose: 0x231c18, inner: 0x5a3a24 }
+  ];
+  const AG = {
+    catEar: new THREE.ConeGeometry(.085, .17, 4), dogEar: new THREE.BoxGeometry(.06, .21, .13),
+    rabbitEar: new THREE.CylinderGeometry(.04, .055, .34, 10), rabbitIn: new THREE.BoxGeometry(.03, .25, .012),
+    bearEar: new THREE.SphereGeometry(.08, 12, 10), snout: new THREE.SphereGeometry(.085, 12, 10), nose: new THREE.SphereGeometry(.028, 8, 6),
+    tail: new THREE.CylinderGeometry(.028, .036, .46, 8), puff: new THREE.SphereGeometry(.085, 10, 8), paw: new THREE.SphereGeometry(.1, 10, 8)
+  };
+  function applyAnimal(m, k) {
+    if (m.skin === k) return;
+    const A = ANIMALS[k];
+    m.skin = k;
+    m.fur.color.set(A.fur); m.snout.color.set(A.snout); m.nose.color.set(A.nose); m.inner.color.set(A.inner);
+    while (m.acc.children.length) m.acc.remove(m.acc.children[0]);
+    m.ears = [];
+    const part = (gm, mt, x, y, z, parent = m.acc) => {
+      const s = new THREE.Mesh(gm, mt); s.position.set(x, y, z); s.castShadow = true; s.raycast = () => {}; parent.add(s); return s;
+    };
+    // 付け根を軸に回せる耳やしっぽ。fold はしゃがんだときに後ろへ倒す量
+    const pivot = (x, y, z, rx, rz, fold = 0) => {
+      const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.set(rx, 0, rz); p.userData.rx = rx; p.userData.fold = fold;
+      m.acc.add(p); if (fold) m.ears.push(p); return p;
+    };
+    part(AG.snout, m.snout, 0, 1.64, -.19).scale.set(1, .8, .9);
+    part(AG.nose, m.nose, 0, 1.68, -.27);
+    for (const s of [-1, 1]) {
+      part(AG.paw, m.fur, s * .45, .78, -.04).scale.set(1, .8, 1);
+      if (A.id === 'cat') part(AG.catEar, m.fur, 0, .085, 0, pivot(s * .12, 1.86, 0, 0, -s * .3, .9));
+      if (A.id === 'dog') part(AG.dogEar, m.inner, 0, -.1, 0, pivot(s * .21, 1.82, 0, 0, s * .3));
+      if (A.id === 'rabbit') {
+        const p = pivot(s * .09, 1.88, 0, 0, -s * .12, 1.2);
+        part(AG.rabbitEar, m.fur, 0, .17, 0, p).scale.set(1, 1, .65);
+        part(AG.rabbitIn, m.inner, 0, .17, -.03, p);
+      }
+      if (A.id === 'bear') part(AG.bearEar, m.fur, s * .17, 1.87, 0).scale.set(1, 1, .6);
+    }
+    if (A.id === 'cat' || A.id === 'dog') part(AG.tail, m.fur, 0, .2, 0, pivot(0, .78, .17, A.id === 'cat' ? .9 : .5, 0)).scale.set(1, A.id === 'cat' ? 1 : .55, 1);
+    else part(AG.puff, m.fur, 0, .74, .2).scale.setScalar(A.id === 'bear' ? .65 : 1);
+  }
+  function foldEars(m, t) { for (const e of m.ears) e.rotation.x = e.userData.rx + e.userData.fold * t; }
+
+  // 準備画面で、自分のキャラをくるくる回して見せる（小さな別キャンバスに描いて写す）
+  const pv = { r: null, scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(30, 4 / 5, .1, 20) };
+  pv.scene.add(new THREE.HemisphereLight(0xb9c6d3, 0x2a2219, .55));
+  { const d = new THREE.DirectionalLight(0xffe2bd, .75); d.position.set(-2, 3, -4); pv.scene.add(d); }
+  pv.cam.position.set(0, 1.25, -4.4); pv.cam.lookAt(0, 1.08, 0);
+  function drawPreview(p, t) {
+    if (pv.r === null) {
+      try { pv.r = new THREE.WebGLRenderer({ antialias: true, alpha: true }); pv.r.setPixelRatio(1); pv.r.setSize(168, 210, false); pv.r.outputEncoding = THREE.sRGBEncoding; }
+      catch (e) { pv.r = false; }
+    }
+    if (!pv.r) return;
+    for (const q of players) q.pv.g.visible = q === p;
+    p.pv.g.rotation.y = t * .7;  // 正面からゆっくり一回転（しっぽも見える）
+    pv.r.render(pv.scene, pv.cam);
+    p.pctx.clearRect(0, 0, 168, 210); p.pctx.drawImage(pv.r.domElement, 0, 0, 168, 210);
   }
 
   // ---------- Audio ----------
@@ -583,6 +672,13 @@
         <h1 class="ptitle"></h1>
         <p class="ptext"></p>
         <div class="pstats" hidden></div>
+        <div class="look">
+          <canvas class="pvc" width="168" height="210" aria-hidden="true"></canvas>
+          <div class="skins" role="radiogroup" aria-label="見た目">
+            <span class="skins-l">見た目</span>
+            ${ANIMALS.map((a, k) => `<button class="skin" type="button" role="radio" aria-checked="false" data-k="${k}"><span class="em">${a.emoji}</span>${a.name}</button>`).join('')}
+          </div>
+        </div>
         <div class="prow">
           <button class="ready" type="button">準備OK</button>
           <button class="invite" type="button" hidden>もう1人呼ぶ</button>
@@ -611,7 +707,7 @@
     const muzzle = new THREE.PointLight(COLORS[i], 0, 9, 2); scene.add(muzzle);
     const p = {
       i, name: NAMES[i], color: COLORS[i], el, cam, gunCam, muzzle,
-      ...makeGun(COLORS[i]), model: makeSoldier(COLORS[i]),
+      ...makeGun(COLORS[i]), model: makeSoldier(COLORS[i]), pv: makeSoldier(COLORS[i], pv.scene), skin: -1,
       pos: new V3(), vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0, onGround: true,
       hp: 100, ammo: MAG, reloadT: 0, lastShot: -1, lastShotAt: -9, bloom: 0, recoil: 0, flashT: 0, landDip: 0, bobPhase: 0,
       aiming: false, adsT: 0, firing: false, jumpQ: false, kills: 0, shots: 0, hits: 0, heads: 0,
@@ -626,14 +722,25 @@
         stick: q('.stick'), knob: q('.knob'), fire: q('.fire'), zoom: q('.zoom'), jump: q('.jump'), reload: q('.reload'), slide: q('.slide'), crouch: q('.crouch'),
         boost: q('.boost'), boostBar: q('.boost .bar i'),
         panel: q('.panel'), eyebrow: q('.eyebrow'), ptitle: q('.ptitle'), ptext: q('.ptext'), pstats: q('.pstats'),
-        ready: q('.ready'), invite: q('.invite'), sens: q('.sens input'), pnote: q('.pnote'), keys: q('.keys')
+        ready: q('.ready'), invite: q('.invite'), sens: q('.sens input'), pvc: q('.pvc'), skins: [...el.querySelectorAll('.skin')], pnote: q('.pnote'), keys: q('.keys')
       }
     };
-    p.rctx = p.ui.radar.getContext('2d');
+    p.rctx = p.ui.radar.getContext('2d'); p.pctx = p.ui.pvc.getContext('2d');
+    p.pv.g.visible = false;
+    setSkin(p, store.get('hd.skin' + i, i % ANIMALS.length));
     p.ui.sens.value = p.sens;
     p.ui.sens.addEventListener('input', e => { p.sens = +e.target.value; store.set('hd.sens' + i, p.sens); });
     p.ui.keys.textContent = KEYS_TEXT[i === 1 ? 1 : 0];
     return p;
+  }
+  // 見た目を変える（相手から見える体、自分の手、準備画面のプレビュー）
+  function setSkin(p, k) {
+    k = clamp(Math.round(+k) || 0, 0, ANIMALS.length - 1);
+    if (p.skin === k) return;
+    p.skin = k;
+    applyAnimal(p.model, k); applyAnimal(p.pv, k);
+    p.pawMat.color.set(ANIMALS[k].fur);
+    for (const b of p.ui.skins) { const on = +b.dataset.k === k; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }
   }
   const players = [makePlayer(0), makePlayer(1)];
   const others = p => players.filter(q => q !== p && !q.gone);
@@ -937,6 +1044,7 @@
     const m = p.model;
     m.g.position.copy(p.pos); m.g.rotation.y = p.yaw;
     m.g.scale.y = 1 - .45 * p.crouchT;
+    foldEars(m, p.crouchT);  // しゃがむと、立った耳は後ろに倒れる
     p.hitFlash = Math.max(0, p.hitFlash - dt);
     m.team.emissiveIntensity = p.hitFlash > 0 ? 1.4 : .25;
   }
@@ -1078,7 +1186,8 @@
       u.pstats.hidden = true;
       const score = many ? `${p.kills}キル` : `${p.kills} – ${f ? f.kills : 0}`;
       if (phase === 'lobby') {
-        u.eyebrow.textContent = online ? `${n}人で対戦 · あなたは${p.name}` : `2 PLAYERS · FPS · あなたは${p.name}`;
+        const who = `あなたは${p.name}の${ANIMALS[p.skin].name}`;
+        u.eyebrow.textContent = online ? `${n}人で対戦 · ${who}` : `2 PLAYERS · FPS · ${who}`;
         u.ptitle.innerHTML = 'HOLLOW<span>DUEL</span>';
         u.ptext.textContent = `${online ? 'それぞれ自分のスマホで対戦。' : 'スマホを机に置いて、向かい合って対戦。'}先に${GOAL}回倒した${many ? '人' : 'ほう'}の勝ち。頭に当てるとダメージ2倍。「のぞく」と弾がまっすぐ飛ぶ。「しゃがむ」と低い箱に隠れられる。走りながら「スライド」で滑り込める。倒された人はスピードアップを落とす。`
           + (online && localIdx === 0 && n < MAXP ? `\n「もう1人呼ぶ」で${MAXP}人まで遊べる。` : '');
@@ -1110,7 +1219,7 @@
     if (n !== lastCount && n > 0) { lastCount = n; for (const p of players) banner(p, String(n), ''); sfx.beep(false); }
     if (countT <= 0) {
       phase = 'playing'; updatePanels();
-      for (const p of players) banner(p, 'GO!', `あなたは${p.name}`); sfx.beep(true);
+      for (const p of players) banner(p, 'GO!', `あなたは${p.name}の${ANIMALS[p.skin].name}`); sfx.beep(true);
     }
   }
 
@@ -1267,7 +1376,7 @@
   function sendState() {
     const p = me();
     send({ t: 's', x: r3(p.pos.x), y: r3(p.pos.y), z: r3(p.pos.z), yw: r3(p.yaw), pt: r3(p.pitch), c: r3(p.crouchT), iv: r3(p.invT),
-      hp: Math.ceil(p.hp), d: p.dead ? 1 : 0, a: p.aiming ? 1 : 0 });
+      hp: Math.ceil(p.hp), d: p.dead ? 1 : 0, a: p.aiming ? 1 : 0, k: p.skin });
   }
   function updateRemote(p, dt) {
     const s = p.net;
@@ -1279,6 +1388,7 @@
     else { p.pos.x += dx * k; p.pos.y += dy * k; p.pos.z += dz * k; }
     p.yaw += Math.atan2(Math.sin(s.yw - p.yaw), Math.cos(s.yw - p.yaw)) * k;
     p.pitch = s.pt; p.crouchT = s.c; p.invT = s.iv; p.hp = s.hp; p.aiming = !!s.a;
+    if (s.k != null && s.k !== p.skin) setSkin(p, s.k);
   }
   // 当たったかどうかは撃った人が判定し、体力を減らして倒れるかどうかは撃たれた人が決める。
   // 試合の終わりは部屋を作った人が決めて伝える（ほぼ同時に倒し合っても、全員の画面で勝者がそろうように）
@@ -1347,6 +1457,7 @@
     document.body.classList.add('online');
     for (const p of players) { p.el.classList.toggle('local', p.i === idx); p.gunCam.rotation.z = 0; }
     me().ui.keys.textContent = KEYS_TEXT[0];  // 2台以上のときは、だれでも WASD で動かせる
+    setSkin(me(), store.get('hd.skinNet', me().skin));
     $('netSheet').hidden = true; $('modeSel').hidden = true;
     phase = 'lobby'; winner = null;
     if (net.role === 'host') ready.fill(false);
@@ -1582,6 +1693,11 @@
     tb(u.crouch, () => toggleCrouch(p));
     u.ready.addEventListener('click', () => pressReady(p));
     u.invite.addEventListener('click', inviteMore);
+    for (const b of u.skins) b.addEventListener('click', () => {
+      setSkin(p, +b.dataset.k);
+      store.set(online ? 'hd.skinNet' : 'hd.skin' + p.i, p.skin);  // 2台以上のときは、このスマホの見た目として覚える
+      updatePanels();
+    });
   }
   for (const p of players) bindPlayer(p);
   // 自分の画面の左側（奥の人は画面の右側）を触ったら、その場所にスティックを出す
@@ -1708,6 +1824,7 @@
     updateReferee(dt);
     for (const p of players) { if (p.gone) continue; animateGun(p, dt); if (!isRemote(p)) updateHUD(p); }
     renderAll();
+    for (const p of players) if (!p.gone && !isRemote(p) && !p.ui.panel.hidden) drawPreview(p, t / 1000);
   }
   requestAnimationFrame(frame);
 })();
