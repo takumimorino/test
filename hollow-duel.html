@@ -146,7 +146,7 @@
     border: 1px solid var(--line); background: rgba(12, 16, 22, .8); color: var(--ink); font: 700 12px/1 var(--mono); padding: 0; touch-action: manipulation; }
   /* ---------- 遊び方の選択と、2台でつなぐ画面（向かい合わせではなく、普通の向き） ---------- */
   .sheet { position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; overflow-y: auto;
-    padding: calc(20px + env(safe-area-inset-top, 0px)) 18px calc(20px + env(safe-area-inset-bottom, 0px)); background: rgba(8, 11, 15, .94); }
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 18px calc(20px + env(safe-area-inset-bottom, 0px)); background: var(--bg); }
   .sbox { width: min(420px, 100%); display: grid; gap: 12px; }
   .stitle { margin: 0; font-family: var(--display); font-weight: 800; font-size: 56px; line-height: .84; }
   .stitle span { color: var(--p1); display: block; }
@@ -1201,6 +1201,7 @@
     online = true; localIdx = idx; net.lost = false;
     document.body.classList.add('online');
     players[idx].el.classList.add('local');
+    players[idx].ui.keys.textContent = players[0].ui.keys.textContent;  // 2台のときは、どちらも WASD で動かせる
     for (const p of players) p.gunCam.rotation.z = 0;
     $('netSheet').hidden = true; $('modeSel').hidden = true;
     phase = 'lobby'; ready[0] = ready[1] = false; winner = null;
