@@ -11,14 +11,41 @@
 :root{--sky:#7bdff2;--cream:#fffaf0;--paper:#fff;--ink:#25213b;--soft:#665f7a;--pink:#ff5f9e;--yellow:#ffd447;--purple:#8b5cf6;--mint:#70e1b2;--blue:#4d96ff;--font-display:"Fredoka","Hiragino Kaku Gothic ProN",sans-serif;--font-body:"Nunito","Hiragino Kaku Gothic ProN",sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:var(--font-body);color:var(--ink)}body{min-height:100dvh;display:grid;place-items:center;padding:28px 16px;background:var(--sky);position:relative;overflow-x:hidden}body::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 9% 14%,rgba(255,255,255,.8) 0 5px,transparent 6px),radial-gradient(circle at 88% 20%,rgba(255,212,71,.9) 0 7px,transparent 8px),radial-gradient(circle at 18% 74%,rgba(255,95,158,.45) 0 9px,transparent 10px),radial-gradient(circle at 92% 83%,rgba(112,225,178,.75) 0 11px,transparent 12px),linear-gradient(145deg,#95e7f4,var(--sky) 42%,#8ed7ff);pointer-events:none}.wrap{position:relative;z-index:1;width:min(900px,100%);background:var(--cream);border:4px solid var(--ink);border-radius:34px;box-shadow:10px 12px 0 var(--ink);padding:34px 28px 30px}.eyebrow{display:table;margin:0 auto 13px;font-size:11px;font-weight:900;letter-spacing:.12em;color:#6842d6;background:#eee7ff;border:2px solid var(--ink);border-radius:999px;padding:5px 11px;box-shadow:3px 3px 0 var(--ink)}.title{font-family:var(--font-display);margin:0;text-align:center;font-size:clamp(40px,9vw,68px);line-height:1;font-weight:700;letter-spacing:.01em;text-shadow:4px 4px 0 var(--yellow)}.lead{text-align:center;color:var(--soft);margin:16px auto 27px;max-width:560px;font-size:15px;line-height:1.7;font-weight:700}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.card{position:relative;display:flex;flex-direction:column;min-height:310px;padding:25px;border:3px solid var(--ink);border-radius:24px;text-decoration:none;color:var(--ink);overflow:hidden;transition:transform .12s,box-shadow .12s;box-shadow:7px 8px 0 var(--ink)}.card:hover{transform:translate(-2px,-3px);box-shadow:9px 11px 0 var(--ink)}.card:active{transform:translate(4px,5px);box-shadow:3px 3px 0 var(--ink)}.solo{background:#d6f5e8}.two{background:#fff3bd}.three{background:#eee7ff}.card::after{content:"✦";position:absolute;right:17px;top:15px;font-size:25px}.solo::after{color:var(--blue)}.two::after{color:var(--pink)}.three::after{color:var(--yellow)}.icon{font-size:67px;line-height:1;margin-bottom:18px}.label{display:inline-block;align-self:flex-start;font-size:11px;font-weight:900;letter-spacing:.1em;border:2px solid var(--ink);border-radius:999px;padding:4px 8px;background:#fff}.name{font-family:var(--font-display);font-size:clamp(28px,5vw,40px);font-weight:700;margin:8px 0 10px}.desc{font-size:14px;line-height:1.65;font-weight:700;color:var(--soft);max-width:34ch}@media(max-width:900px) and (min-width:701px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.solo{grid-column:1/-1;min-height:250px}}.go{margin-top:auto;padding-top:24px;font-weight:900;color:#6842d6}.footer{text-align:center;color:rgba(37,33,59,.55);font-size:11px;font-weight:900;letter-spacing:.08em;margin-top:25px}@media(max-width:700px){body{padding:18px 12px}.wrap{padding:28px 18px 24px;box-shadow:7px 8px 0 var(--ink)}.cards{grid-template-columns:1fr}.card{min-height:235px}.icon{font-size:54px}}
 .group{margin-top:34px}.group-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0 0 14px}.group-title{font-family:var(--font-display);font-size:26px;font-weight:700;margin:0}.group-note{font-size:13px;font-weight:800;color:var(--soft)}.sub{font-size:13px;font-weight:900;color:var(--soft);margin:22px 0 12px;letter-spacing:.04em}.cards.compact .card{min-height:230px;padding:20px}.cards.compact .icon{font-size:46px;margin-bottom:12px}.cards.compact .name{font-size:clamp(22px,4vw,30px);margin:6px 0 8px}.cards.compact .desc{font-size:13px}.new{background:var(--yellow)}@media(max-width:700px){.cards.compact{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.cards.compact .card{min-height:0;padding:14px;border-radius:20px;box-shadow:5px 6px 0 var(--ink)}.cards.compact .icon{font-size:34px;margin-bottom:8px}.cards.compact .name{font-size:clamp(19px,5.4vw,24px)}.cards.compact .desc{font-size:12px;line-height:1.55}.cards.compact .go{padding-top:10px;font-size:12px}.cards.compact .label{font-size:9px;padding:3px 6px}.cards.compact .card::after{font-size:17px;right:11px;top:9px}.group-title{font-size:22px}}
+.feature{position:relative;display:grid;gap:14px;padding:26px 28px 24px;background:var(--ink);color:var(--cream);border:3px solid var(--ink);border-radius:28px;text-decoration:none;overflow:hidden;box-shadow:8px 9px 0 var(--pink);transition:transform .12s,box-shadow .12s}
+.feature::before{content:"";position:absolute;right:-70px;top:-70px;width:260px;height:260px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,transparent 0 37px,rgba(255,212,71,.5) 38px 41px,transparent 42px 77px,rgba(255,212,71,.32) 78px 80px,transparent 81px 117px,rgba(255,212,71,.18) 118px 120px,transparent 121px),linear-gradient(rgba(255,212,71,.35),rgba(255,212,71,.35)) center/2px 100% no-repeat,linear-gradient(rgba(255,212,71,.35),rgba(255,212,71,.35)) center/100% 2px no-repeat}
+.feature:hover{transform:translate(-2px,-3px);box-shadow:10px 12px 0 var(--pink)}.feature:active{transform:translate(4px,5px);box-shadow:3px 3px 0 var(--pink)}.feature:focus-visible{outline:3px solid var(--yellow);outline-offset:4px}
+.f-top{position:relative;display:flex;align-items:center;gap:16px}.f-icon{font-size:58px;line-height:1;white-space:nowrap}.f-label{background:var(--yellow);color:var(--ink)}.feature .name{margin:6px 0 0;font-size:clamp(34px,6vw,50px);line-height:1;color:var(--yellow);text-shadow:3px 3px 0 var(--pink);white-space:nowrap}
+.feature .desc{position:relative;margin:0;max-width:60ch;color:rgba(255,250,240,.82);font-size:14px}.f-modes{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.f-mode{display:grid;gap:4px;padding:12px 14px;border:2px solid rgba(255,250,240,.3);border-radius:16px;background:rgba(255,250,240,.07)}.f-mode b{font-family:var(--font-display);font-size:19px;font-weight:700;color:var(--cream)}.f-mode span{font-size:12px;line-height:1.55;font-weight:700;color:rgba(255,250,240,.7)}
+.feature .go{padding-top:4px;color:var(--yellow)}
+@media(max-width:700px){.feature{padding:20px 18px 18px;border-radius:22px;box-shadow:6px 7px 0 var(--pink)}.feature::before{width:200px;height:200px;right:-80px;top:-80px}.f-top{flex-direction:column;align-items:flex-start;gap:10px}.f-icon{font-size:42px}.f-modes{grid-template-columns:1fr;gap:8px}.f-mode{padding:10px 12px}.f-mode b{font-size:17px}.feature .desc{font-size:13px}}
+.title,.lead,.group-note,.desc,.f-mode span{word-break:auto-phrase}
 </style>
 </head>
 <body>
 <main class="wrap">
   <div class="eyebrow">SELECT A GAME</div>
   <h1 class="title">どのゲームで遊ぶ？</h1>
-  <p class="lead">1人で遊べるFPS、スマホ1台で向かい合って遊ぶ2人用ゲーム、3人で読み合う推理ゲームから選べます。</p>
+  <p class="lead">1人でじっくり遊べるゲーム、スマホをつないで最大4人で撃ち合うFPS、スマホ1台を囲んで遊ぶ2人用・3人用ゲームがあります。</p>
   <section class="group" style="margin-top:0">
+    <div class="group-head"><h2 class="group-title">みんなで撃ち合う</h2><span class="group-note">2〜4人で。スマホ1台でも、1人1台でも</span></div>
+    <a class="feature" href="hollow-duel.html">
+      <div class="f-top">
+        <div class="f-icon" aria-hidden="true">🎯🔫</div>
+        <div class="f-head">
+          <div class="label f-label">2–4 PLAYERS · FPS · NEW</div>
+          <div class="name">Hollow Duel</div>
+        </div>
+      </div>
+      <p class="desc">Hollow Rangeのアリーナで撃ち合う対戦FPS。しゃがんで箱に隠れ、スライドで滑り込み、のぞき込んで狙い撃つ。先に5回倒した人の勝ち。</p>
+      <div class="f-modes">
+        <div class="f-mode"><b>1台で2人</b><span>スマホを机に置いて、上下に分かれた画面で向かい合う</span></div>
+        <div class="f-mode"><b>2〜4台で最大4人</b><span>1人1台。QRコードを読み取り合ってつなぐ（同じWi-Fiで）</span></div>
+      </div>
+      <div class="go">対戦する →</div>
+    </a>
+  </section>
+  <section class="group">
     <div class="group-head"><h2 class="group-title">1人で遊ぶ</h2></div>
     <div class="cards compact">
       <a class="card solo" href="fps.html"><div class="icon">🎯💥</div><div class="label">1 PLAYER</div><div class="name">Hollow Range</div><div class="desc">廃墟の射撃場で、ドローンを撃ち落とすFPS。ハイスコアをねらうウェーブと、全5章のストーリーから選べます。</div><div class="go">1人で遊ぶ →</div></a>
@@ -33,7 +60,6 @@
       <a class="card two" href="light-cycles.html"><div class="icon">🏍️✨</div><div class="label new">2 PLAYERS · NEW</div><div class="name">Light Cycles</div><div class="desc">光の軌跡を残して走るバイクで、相手を囲い込め。先にぶつかったほうの負け。</div><div class="go">2人で遊ぶ →</div></a>
       <a class="card two" href="air-hockey.html"><div class="icon">🏒</div><div class="label">2 PLAYERS</div><div class="name">Air Hockey</div><div class="desc">指でパドルを振って、相手のゴールへ。速く振るほど強く打てます。</div><div class="go">2人で遊ぶ →</div></a>
       <a class="card two" href="tap-battle.html"><div class="icon">⚡👆</div><div class="label">2 PLAYERS</div><div class="name">Tap Battle</div><div class="desc">連打で真ん中の線を押し合う綱引き。相手の端まで押し切れ！</div><div class="go">2人で遊ぶ →</div></a>
-      <a class="card two" href="hollow-duel.html"><div class="icon">🎯🔫</div><div class="label">2–4 PLAYERS</div><div class="name">Hollow Duel</div><div class="desc">Hollow Rangeのアリーナで、向かい合ってFPS対戦。スマホをQRでつなげば、1人1台で4人まで撃ち合える。</div><div class="go">2人で遊ぶ →</div></a>
       <a class="card two" href="charge-duel.html"><div class="icon">🔥⚡</div><div class="label">2 PLAYERS</div><div class="name">Charge Fire Duel</div><div class="desc">チャージ、ファイア、カウンターを3秒ごとに選ぶ読み合い。10ポイント先取。</div><div class="go">2人で遊ぶ →</div></a>
     </div>
     <h3 class="sub">交代で考える、ボードゲーム</h3>
