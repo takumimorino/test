@@ -610,12 +610,13 @@
       snout: new THREE.MeshStandardMaterial({ roughness: .85 }), nose: new THREE.MeshStandardMaterial({ roughness: .4 }),
       inner: new THREE.MeshStandardMaterial({ roughness: .85 }) };
   }
-  // 見た目は4種類の動物。耳やしっぽは飾りなので、動物によって弾の当たりやすさは変わらない
+  // 見た目は4種類の動物。動物ごとに体の大きさ（size）が違い、当たり判定もそのまま変わる。
+  // 耳・鼻は頭あつかい（当たるとダメージ2倍）、しっぽと手は体あつかい。ウサギは長い耳を撃たれやすいぶん不利
   const ANIMALS = [
-    { id: 'cat', name: 'ネコ', emoji: '🐱', fur: 0x8e8983, snout: 0xf2ede4, nose: 0xff8fa8, inner: 0xffb3c6 },
-    { id: 'dog', name: 'イヌ', emoji: '🐶', fur: 0xd39a5c, snout: 0xf6e3c6, nose: 0x231c18, inner: 0x8a5a32 },
-    { id: 'rabbit', name: 'ウサギ', emoji: '🐰', fur: 0xf0ede6, snout: 0xffffff, nose: 0xff8fa8, inner: 0xffb3c6 },
-    { id: 'bear', name: 'クマ', emoji: '🐻', fur: 0x7b5236, snout: 0xc89b6d, nose: 0x231c18, inner: 0x5a3a24 }
+    { id: 'cat', name: 'ネコ', emoji: '🐱', size: .88, hit: '小さくて当たりにくい', fur: 0x8e8983, snout: 0xf2ede4, nose: 0xff8fa8, inner: 0xffb3c6 },
+    { id: 'dog', name: 'イヌ', emoji: '🐶', size: 1, hit: 'ふつうの大きさ', fur: 0xd39a5c, snout: 0xf6e3c6, nose: 0x231c18, inner: 0x8a5a32 },
+    { id: 'rabbit', name: 'ウサギ', emoji: '🐰', size: .95, hit: '耳も頭あつかい（当たると2倍）', fur: 0xf0ede6, snout: 0xffffff, nose: 0xff8fa8, inner: 0xffb3c6 },
+    { id: 'bear', name: 'クマ', emoji: '🐻', size: 1.15, hit: '体が大きくて当たりやすい', fur: 0x7b5236, snout: 0xc89b6d, nose: 0x231c18, inner: 0x5a3a24 }
   ];
   const AG = {
     catEar: new THREE.ConeGeometry(.085, .17, 4), dogEar: new THREE.BoxGeometry(.06, .21, .13),
@@ -630,26 +631,28 @@
     m.fur.color.set(A.fur); m.snout.color.set(A.snout); m.nose.color.set(A.nose); m.inner.color.set(A.inner);
     while (m.acc.children.length) m.acc.remove(m.acc.children[0]);
     m.ears = [];
-    const part = (gm, mt, x, y, z, parent = m.acc) => {
-      const s = new THREE.Mesh(gm, mt); s.position.set(x, y, z); s.castShadow = true; s.raycast = () => {}; parent.add(s); return s;
+    m.size = A.size; m.g.scale.setScalar(A.size);
+    // weak = 頭あつかい（耳・鼻）。ほかは体あつかい
+    const part = (gm, mt, x, y, z, parent = m.acc, weak = false) => {
+      const s = new THREE.Mesh(gm, mt); s.position.set(x, y, z); s.castShadow = true; if (weak) s.userData.weak = true; parent.add(s); return s;
     };
     // 付け根を軸に回せる耳やしっぽ。fold はしゃがんだときに後ろへ倒す量
     const pivot = (x, y, z, rx, rz, fold = 0) => {
       const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.set(rx, 0, rz); p.userData.rx = rx; p.userData.fold = fold;
       m.acc.add(p); if (fold) m.ears.push(p); return p;
     };
-    part(AG.snout, m.snout, 0, 1.64, -.19).scale.set(1, .8, .9);
-    part(AG.nose, m.nose, 0, 1.68, -.27);
+    part(AG.snout, m.snout, 0, 1.64, -.19, m.acc, true).scale.set(1, .8, .9);
+    part(AG.nose, m.nose, 0, 1.68, -.27, m.acc, true);
     for (const s of [-1, 1]) {
       part(AG.paw, m.fur, s * .45, .78, -.04).scale.set(1, .8, 1);
-      if (A.id === 'cat') part(AG.catEar, m.fur, 0, .085, 0, pivot(s * .12, 1.86, 0, 0, -s * .3, .9));
-      if (A.id === 'dog') part(AG.dogEar, m.inner, 0, -.1, 0, pivot(s * .21, 1.82, 0, 0, s * .3));
+      if (A.id === 'cat') part(AG.catEar, m.fur, 0, .085, 0, pivot(s * .12, 1.86, 0, 0, -s * .3, .9), true);
+      if (A.id === 'dog') part(AG.dogEar, m.inner, 0, -.1, 0, pivot(s * .21, 1.82, 0, 0, s * .3), true);
       if (A.id === 'rabbit') {
         const p = pivot(s * .09, 1.88, 0, 0, -s * .12, 1.2);
-        part(AG.rabbitEar, m.fur, 0, .17, 0, p).scale.set(1, 1, .65);
-        part(AG.rabbitIn, m.inner, 0, .17, -.03, p);
+        part(AG.rabbitEar, m.fur, 0, .17, 0, p, true).scale.set(1, 1, .65);
+        part(AG.rabbitIn, m.inner, 0, .17, -.03, p, true);
       }
-      if (A.id === 'bear') part(AG.bearEar, m.fur, s * .17, 1.87, 0).scale.set(1, 1, .6);
+      if (A.id === 'bear') part(AG.bearEar, m.fur, s * .17, 1.87, 0, m.acc, true).scale.set(1, 1, .6);
     }
     if (A.id === 'cat' || A.id === 'dog') part(AG.tail, m.fur, 0, .2, 0, pivot(0, .78, .17, A.id === 'cat' ? .9 : .5, 0)).scale.set(1, A.id === 'cat' ? 1 : .55, 1);
     else part(AG.puff, m.fur, 0, .74, .2).scale.setScalar(A.id === 'bear' ? .65 : 1);
@@ -679,7 +682,7 @@
   const pv = { r: null, scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(30, 4 / 5, .1, 20) };
   pv.scene.add(new THREE.HemisphereLight(0xb9c6d3, 0x2a2219, .55));
   { const d = new THREE.DirectionalLight(0xffe2bd, .75); d.position.set(-2, 3, -4); pv.scene.add(d); }
-  pv.cam.position.set(0, 1.25, -4.4); pv.cam.lookAt(0, 1.08, 0);
+  pv.cam.position.set(0, 1.3, -5); pv.cam.lookAt(0, 1.12, 0);  // クマの耳まで入るように
   function drawPreview(p, t) {
     if (pv.r === null) {
       try { pv.r = new THREE.WebGLRenderer({ antialias: true, alpha: true }); pv.r.setPixelRatio(1); pv.r.setSize(168, 210, false); pv.r.outputEncoding = THREE.sRGBEncoding; }
@@ -778,7 +781,7 @@
           <div class="picks">
             <div class="pick" role="radiogroup" aria-label="見た目">
               <span class="pick-l">見た目</span>
-              ${ANIMALS.map((a, k) => `<button class="chip skin" type="button" role="radio" aria-checked="false" data-k="${k}"><span class="em">${a.emoji}</span>${a.name}</button>`).join('')}
+              ${ANIMALS.map((a, k) => `<button class="chip skin" type="button" role="radio" aria-checked="false" data-k="${k}" title="${a.hit}"><span class="em">${a.emoji}</span>${a.name}</button>`).join('')}
             </div>
             <div class="pick" role="radiogroup" aria-label="武器">
               <span class="pick-l">武器（やられるたびに選び直せる）</span>
@@ -968,12 +971,13 @@
     const hs = Math.hypot(p.vx, p.vz);
     if (!p.dead && p.onGround && hs > .5) p.bobPhase += dt * hs * 1.25;
     p.landDip = Math.max(0, p.landDip - dt * .6);
-    let y = p.pos.y + EYE + (p.onGround ? Math.sin(p.bobPhase * 2) * .035 * Math.min(1, hs / 7) : 0) - p.landDip;
+    const eye = EYE * p.model.size;
+    let y = p.pos.y + eye + (p.onGround ? Math.sin(p.bobPhase * 2) * .035 * Math.min(1, hs / 7) : 0) - p.landDip;
     let pitch = p.pitch, roll = (p.i && !online ? Math.PI : 0) + .07 * p.leanT;
-    y -= .72 * p.crouchT;
+    y -= .72 * p.model.size * p.crouchT;
     if (p.dead) {
       const d = Math.min(1, p.deathT / .6);
-      y = p.pos.y + EYE - 1.15 * d; pitch = p.pitch * (1 - d) - .25 * d; roll += .45 * d;
+      y = p.pos.y + eye - 1.15 * d; pitch = p.pitch * (1 - d) - .25 * d; roll += .45 * d;
     }
     p.cam.position.set(p.pos.x, y, p.pos.z);
     p.cam.rotation.set(pitch, p.yaw, roll);
@@ -1099,7 +1103,7 @@
     // 狙いの中心を寄せたあとでばらつきを足すので、腰だめのぶれは残る
     let best = (.02 + .055 * p.adsT) * W.assist;
     for (const q of foes) {
-      const chest = new V3(q.pos.x, q.pos.y + 1.2 - .6 * q.crouchT, q.pos.z), to = chest.clone().sub(p.cam.position), ang = fwd.angleTo(to);
+      const chest = new V3(q.pos.x, q.pos.y + (1.2 - .6 * q.crouchT) * q.model.size, q.pos.z), to = chest.clone().sub(p.cam.position), ang = fwd.angleTo(to);
       if (ang < best && hasLOS(p.cam.position, chest)) { best = ang; aimDir.copy(to).normalize(); }
     }
     const right = new V3(1, 0, 0).applyQuaternion(p.cam.quaternion), up = new V3(0, 1, 0).applyQuaternion(p.cam.quaternion);
@@ -1152,7 +1156,7 @@
     let foe = null, at = null, best = Infinity;
     for (const q of others(p)) {
       if (q.dead) continue;
-      const chest = new V3(q.pos.x, q.pos.y + 1.1 - .5 * q.crouchT, q.pos.z), to = chest.clone().sub(p.cam.position), d = to.length(), ang = fwd.angleTo(to);
+      const chest = new V3(q.pos.x, q.pos.y + (1.1 - .5 * q.crouchT) * q.model.size, q.pos.z), to = chest.clone().sub(p.cam.position), d = to.length(), ang = fwd.angleTo(to);
       if (d > W.reach || ang > .65 || !hasLOS(p.cam.position, chest)) continue;
       if (ang + d * .1 < best) { best = ang + d * .1; foe = q; at = chest; }
     }
@@ -1229,7 +1233,7 @@
     // 相手から見える体
     const m = p.model;
     m.g.position.copy(p.pos); m.g.rotation.y = p.yaw;
-    m.g.scale.y = 1 - .45 * p.crouchT;
+    m.g.scale.set(m.size, m.size * (1 - .45 * p.crouchT), m.size);
     foldEars(m, p.crouchT);  // しゃがむと、立った耳は後ろに倒れる
     p.hitFlash = Math.max(0, p.hitFlash - dt);
     m.team.emissiveIntensity = p.hitFlash > 0 ? 1.4 : .25;
@@ -1893,6 +1897,7 @@
     });
     for (const b of u.skins) b.addEventListener('click', () => {
       setSkin(p, +b.dataset.k);
+      u.wdesc.textContent = `${ANIMALS[p.skin].name}：${ANIMALS[p.skin].hit}`;
       store.set(online ? 'hd.skinNet' : 'hd.skin' + p.i, p.skin);  // 2台以上のときは、このスマホの見た目として覚える
       updatePanels();
     });

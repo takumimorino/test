@@ -224,6 +224,26 @@
   .ch-s { font-size: 11px; font-weight: 700; color: var(--muted); }
   .ch-s.new { color: var(--sodium); }
   .chmeta { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+  /* 見た目と武器を選ぶ */
+  .look { display: flex; align-items: center; gap: 14px; padding: 12px 14px; background: rgba(236, 230, 216, .04); border: 1px solid var(--line); border-radius: 4px; }
+  #pvc { width: 84px; height: 105px; flex: none; border-radius: 4px; background: radial-gradient(circle at 50% 40%, rgba(236, 230, 216, .16), rgba(236, 230, 216, .03) 70%); }
+  .picks { flex: 1; min-width: 0; display: grid; gap: 8px; }
+  .pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .pick-l { grid-column: 1 / -1; font-weight: 700; font-size: 11px; letter-spacing: .1em; color: var(--muted); }
+  .chip { display: grid; justify-items: center; gap: 2px; padding: 6px 2px 5px; font: 700 12px/1.2 var(--body); letter-spacing: -.02em; white-space: nowrap; color: var(--ink);
+    background: rgba(236, 230, 216, .06); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; touch-action: manipulation; overflow: hidden; }
+  .chip .em { font-size: 20px; line-height: 1.1; }
+  .chip:hover { border-color: var(--ink); }
+  .chip.on { color: var(--sodium); border-color: var(--sodium); box-shadow: inset 0 0 0 1px var(--sodium); }
+  .chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  #lookDesc { margin: 0; font-size: 12px; line-height: 1.6; color: var(--muted); }
+  #lookDesc b { color: var(--ink); }
+  @media (max-width: 420px) { .look { padding: 10px; gap: 10px; } #pvc { width: 64px; height: 80px; } .chip { font-size: 10px; } .chip .em { font-size: 17px; } }
+  /* スナイパーでのぞき込んだときのスコープ */
+  #scope { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(circle closest-side at 50% 50%, transparent 0 95%, #05080b 96%); }
+  #scope::before, #scope::after { content: ""; position: absolute; background: rgba(5, 8, 11, .8); }
+  #scope::before { left: 50%; top: 0; bottom: 0; width: 1px; }
+  #scope::after { top: 50%; left: 0; right: 0; height: 1px; }
   .ghost { font-family: var(--body); font-weight: 700; font-size: 15px; letter-spacing: .08em; background: transparent; color: var(--ink); border: 1px solid var(--line);
     border-radius: 2px; padding: 13px 22px; cursor: pointer; touch-action: manipulation; }
   .ghost:hover { border-color: var(--ink); }
@@ -271,6 +291,7 @@
     <div class="ammoline"><span id="ammo" class="big">30</span><span id="ammoMag">/ 30</span></div>
     <div id="reloadTxt" class="lbl"></div>
   </div>
+  <div id="scope"></div>
   <div id="xhair"><i></i><i></i><i></i><i></i><b></b></div>
   <div id="hitm"></div>
   <div id="banner"><div id="bannerT"></div><div id="bannerS"></div></div>
@@ -300,6 +321,14 @@
     <h1 id="ovTitle">HOLLOW<span>RANGE</span></h1>
     <p id="ovText">廃墟になった射撃場が、ドローンに乗っ取られた！ 次々に出てくる敵を全部倒して、ウェーブをクリアしよう。赤く光っているところが弱点で、当てるとダメージ2倍。敵の弾はゆっくり飛んでくるから、動き回ればよけられる。</p>
     <div id="ovStats" hidden></div>
+    <div class="look" id="loadout">
+      <canvas id="pvc" width="168" height="210" aria-hidden="true"></canvas>
+      <div class="picks">
+        <div class="pick" id="skinPick" role="radiogroup" aria-label="見た目"></div>
+        <div class="pick" id="wpnPick" role="radiogroup" aria-label="武器"></div>
+        <p id="lookDesc"></p>
+      </div>
+    </div>
     <div class="modes" id="modes">
       <button class="mode" id="modeWave" type="button"><span class="mode-k">WAVE</span><span class="mode-n">ウェーブ</span><span class="mode-d">次々に出てくる敵を倒して、ハイスコアをめざす</span><span class="mode-p" id="modeWaveBest"></span></button>
       <button class="mode" id="modeStory" type="button"><span class="mode-k">STORY</span><span class="mode-n">ストーリー</span><span class="mode-d">射撃場にひとり残された管制AI「コダマ」と過ごす、全5章</span><span class="mode-p" id="modeStoryProg"></span></button>
@@ -326,10 +355,10 @@
       <dt><kbd>Shift</kbd></dt><dd>ダッシュ</dd>
       <dt><kbd>C</kbd></dt><dd>スライディング（走りながら）</dd>
       <dt><kbd>X</kbd></dt><dd>しゃがむ（もう一度押すと立つ）</dd>
-      <dt><kbd>R</kbd></dt><dd>リロード</dd>
+      <dt><kbd>R</kbd></dt><dd>リロード（ナイフは切る）</dd>
       <dt><kbd>Esc</kbd></dt><dd>一時停止</dd>
     </dl>
-    <p class="touch-hint">画面の左側を触るとそこにスティックが出て移動、右側をなぞると向きが変わる。「のぞく」でのぞき込むと弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込み。「しゃがむ」と低い箱の陰に隠れられる。スマホは横向きがおすすめ。</p>
+    <p class="touch-hint">画面の左側を触るとそこにスティックが出て移動、右側をなぞると向きが変わる。「のぞく」でのぞき込むと弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込み。「しゃがむ」と低い箱の陰に隠れられる。見た目と武器は、始める前にこの画面で選べる。スマホは横向きがおすすめ。</p>
   </div>
 </div>
 
@@ -360,7 +389,26 @@
   } catch (e) {}
 
   // ---------- Constants ----------
-  const HALF = 40, WALL_H = 7, EYE = 1.62, PR = 0.45, MAG = 30, RELOAD = 1.35, FIRE_INT = 0.095;
+  const HALF = 40, WALL_H = 7, EYE = 1.62, PR = 0.45;
+  // 武器。ダメージは1発（ショットガンは1粒）あたり。ドローン用に2人用より強め。
+  // hip/ads：腰だめ／のぞき込みのばらつき、zoom：のぞき込んだときの拡大、assist：エイムアシストの強さ、kick：反動（腰だめ／のぞき込み）、speed：足の速さ
+  const WEAPONS = [
+    { id: 'rifle', name: 'アサルトライフル', short: 'ライフル', icon: '🔫', desc: '連射できて扱いやすい。迷ったらこれ',
+      mag: 30, int: .095, body: 24, head: 54, reload: 1.35, hip: .03, ads: .0015, bloom: [.006, .05, .0015, .012], zoom: .3, assist: 1, pellets: 1, kick: [.008, .003], speed: 1 },
+    { id: 'shotgun', name: 'ショットガン', short: 'ショットガン', icon: '💥', desc: '散弾で、近くの敵をまとめて落とす。遠いと弱い',
+      mag: 6, int: .85, body: 12, head: 26, reload: 2.1, hip: .075, ads: .05, zoom: .15, assist: .6, pellets: 8, near: 6, far: 24, kick: [.04, .03], speed: 1 },
+    { id: 'sniper', name: 'スナイパーライフル', short: 'スナイパー', icon: '🎯', desc: '一撃が重い。のぞかないと当たらない',
+      mag: 5, int: 1.1, body: 95, head: 200, reload: 2.3, hip: .09, ads: .0004, zoom: .62, assist: .5, pellets: 1, kick: [.05, .04], speed: .95, scope: true },
+    { id: 'knife', name: 'ナイフ', short: 'ナイフ', icon: '🔪', desc: '足が速い。届けばドローンも一撃',
+      melee: true, int: .45, body: 90, head: 90, reach: 3.2, speed: 1.2 }
+  ];
+  // 自分の見た目。動物ごとに体の大きさが違い、敵の弾の当たり判定（太さ r・耳の高さ ear）と目の高さが変わる
+  const ANIMALS = [
+    { id: 'cat', name: 'ネコ', emoji: '🐱', size: .88, r: .44, ear: .1, hit: '小さくて弾が当たりにくい', fur: 0x8e8983, snout: 0xf2ede4, nose: 0xff8fa8, inner: 0xffb3c6 },
+    { id: 'dog', name: 'イヌ', emoji: '🐶', size: 1, r: .5, ear: .05, hit: 'ふつうの大きさ', fur: 0xd39a5c, snout: 0xf6e3c6, nose: 0x231c18, inner: 0x8a5a32 },
+    { id: 'rabbit', name: 'ウサギ', emoji: '🐰', size: .95, r: .47, ear: .42, hit: '長い耳にも弾が当たる', fur: 0xf0ede6, snout: 0xffffff, nose: 0xff8fa8, inner: 0xffb3c6 },
+    { id: 'bear', name: 'クマ', emoji: '🐻', size: 1.15, r: .58, ear: .08, hit: '体が大きくて弾が当たりやすい', fur: 0x7b5236, snout: 0xc89b6d, nose: 0x231c18, inner: 0x5a3a24 }
+  ];
 
   // ---------- Renderer & scenes ----------
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -662,23 +710,149 @@
   }
 
   // ---------- Gun (drawn in its own pass so it never clips into walls) ----------
-  const gun = new THREE.Group(); gunScene.add(gun);
-  const gm = new THREE.MeshStandardMaterial({ color: 0x2c333b, metalness: .65, roughness: .38 });
-  const gm2 = new THREE.MeshStandardMaterial({ color: 0x14191e, metalness: .4, roughness: .6 });
-  const gAccent = new THREE.MeshStandardMaterial({ color: 0xffae3b, emissive: 0xb86a10, emissiveIntensity: .7 });
-  const part = (g, m, x, y, z, rx = 0) => { const p = new THREE.Mesh(g, m); p.position.set(x, y, z); p.rotation.x = rx; gun.add(p); return p; };
-  part(new THREE.BoxGeometry(.09, .12, .5), gm, 0, 0, 0);
-  part(new THREE.BoxGeometry(.1, .1, .26), gm2, 0, -.005, -.36);
-  part(new THREE.CylinderGeometry(.022, .022, .34, 12), gm, 0, .02, -.52, Math.PI / 2);
-  const magMesh = part(new THREE.BoxGeometry(.065, .2, .09), gm2, 0, -.14, -.06, .18);
-  part(new THREE.BoxGeometry(.06, .15, .07), gm2, 0, -.11, .14, -.32);
-  part(new THREE.BoxGeometry(.07, .09, .22), gm2, 0, -.01, .34);
-  part(new THREE.BoxGeometry(.035, .045, .12), gm, 0, .085, -.04);
-  part(new THREE.BoxGeometry(.092, .012, .32), gAccent, 0, .038, -.12);
-  const flash = new THREE.Mesh(new THREE.PlaneGeometry(.34, .34),
-    new THREE.MeshBasicMaterial({ map: flashTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-  flash.position.set(0, .02, -.72); flash.visible = false; gun.add(flash);
+  // 自分の画面に映る武器（4種類ぶん作っておき、使う1つだけを表示する）。どれも動物の手で持つ
+  function makeGuns(color) {
+    const gm = new THREE.MeshStandardMaterial({ color: 0x2c333b, metalness: .65, roughness: .38 });
+    const gm2 = new THREE.MeshStandardMaterial({ color: 0x14191e, metalness: .4, roughness: .6 });
+    const acc = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: .45 });
+    const steel = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: .85, roughness: .25 });
+    const pawMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: .85 });
+    const flashMat = new THREE.MeshBasicMaterial({ map: flashTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    const build = (flashZ, fn) => {
+      const gun = new THREE.Group(); gun.visible = false; gunScene.add(gun);
+      const part = (g, m, x, y, z, rx = 0) => { const p = new THREE.Mesh(g, m); p.position.set(x, y, z); p.rotation.x = rx; gun.add(p); return p; };
+      const paw = (x, y, z, sx, sy, sz) => part(new THREE.SphereGeometry(.05, 12, 10), pawMat, x, y, z).scale.set(sx, sy, sz);
+      const flash = new THREE.Mesh(new THREE.PlaneGeometry(.34, .34), flashMat);
+      flash.position.set(0, .02, flashZ); flash.visible = false; gun.add(flash);
+      const mag = fn(part, paw);
+      mag.userData.base = mag.position.clone();
+      return { gun, mag, flash };
+    };
+    const rifle = build(-.72, (part, paw) => {
+      part(new THREE.BoxGeometry(.09, .12, .5), gm, 0, 0, 0);
+      part(new THREE.BoxGeometry(.1, .1, .26), gm2, 0, -.005, -.36);
+      part(new THREE.CylinderGeometry(.022, .022, .34, 12), gm, 0, .02, -.52, Math.PI / 2);
+      const mag = part(new THREE.BoxGeometry(.065, .2, .09), gm2, 0, -.14, -.06, .18);
+      part(new THREE.BoxGeometry(.06, .15, .07), gm2, 0, -.11, .14, -.32);
+      part(new THREE.BoxGeometry(.07, .09, .22), gm2, 0, -.01, .34);
+      part(new THREE.BoxGeometry(.035, .045, .12), gm, 0, .085, -.04);
+      part(new THREE.BoxGeometry(.092, .012, .32), acc, 0, .038, -.12);
+      paw(0, -.15, .15, 1.15, .95, 1.35); paw(0, -.085, -.3, 1.25, .85, 1.2);
+      return mag;
+    });
+    const shotgun = build(-.76, (part, paw) => {
+      part(new THREE.BoxGeometry(.1, .13, .4), gm2, 0, 0, .02);
+      part(new THREE.CylinderGeometry(.03, .03, .56, 12), gm, 0, .03, -.42, Math.PI / 2);
+      part(new THREE.CylinderGeometry(.022, .022, .48, 10), gm2, 0, -.025, -.38, Math.PI / 2);
+      const pump = part(new THREE.BoxGeometry(.1, .075, .2), gm2, 0, -.03, -.32);  // 撃つたび・リロードのたびに前後に動く
+      part(new THREE.BoxGeometry(.06, .15, .07), gm2, 0, -.11, .16, -.32);
+      part(new THREE.BoxGeometry(.08, .1, .26), gm2, 0, -.02, .36);
+      part(new THREE.BoxGeometry(.102, .014, .22), acc, 0, .067, .02);
+      paw(0, -.15, .17, 1.15, .95, 1.35); paw(0, -.075, -.32, 1.3, .9, 1.3);
+      return pump;
+    });
+    const sniper = build(-.9, (part, paw) => {
+      part(new THREE.BoxGeometry(.08, .11, .5), gm, 0, 0, .02);
+      part(new THREE.CylinderGeometry(.018, .022, .62, 12), gm, 0, .02, -.54, Math.PI / 2);
+      part(new THREE.BoxGeometry(.09, .09, .22), gm2, 0, -.005, -.3);
+      part(new THREE.CylinderGeometry(.034, .034, .3, 14), gm2, 0, .1, -.02, Math.PI / 2);
+      part(new THREE.CylinderGeometry(.044, .034, .05, 14), gm2, 0, .1, -.19, Math.PI / 2);
+      part(new THREE.BoxGeometry(.03, .04, .08), gm, 0, .06, -.02);
+      const mag = part(new THREE.BoxGeometry(.06, .12, .1), gm2, 0, -.1, -.04);
+      part(new THREE.BoxGeometry(.06, .15, .07), gm2, 0, -.11, .16, -.32);
+      part(new THREE.BoxGeometry(.075, .11, .3), gm2, 0, -.02, .38);
+      part(new THREE.BoxGeometry(.006, .03, .4), acc, .042, 0, .02);
+      paw(0, -.15, .17, 1.15, .95, 1.35); paw(0, -.08, -.3, 1.25, .85, 1.2);
+      return mag;
+    });
+    const knife = build(-.5, (part, paw) => {
+      const handle = part(new THREE.BoxGeometry(.035, .045, .13), gm2, 0, 0, .04);
+      part(new THREE.BoxGeometry(.08, .02, .025), gm, 0, 0, -.03);
+      part(new THREE.BoxGeometry(.01, .055, .27), steel, 0, .006, -.17);
+      part(new THREE.BoxGeometry(.012, .008, .2), acc, 0, .036, -.14);
+      paw(0, -.004, .05, 1.25, 1.15, 1.45);
+      return handle;
+    });
+    return { guns: [rifle, shotgun, sniper, knife], pawMat };
+  }
+  const { guns, pawMat } = makeGuns(0xffae3b);
+  let gun = guns[0].gun, magMesh = guns[0].mag, flash = guns[0].flash;
   const HIP = new V3(.2, -.2, -.46), ADS = new V3(0, -.107, -.36);
+  // ---------- 自分の見た目（メニューで、選んだ動物が回って見える） ----------
+  const suitMat = new THREE.MeshStandardMaterial({ color: 0x2b3138, roughness: .7, metalness: .2 });
+  const AG = {
+    catEar: new THREE.ConeGeometry(.085, .17, 4), dogEar: new THREE.BoxGeometry(.06, .21, .13),
+    rabbitEar: new THREE.CylinderGeometry(.04, .055, .34, 10), rabbitIn: new THREE.BoxGeometry(.03, .25, .012),
+    bearEar: new THREE.SphereGeometry(.08, 12, 10), snout: new THREE.SphereGeometry(.085, 12, 10), nose: new THREE.SphereGeometry(.028, 8, 6),
+    tail: new THREE.CylinderGeometry(.028, .036, .46, 8), puff: new THREE.SphereGeometry(.085, 10, 8), paw: new THREE.SphereGeometry(.1, 10, 8)
+  };
+  const HG = {
+    rifle: new THREE.BoxGeometry(.08, .11, .66), shotgun: new THREE.BoxGeometry(.1, .13, .56), sniper: new THREE.BoxGeometry(.07, .1, .92),
+    scope: new THREE.CylinderGeometry(.04, .04, .26, 10), blade: new THREE.BoxGeometry(.02, .07, .34), handle: new THREE.BoxGeometry(.045, .05, .14)
+  };
+  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: .85, roughness: .25 });
+  const pv = { r: null, scene: new THREE.Scene(), cam: new THREE.PerspectiveCamera(30, 4 / 5, .1, 20) };
+  pv.scene.add(new THREE.HemisphereLight(0xb9c6d3, 0x2a2219, .55));
+  { const d = new THREE.DirectionalLight(0xffe2bd, .75); d.position.set(-2, 3, -4); pv.scene.add(d); }
+  pv.cam.position.set(0, 1.3, -5); pv.cam.lookAt(0, 1.12, 0);
+  const me3 = (() => {
+    const color = 0xffae3b, g = new THREE.Group();
+    const team = new THREE.MeshStandardMaterial({ color, roughness: .5, emissive: color, emissiveIntensity: .25 });
+    const add = (gm, m, x, y, z) => { const s = new THREE.Mesh(gm, m); s.position.set(x, y, z); g.add(s); return s; };
+    add(new THREE.BoxGeometry(.52, .8, .34), suitMat, 0, .4, 0);
+    add(new THREE.BoxGeometry(.68, .72, .42), team, 0, 1.15, 0);
+    add(new THREE.BoxGeometry(.2, .62, .22), suitMat, -.45, 1.1, -.04);
+    add(new THREE.BoxGeometry(.2, .62, .22), suitMat, .45, 1.1, -.04);
+    const fur = new THREE.MeshStandardMaterial({ roughness: .85 });
+    add(new THREE.SphereGeometry(.23, 16, 12), fur, 0, 1.7, 0);
+    add(new THREE.BoxGeometry(.34, .09, .08), new THREE.MeshBasicMaterial({ color }), 0, 1.72, -.2);
+    const acc = new THREE.Group(), held = new THREE.Group(); g.add(acc, held);
+    pv.scene.add(g);
+    return { g, fur, acc, held, snout: new THREE.MeshStandardMaterial({ roughness: .85 }), nose: new THREE.MeshStandardMaterial({ roughness: .4 }),
+      inner: new THREE.MeshStandardMaterial({ roughness: .85 }) };
+  })();
+  function applyAnimal(m, k) {
+    const A = ANIMALS[k];
+    m.fur.color.set(A.fur); m.snout.color.set(A.snout); m.nose.color.set(A.nose); m.inner.color.set(A.inner);
+    m.g.scale.setScalar(A.size);
+    while (m.acc.children.length) m.acc.remove(m.acc.children[0]);
+    const part = (gm, mt, x, y, z, parent = m.acc) => { const s = new THREE.Mesh(gm, mt); s.position.set(x, y, z); parent.add(s); return s; };
+    const pivot = (x, y, z, rx, rz) => { const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.set(rx, 0, rz); m.acc.add(p); return p; };
+    part(AG.snout, m.snout, 0, 1.64, -.19).scale.set(1, .8, .9);
+    part(AG.nose, m.nose, 0, 1.68, -.27);
+    for (const s of [-1, 1]) {
+      part(AG.paw, m.fur, s * .45, .78, -.04).scale.set(1, .8, 1);
+      if (A.id === 'cat') part(AG.catEar, m.fur, 0, .085, 0, pivot(s * .12, 1.86, 0, 0, -s * .3));
+      if (A.id === 'dog') part(AG.dogEar, m.inner, 0, -.1, 0, pivot(s * .21, 1.82, 0, 0, s * .3));
+      if (A.id === 'rabbit') {
+        const p = pivot(s * .09, 1.88, 0, 0, -s * .12);
+        part(AG.rabbitEar, m.fur, 0, .17, 0, p).scale.set(1, 1, .65);
+        part(AG.rabbitIn, m.inner, 0, .17, -.03, p);
+      }
+      if (A.id === 'bear') part(AG.bearEar, m.fur, s * .17, 1.87, 0).scale.set(1, 1, .6);
+    }
+    if (A.id === 'cat' || A.id === 'dog') part(AG.tail, m.fur, 0, .2, 0, pivot(0, .78, .17, A.id === 'cat' ? .9 : .5, 0)).scale.set(1, A.id === 'cat' ? 1 : .55, 1);
+    else part(AG.puff, m.fur, 0, .74, .2).scale.setScalar(A.id === 'bear' ? .65 : 1);
+  }
+  function applyHeld(m, k) {
+    while (m.held.children.length) m.held.remove(m.held.children[0]);
+    const part = (gm, mt, x, y, z, rx = 0) => { const s = new THREE.Mesh(gm, mt); s.position.set(x, y, z); s.rotation.x = rx; m.held.add(s); return s; };
+    const id = WEAPONS[k].id;
+    if (id === 'rifle') part(HG.rifle, suitMat, .28, 1.22, -.34);
+    if (id === 'shotgun') part(HG.shotgun, suitMat, .28, 1.2, -.3);
+    if (id === 'sniper') { part(HG.sniper, suitMat, .28, 1.22, -.46); part(HG.scope, suitMat, .28, 1.32, -.3, Math.PI / 2); }
+    if (id === 'knife') { part(HG.handle, suitMat, .45, .8, -.1); part(HG.blade, bladeMat, .45, .82, -.33); }
+  }
+  function drawPreview(t) {
+    if (pv.r === null) {
+      try { pv.r = new THREE.WebGLRenderer({ antialias: true, alpha: true }); pv.r.setPixelRatio(1); pv.r.setSize(168, 210, false); pv.r.outputEncoding = THREE.sRGBEncoding; }
+      catch (e) { pv.r = false; }
+    }
+    if (!pv.r) return;
+    me3.g.rotation.y = t * .7;
+    pv.r.render(pv.scene, pv.cam);
+    const c = $('pvc').getContext('2d'); c.clearRect(0, 0, 168, 210); c.drawImage(pv.r.domElement, 0, 0, 168, 210);
+  }
 
   // ---------- Audio (synthesised, starts on first click) ----------
   let actx = null, master = null, noiseBuf = null;
@@ -723,13 +897,17 @@
     powerUp() { if (!actx) return; tone(50, 480, .9, 'sawtooth', .08); tone(960, 960, .15, 'sine', .1, .9); },
     chime() { if (!actx) return; tone(880, 880, .14, 'sine', .14); tone(1320, 1320, .2, 'sine', .12, .12); },
     speed() { if (!actx) return; tone(400, 1600, .3, 'sawtooth', .1); tone(800, 2400, .25, 'sine', .1, .08); },
-    slide() { if (!actx) return; noise(.45, 900, 'bandpass', .35); }
+    slide() { if (!actx) return; noise(.45, 900, 'bandpass', .35); },
+    shotgun() { if (!actx) return; noise(.3, 1100, 'lowpass', .7); tone(120, 32, .22, 'sine', .6); },
+    sniper() { if (!actx) return; noise(.06, 4200, 'highpass', .5); noise(.55, 700, 'lowpass', .4, .02); tone(230, 38, .28, 'sine', .55); },
+    pump() { if (!actx) return; noise(.04, 1800, 'bandpass', .3, .2); noise(.05, 1300, 'bandpass', .32, .34); },
+    swing() { if (!actx) return; noise(.16, 2600, 'bandpass', .36); }
   };
 
   // ---------- State ----------
   const player = { pos: new V3(0, 0, 33), vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0, onGround: true, hp: 100 };
   let state = 'menu', fallback = false, everLocked = false;
-  let ammo = MAG, reloadT = 0, lastShot = -1, bloom = 0, recoil = 0, flashT = 0, landDip = 0, bobPhase = 0;
+  let ammo = 0, reloadT = 0, lastShot = -1, bloom = 0, recoil = 0, flashT = 0, landDip = 0, bobPhase = 0;
   let firing = false, aiming = false, mouseHeld = false, jumpQueued = false;
   let score = 0, kills = 0, shotsFired = 0, shotsHit = 0, wave = 0, waveActive = false, interT = 0, spawnQueue = [], spawnT = 0, gt = 0;
   let dmgFlash = 0, dmgDirT = 0, adsT = 0;
@@ -860,7 +1038,7 @@
   function fireBolt(e, yawOff = 0, aim = null) {
     const from = e.pos.clone();
     const target = aim ? new V3(aim.x + rand(-.3, .3), aim.y + rand(-.2, .2), aim.z + rand(-.3, .3))
-      : new V3(player.pos.x + rand(-.7, .7), player.pos.y + 1.25 - .6 * crouchT + rand(-.3, .3), player.pos.z + rand(-.7, .7));
+      : new V3(player.pos.x + rand(-.7, .7), player.pos.y + (1.25 - .6 * crouchT) * ANIMALS[skin].size + rand(-.3, .3), player.pos.z + rand(-.7, .7));
     const dir = target.sub(from).normalize();
     if (yawOff) dir.applyAxisAngle(new V3(0, 1, 0), yawOff);
     from.addScaledVector(dir, e.type === 'boss' ? 1.9 : e.radius * e.scale * .7 + .2);
@@ -876,7 +1054,7 @@
   }
   const tmp = new V3(), desired = new V3(), headPos = new V3();
   function updateEnemies(dt) {
-    headPos.set(player.pos.x, player.pos.y + 1.4 - .7 * crouchT, player.pos.z);
+    headPos.set(player.pos.x, player.pos.y + (1.4 - .7 * crouchT) * ANIMALS[skin].size, player.pos.z);
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i];
       e.t += dt;
@@ -995,9 +1173,10 @@
       if (core.active && p.distanceToSquared(core.pos) < .9 * .9) {
         damageCore(b.dmg * .8); scene.remove(b.m); bolts.splice(i, 1); continue;
       }
-      const py = clamp(p.y, player.pos.y + .2, player.pos.y + 1.65 - .7 * crouchT);
-      const dx = p.x - player.pos.x, dy = p.y - py, dz = p.z - player.pos.z;
-      if (dx * dx + dy * dy + dz * dz < .5 * .5) {
+      // 自分の体は円柱で判定する。動物ごとに太さ（r）と高さが違う。ウサギは耳の分だけ高い（しゃがむと耳も倒れる）
+      const A = ANIMALS[skin], top = (1.65 - .7 * crouchT) * A.size + A.ear * (1 - .7 * crouchT) + .12;
+      const dx = p.x - player.pos.x, dz = p.z - player.pos.z, h = p.y - player.pos.y;
+      if (dx * dx + dz * dz < A.r * A.r && h > 0 && h < top) {
         hurt(b.dmg, tmp.copy(p).addScaledVector(b.vel, -1));
         scene.remove(b.m); bolts.splice(i, 1); continue;
       }
@@ -1018,6 +1197,44 @@
       }
     }
   }
+
+  // ---------- 見た目と武器を選ぶ（メニュー・ゲームオーバー・章の合間） ----------
+  let skin = 0, nextWeapon = 0, weapon = 0, Wp = WEAPONS[0], swingT = 0, pumpT = 0, scoped = false;
+  function setSkin(k) {
+    skin = clamp(Math.round(+k) || 0, 0, ANIMALS.length - 1);
+    applyAnimal(me3, skin); pawMat.color.set(ANIMALS[skin].fur);
+    for (const b of document.querySelectorAll('#skinPick .chip')) { const on = +b.dataset.k === skin; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }
+  }
+  // 武器を持ち替える（ゲームや章を始めるとき）
+  function setWeapon(k) {
+    weapon = clamp(Math.round(+k) || 0, 0, WEAPONS.length - 1); Wp = WEAPONS[weapon];
+    for (const g of guns) g.gun.visible = false;
+    ({ gun, mag: magMesh, flash } = guns[weapon]);
+    gun.visible = true;
+    ammo = Wp.mag || 0; reloadT = 0; bloom = 0; swingT = 0; pumpT = 0;
+    if (Wp.melee) aiming = false;
+    $('tAim').classList.remove('on'); $('tAim').hidden = $('tReload').hidden = !!Wp.melee;
+    $('tFire').textContent = Wp.melee ? '切る' : '撃つ';
+    $('ammoMag').textContent = Wp.melee ? Wp.short : `/ ${Wp.mag} · ${Wp.short}`;
+    delete hudCache.ammo; delete hudCache.reloadTxt;
+    applyHeld(me3, weapon);
+  }
+  function pickWeapon(k) {
+    nextWeapon = clamp(Math.round(+k) || 0, 0, WEAPONS.length - 1);
+    for (const b of document.querySelectorAll('#wpnPick .chip')) { const on = +b.dataset.w === nextWeapon; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }
+    applyHeld(me3, nextWeapon);
+  }
+  $('skinPick').innerHTML = '<span class="pick-l">見た目</span>' + ANIMALS.map((a, k) =>
+    `<button class="chip" type="button" role="radio" aria-checked="false" data-k="${k}" title="${a.hit}"><span class="em">${a.emoji}</span>${a.name}</button>`).join('');
+  $('wpnPick').innerHTML = '<span class="pick-l">武器</span>' + WEAPONS.map((w, k) =>
+    `<button class="chip" type="button" role="radio" aria-checked="false" data-w="${k}" title="${w.desc}"><span class="em">${w.icon}</span>${w.short}</button>`).join('');
+  const lookDesc = () => {
+    const A = ANIMALS[skin], W = WEAPONS[nextWeapon];
+    $('lookDesc').innerHTML = `<b>${A.name}</b>：${A.hit}<br><b>${W.name}</b>：${W.desc}`;
+  };
+  for (const b of document.querySelectorAll('#skinPick .chip')) b.addEventListener('click', () => { setSkin(+b.dataset.k); store.set('hr.skin', skin); lookDesc(); });
+  for (const b of document.querySelectorAll('#wpnPick .chip')) b.addEventListener('click', () => { pickWeapon(+b.dataset.w); store.set('hr.wpn', nextWeapon); lookDesc(); });
+  setSkin(store.get('hr.skin', 0)); pickWeapon(store.get('hr.wpn', 0)); lookDesc();
 
   // ---------- Player ----------
   function hurt(dmg, src) {
@@ -1041,7 +1258,7 @@
     if (sprint && crouching) setCrouch(false);  // ダッシュすると立ち上がる
     const boost = speedT > 0 ? SPEED_MUL : 1;
     speedT = Math.max(0, speedT - dt); slideCD = Math.max(0, slideCD - dt);
-    const speed = (aiming ? 4 : sprint ? 10.5 : 7) * boost * (crouching ? .5 : 1);
+    const speed = (aiming ? 4 : sprint ? 10.5 : 7) * boost * Wp.speed * (crouching ? .5 : 1);
     const sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
     const tx = (-sy * mz + cy * mx) * speed, tz = (-cy * mz - sy * mx) * speed;
     if (slideT > 0) {
@@ -1079,18 +1296,19 @@
     const ease = 1 - Math.exp(-14 * dt);
     crouchT += ((slideT > 0 || crouching ? 1 : 0) - crouchT) * ease;
     leanT += ((slideT > 0 ? 1 : 0) - leanT) * ease;  // 体を傾けるのはスライド中だけ
-    camera.position.set(player.pos.x, player.pos.y + EYE + bobY - landDip - .72 * crouchT, player.pos.z);
+    const size = ANIMALS[skin].size;  // 目の高さも体の大きさに合わせる
+    camera.position.set(player.pos.x, player.pos.y + EYE * size + bobY - landDip - .72 * size * crouchT, player.pos.z);
     camera.rotation.set(player.pitch, player.yaw, .07 * leanT);
 
-    adsT += ((aiming ? 1 : 0) - adsT) * (1 - Math.exp(-14 * dt));
-    const fov = baseFov() * (1 - .3 * adsT) + 7 * Math.min(1, speedT) + 6 * leanT;
+    adsT += ((aiming && !Wp.melee ? 1 : 0) - adsT) * (1 - Math.exp(-14 * dt));
+    const fov = baseFov() * (1 - (Wp.zoom || 0) * adsT) + 7 * Math.min(1, speedT) + 6 * leanT;
     if (Math.abs(camera.fov - fov) > .01) { camera.fov = fov; camera.updateProjectionMatrix(); }
     const gfov = 60 * baseFov() / 75;
     if (Math.abs(gunCam.fov - gfov) > .01) { gunCam.fov = gfov; gunCam.updateProjectionMatrix(); }
 
-    if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { reloadT = 0; ammo = MAG; } }
+    if (reloadT > 0) { reloadT -= dt; if (reloadT <= 0) { reloadT = 0; ammo = Wp.mag; } }
     bloom = Math.max(0, bloom - dt * .05);
-    if (firing && gt - lastShot >= FIRE_INT) fire();
+    if (firing && gt - lastShot >= Wp.int) fire();
   }
   // Keep roughly a 90° horizontal view on tall (portrait) screens.
   function baseFov() {
@@ -1114,8 +1332,9 @@
   }
   // 腰だめ撃ちはばらつきが大きく、のぞき込む（ADS）とほぼまっすぐ飛ぶ
   function spreadNow() {
+    if (Wp.melee) return 0;
     const moving = Math.hypot(player.vx, player.vz) > 1;
-    const hip = .03 + bloom, ads = .0015 + bloom * .2;
+    const hip = Wp.hip + bloom, ads = Wp.ads + bloom * .2;
     let sp = hip * (1 - adsT) + ads * adsT;
     if (moving) sp *= 1 + .7 * (1 - adsT) + .25 * adsT;
     if (!player.onGround) sp *= 2.2;
@@ -1124,24 +1343,25 @@
     return sp;
   }
   function startReload() {
-    if (reloadT > 0 || ammo === MAG || state !== 'playing') return;
-    reloadT = RELOAD; sfx.reload();
+    if (Wp.melee || reloadT > 0 || ammo === Wp.mag || state !== 'playing') return;
+    reloadT = Wp.reload; sfx.reload();
   }
   const ray = new THREE.Raycaster(), dir = new V3();
   function enemyOf(o) { while (o) { if (o.userData.enemy) return o.userData.enemy; o = o.parent; } return null; }
   function fire() {
     lastShot = gt;
+    if (Wp.melee) { swing(); return; }
     if (reloadT > 0) return;
     if (ammo <= 0) { sfx.dry(); startReload(); return; }
     ammo--; shotsFired++;
-    const spread = spreadNow();
-    bloom = adsT > .5 ? Math.min(.012, bloom + .0015) : Math.min(.05, bloom + .006);
+    const W = Wp, spread = spreadNow();
+    if (W.bloom) bloom = adsT > .5 ? Math.min(W.bloom[3], bloom + W.bloom[2]) : Math.min(W.bloom[1], bloom + W.bloom[0]);
     const fwd = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
     const aimDir = fwd.clone();
     if (isTouch) {
       // タッチ操作のエイムアシスト：のぞき込んでいるときだけしっかり吸い付き、腰だめは弱い。
       // 狙いの中心を寄せたあとでばらつきを足すので、腰だめのぶれは残る
-      let target = null, bestAng = .02 + .05 * adsT;
+      let target = null, bestAng = (.02 + .05 * adsT) * W.assist;
       for (const e of enemies) {
         if (e.spawnT > 0) continue;
         const to = new V3().subVectors(e.pos, camera.position), ang = fwd.angleTo(to);
@@ -1149,32 +1369,64 @@
       }
       if (target && hasLOS(camera.position, tmp.copy(camera.position).add(target))) aimDir.copy(target).normalize();
     }
-    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
     const right = new V3(1, 0, 0).applyQuaternion(camera.quaternion), up = new V3(0, 1, 0).applyQuaternion(camera.quaternion);
-    dir.copy(aimDir).addScaledVector(right, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r).normalize();
-    ray.set(camera.position, dir); ray.far = 160;
     const targets = [floor, ...solids]; for (const e of enemies) targets.push(e.g);
-    const hits = ray.intersectObjects(targets, true);
-    let end;
-    if (hits.length) {
-      const h = hits[0]; end = h.point.clone();
-      const e = enemyOf(h.object);
-      if (e && e.spawnT <= 0) {
-        const weak = !!h.object.userData.weak;
-        shotsHit++;
-        const killed = damageEnemy(e, weak ? (e.type === 'boss' ? 40 : 54) : 24, weak);
-        burst(end, weak ? 0xff4a3d : 0xffae3b, weak ? 9 : 5, 4);
-        hitMarker(weak, killed); sfx.hit(weak);
-      } else {
-        burst(end, 0xbdb6a6, 5, 2.5);
-        if (h.object === screen) shotKodama();
-      }
-    } else end = camera.position.clone().addScaledVector(dir, 160);
-    tracer(camera.localToWorld(new V3(aiming ? 0 : .16, aiming ? -.07 : -.15, -.9)), end);
-    player.pitch = Math.min(1.5, player.pitch + (adsT > .5 ? .003 : .008));
-    player.yaw += (Math.random() - .5) * (adsT > .5 ? .0015 : .006);
-    recoil = 1; flashT = .045; sfx.shot();
+    const ends = [], dealt = new Map();
+    // ショットガンは1回で8粒。1粒ずつ当たりを調べて、敵ごとにダメージを合計する（遠いほど弱い）
+    for (let n = 0; n < W.pellets; n++) {
+      const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
+      dir.copy(aimDir).addScaledVector(right, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r).normalize();
+      ray.set(camera.position, dir); ray.far = 160;
+      const hits = ray.intersectObjects(targets, true);
+      let end;
+      if (hits.length) {
+        const h = hits[0]; end = h.point.clone();
+        const e = enemyOf(h.object);
+        if (e && e.spawnT <= 0) {
+          const weak = !!h.object.userData.weak;
+          const fall = W.far ? clamp(1 - (h.distance - W.near) / (W.far - W.near) * .7, .3, 1) : 1;
+          const d = dealt.get(e) || { d: 0, weak: false, at: end };
+          d.d += (weak ? W.head * (e.type === 'boss' ? .74 : 1) : W.body) * fall; d.weak = d.weak || weak; dealt.set(e, d);
+        } else {
+          burst(end, 0xbdb6a6, W.pellets > 1 ? 2 : 5, 2.5);
+          if (h.object === screen) shotKodama();
+        }
+      } else end = camera.position.clone().addScaledVector(dir, 160);
+      ends.push(end);
+    }
+    if (dealt.size) shotsHit++;
+    for (const [e, d] of dealt) {
+      if (e.dead) continue;
+      const killed = damageEnemy(e, Math.round(d.d), d.weak);
+      burst(d.at, d.weak ? 0xff4a3d : 0xffae3b, d.weak ? 9 : 5, 4);
+      hitMarker(d.weak, killed); sfx.hit(d.weak);
+    }
+    const muzzle = camera.localToWorld(new V3(aiming ? 0 : .16, aiming ? -.07 : -.15, -.9));
+    for (const end of ends) tracer(muzzle, end);
+    player.pitch = Math.min(1.5, player.pitch + W.kick[adsT > .5 ? 1 : 0]);
+    player.yaw += (Math.random() - .5) * (adsT > .5 ? .0015 : .006) * (W.pellets > 1 ? 2 : 1);
+    recoil = 1; flashT = .045;
+    if (W.id === 'shotgun') { sfx.shotgun(); pumpT = PUMP; sfx.pump(); } else if (W.id === 'sniper') sfx.sniper(); else sfx.shot();
     if (ammo === 0) startReload();
+  }
+  // ナイフ：少し踏み込んで、目の前（届く距離・正面の左右40°くらい）の敵を切る。切った場所は弱点あつかい
+  const SWING = .3, PUMP = .5;
+  function swing() {
+    swingT = SWING; shotsFired++; sfx.swing();
+    if (player.onGround) { player.vx -= Math.sin(player.yaw) * 5; player.vz -= Math.cos(player.yaw) * 5; }
+    const fwd = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
+    let foe = null, best = Infinity;
+    for (const e of enemies) {
+      if (e.spawnT > 0 || e.dead) continue;
+      const to = new V3().subVectors(e.pos, camera.position), d = to.length() - e.radius * e.scale * .8, ang = fwd.angleTo(to);
+      if (d > Wp.reach || ang > .7 || !hasLOS(camera.position, e.pos)) continue;
+      if (ang + d * .1 < best) { best = ang + d * .1; foe = e; }
+    }
+    if (!foe) return;
+    shotsHit++;
+    const killed = damageEnemy(foe, Wp.body, true);
+    burst(foe.pos.clone(), 0xff4a3d, 9, 4);
+    hitMarker(true, killed); sfx.hit(true);
   }
   let hitTimer = 0;
   function hitMarker(weak, kill) {
@@ -1184,12 +1436,25 @@
 
   function animateGun(dt) {
     recoil = Math.max(0, recoil - dt * 9);
-    const p = reloadT > 0 ? 1 - reloadT / RELOAD : 0, dip = Math.sin(p * Math.PI);
+    pumpT = Math.max(0, pumpT - dt); swingT = Math.max(0, swingT - dt);
+    const p = reloadT > 0 ? 1 - reloadT / Wp.reload : 0, dip = Math.sin(p * Math.PI);
     const hs = Math.hypot(player.vx, player.vz), amp = Math.min(1, hs / 7) * (1 - adsT * .8);
-    const base = tmp.copy(HIP).lerp(ADS, adsT);
-    gun.position.set(base.x + Math.cos(bobPhase) * .012 * amp, base.y + Math.abs(Math.sin(bobPhase)) * .012 * amp - dip * .12 - landDip * .3, base.z + recoil * .06);
-    gun.rotation.set(recoil * .05 - dip * .7, dip * .3, dip * .25);
-    magMesh.position.y = -.14 - (p > .15 && p < .6 ? Math.sin((p - .15) / .45 * Math.PI) * .25 : 0);
+    const bobX = Math.cos(bobPhase) * .012 * amp, bobY = Math.abs(Math.sin(bobPhase)) * .012 * amp;
+    if (Wp.melee) {
+      // ナイフは右から左へ振り抜く
+      const s = swingT > 0 ? Math.sin((1 - swingT / SWING) * Math.PI) : 0;
+      gun.position.set(.22 - s * .22 + bobX, -.22 + s * .06 + bobY - landDip * .3, -.42 - s * .14);
+      gun.rotation.set(.25 - s * .45, .15 + s * 1.1, -s * .55);
+    } else {
+      const base = tmp.copy(HIP).lerp(ADS, adsT);
+      gun.position.set(base.x + bobX, base.y + bobY - dip * .12 - landDip * .3, base.z + recoil * .06);
+      gun.rotation.set(recoil * .05 - dip * .7, dip * .3, dip * .25);
+      // マガジン（ショットガンはポンプ）の動き
+      const b = magMesh.userData.base, off = p > .15 && p < .6 ? Math.sin((p - .15) / .45 * Math.PI) : 0;
+      if (Wp.id === 'shotgun') magMesh.position.set(b.x, b.y, b.z + (off + (pumpT > 0 ? Math.sin((1 - pumpT / PUMP) * Math.PI) : 0)) * .11);
+      else magMesh.position.set(b.x, b.y - off * .25, b.z);
+    }
+    gun.visible = !scoped;
     flashT -= dt; flash.visible = flashT > 0;
     if (flash.visible) flash.rotation.z = Math.random() * Math.PI;
     muzzleLight.intensity = flashT > 0 ? 2.2 : 0;
@@ -1247,8 +1512,10 @@
     const hp = Math.ceil(player.hp);
     setText('hp', String(hp));
     $('hpbar').style.width = hp + '%'; $('hpbar').classList.toggle('low', hp <= 30);
-    setText('ammo', String(ammo)); $('ammo').classList.toggle('empty', ammo === 0);
-    setText('reloadTxt', reloadT > 0 ? 'リロード中…' : ammo <= 8 ? (isTouch ? '弾が少ない' : 'R でリロード') : '');
+    setText('ammo', Wp.melee ? '∞' : String(ammo)); $('ammo').classList.toggle('empty', !Wp.melee && ammo === 0);
+    setText('reloadTxt', Wp.melee ? '' : reloadT > 0 ? 'リロード中…' : ammo <= Math.max(1, Math.round(Wp.mag * .27)) ? (isTouch ? '弾が少ない' : 'R でリロード') : '');
+    const sc = Wp.scope ? clamp((adsT - .6) / .35, 0, 1) : 0;  // スナイパーでのぞき込むと、スコープだけが見える
+    scoped = sc > .9; $('scope').style.opacity = sc.toFixed(2);
     $('xhair').style.setProperty('--gap', (4 + spreadNow() * 420).toFixed(1) + 'px');
     $('boost').hidden = speedT <= 0;
     if (speedT > 0) $('boostBar').style.width = (speedT / SPEED_TIME * 100).toFixed(1) + '%';
@@ -1308,7 +1575,7 @@
     clearWorld();
     Object.assign(player, { vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0, onGround: true, hp: 100 });
     player.pos.set(0, 0, 33);
-    ammo = MAG; reloadT = 0; bloom = 0; recoil = 0; score = 0; kills = 0; shotsFired = 0; shotsHit = 0;
+    setWeapon(nextWeapon); recoil = 0; score = 0; kills = 0; shotsFired = 0; shotsHit = 0;
     speedT = 0; slideT = 0; slideCD = 0; crouchT = 0; leanT = 0; setCrouch(false);
     wave = 0; waveActive = false; interT = 1.2; spawnQueue = []; gt = 0; lastShot = -1; dmgFlash = 0; dmgDirT = 0;
     camera.fov = baseFov(); camera.updateProjectionMatrix();
@@ -1341,6 +1608,7 @@
     const stats = $('ovStats');
     $('overlay').hidden = false; $('touch').hidden = true; $('ovNote').textContent = '';
     $('modes').hidden = m !== 'menu'; $('chapters').hidden = m !== 'chapters';
+    $('loadout').hidden = !['menu', 'chapters', 'over', 'fail', 'result'].includes(m);  // 遊んでいないときだけ選べる
     $('startBtn').hidden = m === 'menu' || m === 'chapters';
     $('subBtn').hidden = m === 'menu' || m === 'ending';
     $('subBtn').textContent = m === 'chapters' ? 'もどる' : 'タイトルへ';
@@ -1846,14 +2114,14 @@
   });
   addEventListener('keyup', e => { keys[e.code] = false; });
   function look(dx, dy) {
-    const k = .0022 * sens * (aiming ? .6 : 1);
+    const k = .0022 * sens * (aiming ? (Wp.scope ? .35 : .6) : 1);  // スコープをのぞいているときは、さらにゆっくり
     player.yaw -= dx * k; player.pitch = clamp(player.pitch - dy * k, -1.5, 1.5);
   }
   canvas.addEventListener('mousedown', e => {
     if (state !== 'playing') return;
     mouseHeld = true;
     if (e.button === 0) firing = true;
-    if (e.button === 2) aiming = true;
+    if (e.button === 2 && !Wp.melee) aiming = true;
   });
   addEventListener('mouseup', e => {
     if (e.button === 0) firing = false;
@@ -1939,7 +2207,7 @@
   tb('tSlide', () => startSlide());
   tb('tCrouch', () => toggleCrouch());
   tb('tReload', () => startReload());
-  tb('tAim', () => { aiming = !aiming; $('tAim').classList.toggle('on', aiming); });
+  tb('tAim', () => { if (Wp.melee) return; aiming = !aiming; $('tAim').classList.toggle('on', aiming); });
   tb('tPause', () => setPaused());
 
   function onResize() {
@@ -1981,6 +2249,7 @@
     renderer.clear();
     renderer.render(scene, camera);
     if (state !== 'menu') { renderer.clearDepth(); renderer.render(gunScene, gunCam); }
+    if (!$('overlay').hidden && !$('loadout').hidden) drawPreview(t / 1000);
   }
   showOverlay('menu');
   requestAnimationFrame(frame);
