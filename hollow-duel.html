@@ -144,6 +144,37 @@
 
   .pause { position: fixed; left: 50%; top: 50%; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; z-index: 3;
     border: 1px solid var(--line); background: rgba(12, 16, 22, .8); color: var(--ink); font: 700 12px/1 var(--mono); padding: 0; touch-action: manipulation; }
+  /* ---------- 遊び方の選択と、2台でつなぐ画面（向かい合わせではなく、普通の向き） ---------- */
+  .sheet { position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; overflow-y: auto;
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 18px calc(20px + env(safe-area-inset-bottom, 0px)); background: rgba(8, 11, 15, .94); }
+  .sbox { width: min(420px, 100%); display: grid; gap: 12px; }
+  .stitle { margin: 0; font-family: var(--display); font-weight: 800; font-size: 56px; line-height: .84; }
+  .stitle span { color: var(--p1); display: block; }
+  .stitle2 { margin: 0; font-family: var(--body); font-weight: 700; font-size: 22px; line-height: 1.35; }
+  .stext { margin: 0; font-size: 14px; line-height: 1.7; color: #cfc9bc; }
+  .sbtn { display: grid; gap: 4px; text-align: left; padding: 14px 16px; border-radius: 6px; border: 1px solid var(--line); background: rgba(236, 230, 216, .06);
+    color: var(--ink); font: 700 18px var(--body); cursor: pointer; touch-action: manipulation; }
+  .sbtn small { font-size: 12px; font-weight: 400; color: var(--muted); line-height: 1.5; }
+  .sbtn.main { background: var(--p1); color: #12100a; border-color: var(--p1); }
+  .sbtn.main small { color: #3d2a08; }
+  .sbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .nbtns { display: grid; gap: 10px; }
+  .qr { justify-self: center; padding: 12px; background: #fff; border-radius: 8px; }
+  .qr img { display: block; width: min(76vw, 340px); height: auto; image-rendering: pixelated; }
+  #nVideo { justify-self: center; width: min(80vw, 360px); aspect-ratio: 1; object-fit: cover; border-radius: 8px; background: #000; border: 2px solid var(--p2); }
+  .codebox { display: grid; gap: 8px; font-size: 12px; color: var(--muted); }
+  .codebox summary { cursor: pointer; }
+  .codebox textarea { width: 100%; min-height: 64px; resize: vertical; font: 12px/1.4 var(--mono); color: var(--ink); background: rgba(236, 230, 216, .06);
+    border: 1px solid var(--line); border-radius: 4px; padding: 8px; -webkit-user-select: text; user-select: text; }
+  .codebox .row2 { display: flex; gap: 8px; }
+  .mini { font: 700 13px var(--body); padding: 8px 14px; border-radius: 4px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+  #nText { white-space: pre-line; }
+  .nnote { margin: 0; font-size: 12px; color: var(--p1); min-height: 1em; }
+  /* 2台で遊ぶときは、自分の画面だけを全画面・普通の向きで出す */
+  body.online .half { display: none; }
+  body.online .half.local { display: block; top: 0; bottom: 0; height: auto; transform: none; --edge: env(safe-area-inset-bottom, 0px); }
+  body.online .seam { display: none; }
+  body.online .pause { top: calc(12px + env(safe-area-inset-top, 0px)); margin-top: 0; }
   #rotate { position: fixed; inset: 0; z-index: 10; display: grid; place-content: center; text-align: center; gap: 8px; padding: 24px; background: var(--bg); font-size: 15px; line-height: 1.7; }
   #rotate b { font-family: var(--display); font-weight: 800; font-size: 36px; color: var(--p1); }
   @media (max-height: 640px) {
@@ -161,6 +192,34 @@
 <section class="half p1" id="half0" aria-label="オレンジ（手前側）の画面"></section>
 <div class="seam"></div>
 <button class="pause" id="pauseBtn" type="button" aria-label="一時停止" hidden>II</button>
+<div class="sheet" id="modeSel">
+  <div class="sbox">
+    <div class="eyebrow" style="color:var(--p1)">2 PLAYERS · FPS</div>
+    <h1 class="stitle">HOLLOW<span>DUEL</span></h1>
+    <p class="stext">どうやって遊ぶ？</p>
+    <div class="nbtns">
+      <button class="sbtn main" id="mOne" type="button">1台で遊ぶ<small>スマホを机に置いて向かい合い、上下に分かれた画面で対戦</small></button>
+      <button class="sbtn" id="mTwo" type="button">2台で遊ぶ<small>それぞれ自分のスマホで。QRコードを読み取り合ってつなぐ（同じWi-Fiで）</small></button>
+    </div>
+    <a class="back" href="index.html" style="color:var(--muted)">← ゲーム選択にもどる</a>
+  </div>
+</div>
+<div class="sheet" id="netSheet" hidden>
+  <div class="sbox">
+    <div class="eyebrow" style="color:var(--p2)" id="nEye">2台で遊ぶ</div>
+    <h2 class="stitle2" id="nTitle"></h2>
+    <p class="stext" id="nText"></p>
+    <div class="qr" id="nQR" hidden></div>
+    <video id="nVideo" playsinline muted hidden></video>
+    <div class="nbtns" id="nBtns"></div>
+    <details class="codebox" id="nCodeBox" hidden>
+      <summary>QRが使えないとき（コードで送る）</summary>
+      <div id="nMine"><textarea id="nCode" readonly aria-label="自分のコード"></textarea><div class="row2"><button class="mini" id="nCopy" type="button">コードをコピー</button></div></div>
+      <div id="nTheirs"><textarea id="nPaste" placeholder="相手から届いたコードを貼り付け" aria-label="相手のコード"></textarea><div class="row2"><button class="mini" id="nPasteGo" type="button">このコードでつなぐ</button></div></div>
+    </details>
+    <p class="nnote" id="nNote" aria-live="polite"></p>
+  </div>
+</div>
 <div id="rotate" hidden><b>縦向きで</b>スマホを縦にして机に置き、<br>2人で向かい合って遊んでね。</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -473,7 +532,7 @@
     o.connect(g).connect(master); o.start(t); o.stop(t + dur + .05);
   }
   const sfx = {
-    shot() { if (!actx) return; noise(.12, 2400, 'lowpass', .4); tone(170, 45, .11, 'sine', .45); },
+    shot(v = 1) { if (!actx) return; noise(.12, 2400, 'lowpass', .4 * v); tone(170, 45, .11, 'sine', .45 * v); },
     hit(weak) { if (!actx) return; tone(weak ? 1600 : 1050, weak ? 1500 : 950, .05, 'square', .07); },
     kill() { if (!actx) return; tone(500, 1300, .14, 'triangle', .16); noise(.35, 800, 'lowpass', .35); },
     hurt() { if (!actx) return; tone(130, 50, .2, 'sawtooth', .18); },
@@ -614,8 +673,9 @@
       if (k.cd > 0) { k.cd -= dt; k.g.visible = k.cd <= 0; continue; }
       k.g.rotation.y += dt * 2; k.g.position.y = .8 + Math.sin(k.t * 3) * .12;
       for (const p of players) {
-        if (p.dead || p.hp >= 100 || p.pos.y > 1.6 || Math.hypot(p.pos.x - k.x, p.pos.z - k.z) > 1.3) continue;
+        if (isRemote(p) || p.dead || p.hp >= 100 || p.pos.y > 1.6 || Math.hypot(p.pos.x - k.x, p.pos.z - k.z) > 1.3) continue;
         p.hp = Math.min(100, p.hp + 40); sfx.pickup(); k.cd = 12; k.g.visible = false;
+        if (online) send({ t: 'heal', k: pickups.indexOf(k) });
         break;
       }
     }
@@ -624,18 +684,18 @@
   const SLIDE_TIME = .7, SPEED_TIME = 10, SPEED_MUL = 1.45;
   // 倒された人は、その場にスピードアップアイテムを落とす（15秒で消える）
   const drops = [];
-  function dropSpeed(pos) {
+  function dropSpeed(pos, id) {
     const g = new THREE.Group(); g.add(new THREE.Mesh(geo.speed, mat.speed));
     g.position.set(pos.x, .8, pos.z); scene.add(g);
-    drops.push({ g, t: 0, life: 15 });
+    drops.push({ g, t: 0, life: 15, id });
   }
   function updateDrops(dt) {
     for (let k = drops.length - 1; k >= 0; k--) {
       const d = drops[k]; d.t += dt; d.life -= dt;
       d.g.rotation.y += dt * 2.4; d.g.position.y = .8 + Math.sin(d.t * 3) * .12;
       d.g.visible = d.life > 3 || Math.sin(d.t * 20) > 0;
-      const p = players.find(q => !q.dead && q.pos.y < 1.6 && Math.hypot(q.pos.x - d.g.position.x, q.pos.z - d.g.position.z) < 1.3);
-      if (p) { p.speedT = SPEED_TIME; sfx.speed(); banner(p, 'SPEED UP', `${SPEED_TIME}秒間、足が速くなる`); }
+      const p = players.find(q => !isRemote(q) && !q.dead && q.pos.y < 1.6 && Math.hypot(q.pos.x - d.g.position.x, q.pos.z - d.g.position.z) < 1.3);
+      if (p) { p.speedT = SPEED_TIME; sfx.speed(); banner(p, 'SPEED UP', `${SPEED_TIME}秒間、足が速くなる`); if (online) send({ t: 'take', id: d.id }); }
       if (p || d.life <= 0) { scene.remove(d.g); drops.splice(k, 1); }
     }
   }
@@ -647,7 +707,7 @@
     if (!p.dead && p.onGround && hs > .5) p.bobPhase += dt * hs * 1.25;
     p.landDip = Math.max(0, p.landDip - dt * .6);
     let y = p.pos.y + EYE + (p.onGround ? Math.sin(p.bobPhase * 2) * .035 * Math.min(1, hs / 7) : 0) - p.landDip;
-    let pitch = p.pitch, roll = (p.i ? Math.PI : 0) + .07 * p.crouchT;
+    let pitch = p.pitch, roll = (p.i && !online ? Math.PI : 0) + .07 * p.crouchT;
     y -= .72 * p.crouchT;
     if (p.dead) {
       const d = Math.min(1, p.deathT / .6);
@@ -777,17 +837,22 @@
         if (foe.invT > 0) burst(end, 0xece6d8, 4, 2);
         else {
           p.hits++;
-          const killed = damagePlayer(foe, weak ? DMG_HEAD : DMG_BODY, p, weak);
+          const dmg = weak ? DMG_HEAD : DMG_BODY;
+          let down;
+          if (online) { send({ t: 'hit', d: dmg, w: weak ? 1 : 0 }); down = foe.hp - dmg <= 0; foe.hitFlash = .1; }
+          else down = damagePlayer(foe, dmg, p, weak);
           burst(end, weak ? 0xff4a3d : foe.color, weak ? 9 : 5, 4);
-          hitMarker(p, weak, killed); sfx.hit(weak);
+          hitMarker(p, weak, down); sfx.hit(weak);
         }
       } else {
         burst(end, 0xbdb6a6, 5, 2.5);
         if (screens.includes(h.object)) refereeShot();
       }
     } else end = p.cam.position.clone().addScaledVector(dir, 120);
-    const s = p.i ? -1 : 1;  // 奥側のカメラは180°回っているので、銃口の位置も上下左右を反転
-    tracer(p.cam.localToWorld(new V3(s * (p.aiming ? 0 : .16), s * (p.aiming ? -.07 : -.15), -.9)), end, p.color);
+    const s = p.i && !online ? -1 : 1;  // 奥側のカメラは180°回っているので、銃口の位置も上下左右を反転
+    const muzzlePos = p.cam.localToWorld(new V3(s * (p.aiming ? 0 : .16), s * (p.aiming ? -.07 : -.15), -.9));
+    tracer(muzzlePos, end, p.color);
+    if (online) send({ t: 'shot', a: [muzzlePos.x, muzzlePos.y, muzzlePos.z], b: [end.x, end.y, end.z] });
     p.pitch = Math.min(1.4, p.pitch + (p.aiming ? .003 : .005));  // 1人用より反動を弱めにして、撃ち合いを続けやすくする
     p.yaw += (Math.random() - .5) * (p.adsT > .5 ? .0015 : .006);
     p.recoil = 1; p.flashT = .045; sfx.shot();
@@ -799,10 +864,18 @@
     const sy = Math.sin(v.yaw), cy = Math.cos(v.yaw);
     v.ui.dmgdir.style.transform = `rotate(${Math.atan2(cy * sx - sy * sz, -sy * sx - cy * sz)}rad)`;
     if (v.hp > 0) return false;
+    v.hp = 0;
+    if (online) send({ t: 'died', w: weak ? 1 : 0, x: v.pos.x, y: v.pos.y, z: v.pos.z, n: v.deaths || 0 });
+    killed(v, from, weak);
+    return true;
+  }
+  let deathSeq = 0;
+  function killed(v, from, weak) {
     v.hp = 0; v.dead = true; v.respawnT = RESPAWN; v.deathT = 0; v.firing = false; v.aiming = false; v.ui.zoom.classList.remove('on');
+    v.deaths = (v.deaths || 0) + 1;
     from.kills++; if (weak) from.heads++;
     burst(new V3(v.pos.x, v.pos.y + 1.1, v.pos.z), v.color, 24, 6); sfx.kill();
-    v.speedT = 0; v.slideT = 0; dropSpeed(v.pos);
+    v.speedT = 0; v.slideT = 0; dropSpeed(v.pos, `${v.i}-${v.deaths}`);
     banner(from, 'KILL', weak ? 'ヘッドショット！' : `${from.kills} / ${GOAL}`);
     faceT = 1.5;
     const total = players[0].kills + players[1].kills;
@@ -811,8 +884,7 @@
     else if (from.kills === GOAL - 1 && v.kills === GOAL - 1) say(`${GOAL - 1}対${GOAL - 1}。……見ている私が緊張してきました。`);
     else if (from.kills === GOAL - 1) say(`${from.name}、あと1本です。`);
     else if (weak && Math.random() < .5) say('頭に命中。記録しておきます。');
-    if (from.kills >= GOAL) endMatch(from);
-    return true;
+    if (from.kills >= GOAL && !(online && localIdx === 1)) endMatch(from);
   }
   function hitMarker(p, weak, kill) {
     p.ui.hitm.className = 'hitm on' + (weak ? ' weak' : '') + (kill ? ' kill' : '');
@@ -829,7 +901,7 @@
     p.flashT -= dt; p.flash.visible = p.flashT > 0;
     if (p.flash.visible) p.flash.rotation.z = Math.random() * Math.PI;
     p.muzzle.intensity = p.flashT > 0 ? 2 : 0;
-    p.muzzle.position.copy(p.cam.position);
+    if (isRemote(p)) p.muzzle.position.set(p.pos.x, p.pos.y + 1.4, p.pos.z); else p.muzzle.position.copy(p.cam.position);
     // 相手から見える体
     const m = p.model;
     m.g.position.copy(p.pos); m.g.rotation.y = p.yaw;
@@ -907,6 +979,10 @@
   // ---------- Match flow ----------
   // lobby → (2人とも準備OK) → countdown → playing → result。途中で paused になることもある
   let phase = 'lobby', countT = 0, lastCount = 0, gt = 0, firstMatch = true, winner = null;
+  // 2台で遊ぶとき：online = true、localIdx はこのスマホのプレイヤー（部屋を作った人 0、入った人 1）
+  let online = false, localIdx = 0;
+  const me = () => players[localIdx];
+  const isRemote = p => online && p.i !== localIdx;
   const ready = [false, false];
   const pad = (n, w) => String(n).padStart(w, '0');
   function newMatch() {
@@ -928,12 +1004,14 @@
   }
   function endMatch(w) {
     phase = 'result'; winner = w; ready[0] = ready[1] = false;
+    if (online && localIdx === 0) send({ t: 'end', w: w.i, k: [players[0].kills, players[1].kills] });
     for (const p of players) { p.firing = false; p.aiming = false; p.stick.active = false; }
     sfx.win();
     setTimeout(updatePanels, 900);  // 最後の一発の演出を少しだけ見せてから結果を出す
   }
-  function pause() {
+  function pause(fromRemote) {
     if (phase !== 'playing' && phase !== 'countdown') return;
+    if (online && !fromRemote) send({ t: 'pause' });
     phase = 'paused'; ready[0] = ready[1] = false;
     for (const p of players) { p.firing = false; p.stick.active = false; p.ui.knob.style.transform = ''; }
     updatePanels();
@@ -942,6 +1020,7 @@
     initAudio();
     if (!['lobby', 'paused', 'result'].includes(phase) || (phase === 'result' && !winner)) return;
     ready[p.i] = !ready[p.i];
+    if (online) { send({ t: 'ready', v: ready[p.i] }); if (ready[0] && ready[1] && localIdx === 0) { send({ t: 'go' }); startCountdown(); } else updatePanels(); return; }
     if (ready[0] && ready[1]) startCountdown(); else updatePanels();
   }
   function updatePanels() {
@@ -953,9 +1032,9 @@
       if (!show) continue;
       u.pstats.hidden = true;
       if (phase === 'lobby') {
-        u.eyebrow.textContent = `2 PLAYERS · FPS · あなたは${p.name}`;
+        u.eyebrow.textContent = online ? `2台で対戦 · あなたは${p.name}` : `2 PLAYERS · FPS · あなたは${p.name}`;
         u.ptitle.innerHTML = 'HOLLOW<span>DUEL</span>';
-        u.ptext.textContent = `スマホを机に置いて、向かい合って対戦。先に${GOAL}回倒したほうの勝ち。頭に当てるとダメージ2倍。「のぞく」と弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込める。倒された人はスピードアップを落とす。`;
+        u.ptext.textContent = `${online ? 'それぞれ自分のスマホで対戦。' : 'スマホを机に置いて、向かい合って対戦。'}先に${GOAL}回倒したほうの勝ち。頭に当てるとダメージ2倍。「のぞく」と弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込める。倒された人はスピードアップを落とす。`;
       } else if (phase === 'paused') {
         u.eyebrow.textContent = `一時停止中 · ${p.kills} – ${f.kills}`;
         u.ptitle.innerHTML = 'PAUSE';
@@ -986,13 +1065,327 @@
     }
   }
 
+  // ---------- 2台で遊ぶ（WebRTC。QRコードを読み取り合ってつなぐ。仲介サーバーなし） ----------
+  const QR_GEN = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+  const QR_READ = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+  const libs = {};
+  function loadLib(name, url) {
+    return libs[name] || (libs[name] = new Promise((res, rej) => {
+      const sc = document.createElement('script'); sc.src = url; sc.onload = res;
+      sc.onerror = () => { delete libs[name]; rej(new Error('load ' + name)); };
+      document.head.append(sc);
+    }));
+  }
+  const net = { pc: null, dc: null, role: null, timer: 0, offer: '' };
+  function send(m) { try { if (net.dc && net.dc.readyState === 'open') net.dc.send(JSON.stringify(m)); } catch (e) {} }
+
+  // QRを小さくするため、SDP から接続に必要な値だけを取り出して短い文字列にする（読む側で SDP を組み立て直す）
+  const SETUP = { actpass: 'x', active: 'a', passive: 'p' }, SETUP_R = { x: 'actpass', a: 'active', p: 'passive' };
+  function pack(sdp, kind) {
+    const get = re => (sdp.match(re) || [])[1];
+    const u = get(/a=ice-ufrag:(\S+)/), pw = get(/a=ice-pwd:(\S+)/), fp = get(/a=fingerprint:sha-256 (\S+)/i), setup = get(/a=setup:(\S+)/);
+    const seen = new Set(), cands = [];
+    for (const m of sdp.matchAll(/a=candidate:\S+ 1 udp \d+ (\S+) (\d+) typ (host|srflx)/gi)) {
+      const key = m[1] + ' ' + m[2];
+      if (seen.has(key) || cands.length >= 6) continue;
+      seen.add(key); cands.push(`${m[1]}_${m[2]}_${m[3][0].toLowerCase()}`);
+    }
+    if (!u || !pw || !fp || !setup || !cands.length) throw new Error('つながる経路が見つかりませんでした');
+    const fpb = btoa(String.fromCharCode(...fp.split(':').map(h => parseInt(h, 16)))).replace(/=+$/, '');
+    return ['HD1', kind, u, pw, fpb, SETUP[setup] || 'x', ...cands].join('~');
+  }
+  function unpack(code) {
+    const f = String(code).trim().split('~');
+    if (f[0] !== 'HD1' || f.length < 7) throw new Error('bad code');
+    const [, kind, u, pw, fpb, st, ...cs] = f;
+    const bin = atob(fpb + '='.repeat((4 - fpb.length % 4) % 4));
+    const fp = [...bin].map(ch => ch.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase()).join(':');
+    const cand = cs.map((c, i) => {
+      const [ip, port, t] = c.split('_'), type = t === 's' ? 'srflx' : 'host';
+      return `a=candidate:${i + 1} 1 udp ${(type === 'host' ? 2122260223 : 1686052607) - i} ${ip} ${port} typ ${type}`;
+    });
+    const sdp = ['v=0', `o=- ${Date.now()} 2 IN IP4 127.0.0.1`, 's=-', 't=0 0', 'a=group:BUNDLE 0', 'a=msid-semantic: WMS',
+      'm=application 9 UDP/DTLS/SCTP webrtc-datachannel', 'c=IN IP4 0.0.0.0', ...cand,
+      `a=ice-ufrag:${u}`, `a=ice-pwd:${pw}`, 'a=ice-options:trickle', `a=fingerprint:sha-256 ${fp}`,
+      `a=setup:${SETUP_R[st] || 'actpass'}`, 'a=mid:0', 'a=sctp-port:5000', 'a=max-message-size:262144'].join('\r\n') + '\r\n';
+    return { kind, sdp };
+  }
+  function newPC() {
+    closePC();
+    const pc = new RTCPeerConnection({ iceServers: [] });
+    pc.onconnectionstatechange = () => {
+      const st = pc.connectionState;
+      if (online && (st === 'failed' || st === 'closed')) netLost();
+      else if (!online && pc === net.pc && st === 'failed') netFail(new Error('ice failed'));
+    };
+    net.pc = pc;
+    return pc;
+  }
+  function closePC() {
+    try { if (net.dc) net.dc.close(); if (net.pc) net.pc.close(); } catch (e) {}
+    net.pc = net.dc = null; clearTimeout(net.timer);
+  }
+  function gathered(pc) {
+    return new Promise(res => {
+      if (pc.iceGatheringState === 'complete') return res();
+      const t = setTimeout(res, 2500);
+      pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } });
+    });
+  }
+  function setupDC(dc) {
+    net.dc = dc;
+    dc.onopen = goOnline;
+    dc.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } onMsg(m); };
+    dc.onclose = () => { if (online) netLost(); };
+  }
+
+  // 自分の状態を 1秒に20回送る。相手の体は、届いた位置へなめらかに寄せて描く
+  const r3 = v => Math.round(v * 1000) / 1000;
+  function sendState() {
+    const p = me();
+    send({ t: 's', x: r3(p.pos.x), y: r3(p.pos.y), z: r3(p.pos.z), yw: r3(p.yaw), pt: r3(p.pitch), c: r3(p.crouchT), iv: r3(p.invT),
+      hp: Math.ceil(p.hp), d: p.dead ? 1 : 0, a: p.aiming ? 1 : 0 });
+  }
+  function updateRemote(p, dt) {
+    const s = p.net;
+    if (!s) return;
+    if (p.dead && !s.d) { p.dead = false; p.pos.set(s.x, s.y, s.z); p.yaw = s.yw; }  // 復活した
+    else if (!p.dead && s.d) { p.dead = true; p.deathT = 0; }
+    const k = 1 - Math.exp(-18 * dt), dx = s.x - p.pos.x, dy = s.y - p.pos.y, dz = s.z - p.pos.z;
+    if (Math.hypot(dx, dy, dz) > 4) p.pos.set(s.x, s.y, s.z);
+    else { p.pos.x += dx * k; p.pos.y += dy * k; p.pos.z += dz * k; }
+    p.yaw += Math.atan2(Math.sin(s.yw - p.yaw), Math.cos(s.yw - p.yaw)) * k;
+    p.pitch = s.pt; p.crouchT = s.c; p.invT = s.iv; p.hp = s.hp; p.aiming = !!s.a;
+  }
+  // 当たったかどうかは撃った側が判定し、体力を減らして倒れるかどうかは撃たれた側が決める。
+  // 試合の終わりは部屋を作った側が決めて伝える（相打ちで両方の画面の勝者が食い違わないように）
+  function onMsg(m) {
+    const p = me(), f = foeOf(p);
+    switch (m.t) {
+      case 's': f.net = m; break;
+      case 'hit':
+        if (phase === 'playing' && !p.dead && p.invT <= 0) damagePlayer(p, +m.d || 0, f, !!m.w);
+        break;
+      case 'died':
+        if (phase !== 'playing') break;
+        f.pos.set(+m.x || 0, +m.y || 0, +m.z || 0); f.deaths = +m.n || 0;
+        if (f.net) f.net.d = 1;
+        killed(f, p, !!m.w);
+        break;
+      case 'shot': {
+        if (!Array.isArray(m.a) || !Array.isArray(m.b)) break;
+        const a = new V3().fromArray(m.a), b = new V3().fromArray(m.b);
+        tracer(a, b, f.color); burst(b, 0xbdb6a6, 3, 2);
+        f.lastShotAt = gt; f.flashT = .045;
+        sfx.shot(clamp(1 - a.distanceTo(p.pos) / 70, .25, .8));
+        break;
+      }
+      case 'heal': { const k = pickups[m.k]; if (k) { k.cd = 12; k.g.visible = false; } break; }
+      case 'take': { const i = drops.findIndex(d => d.id === m.id); if (i >= 0) { scene.remove(drops[i].g); drops.splice(i, 1); } break; }
+      case 'ready':
+        if (!['lobby', 'paused', 'result'].includes(phase)) break;
+        ready[f.i] = !!m.v;
+        if (ready[0] && ready[1] && localIdx === 0) { send({ t: 'go' }); startCountdown(); } else updatePanels();
+        break;
+      case 'go': if (['lobby', 'paused', 'result'].includes(phase)) startCountdown(); break;
+      case 'pause': pause(true); break;
+      case 'end':
+        if (Array.isArray(m.k)) { players[0].kills = +m.k[0] || 0; players[1].kills = +m.k[1] || 0; }
+        if (phase !== 'result' && players[m.w]) endMatch(players[m.w]);
+        break;
+    }
+  }
+  function goOnline() { if (!online) enterOnline(net.role === 'host' ? 0 : 1); }
+  function enterOnline(idx) {
+    clearTimeout(net.timer); stopScan();
+    online = true; localIdx = idx; net.lost = false;
+    document.body.classList.add('online');
+    players[idx].el.classList.add('local');
+    for (const p of players) p.gunCam.rotation.z = 0;
+    $('netSheet').hidden = true; $('modeSel').hidden = true;
+    phase = 'lobby'; ready[0] = ready[1] = false; winner = null;
+    newMatch(); onResize(); updatePanels();
+    clearInterval(net.iv); net.iv = setInterval(sendState, 50);
+  }
+  function netLost() {
+    if (net.lost || !online) return;
+    net.lost = true; clearInterval(net.iv);
+    phase = 'lobby'; $('pauseBtn').hidden = true;
+    for (const p of players) { p.firing = false; p.stick.active = false; }
+    netStep({ title: '接続が切れました', text: '相手のスマホとの通信が切れました。続けるときは、2台ともページを読み込み直して、もう一度つないでね。',
+      btns: [['読み込み直す', () => location.reload(), true]] });
+  }
+  addEventListener('pagehide', () => { if (online) closePC(); });
+
+  // ---------- 2台で遊ぶ：つなぐ手順の画面 ----------
+  const NS = { title: $('nTitle'), text: $('nText'), qr: $('nQR'), video: $('nVideo'), btns: $('nBtns'), box: $('nCodeBox'),
+    mine: $('nMine'), theirs: $('nTheirs'), code: $('nCode'), paste: $('nPaste'), note: $('nNote') };
+  const scan = { stream: null, t: 0, bad: '' };
+  net.sid = 0;
+  function stopScan() {
+    net.sid++; clearTimeout(scan.t);
+    if (scan.stream) { scan.stream.getTracks().forEach(t => t.stop()); scan.stream = null; }
+    NS.video.hidden = true; NS.video.srcObject = null;
+  }
+  // o = { title, text, qr: 見せるコード, scan: カメラで読む, theirs: 貼り付け欄を出す, onCode: 相手のコードを受け取る, btns: [[文字, 処理, 目立たせる]] }
+  function netStep(o) {
+    stopScan();
+    $('modeSel').hidden = true; $('netSheet').hidden = false;
+    NS.title.textContent = o.title; NS.text.textContent = o.text || ''; NS.note.textContent = '';
+    NS.qr.hidden = !o.qr; NS.qr.replaceChildren(); if (o.qr) drawQR(o.qr);
+    NS.btns.replaceChildren(...(o.btns || []).map(([label, fn, main]) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sbtn' + (main ? ' main' : '');
+      b.textContent = label; b.addEventListener('click', fn); return b;
+    }));
+    NS.box.hidden = !o.qr && !o.theirs; NS.box.open = false;
+    NS.mine.hidden = !o.qr; NS.code.value = o.qr || '';
+    NS.theirs.hidden = !o.theirs; NS.paste.value = '';
+    net.onCode = o.onCode || null; scan.bad = '';
+    if (o.scan) startScan();
+  }
+  function showCodeBox(msg) { NS.note.textContent = msg; NS.box.hidden = false; NS.box.open = true; }
+  async function drawQR(code) {
+    const sid = net.sid;
+    try {
+      await loadLib('qr', QR_GEN);
+      if (sid !== net.sid) return;
+      const q = qrcode(0, 'M'); q.addData(code); q.make();
+      const img = new Image(); img.alt = '接続用のQRコード'; img.src = q.createDataURL(8, 16);
+      NS.qr.replaceChildren(img);
+    } catch (e) {
+      if (sid !== net.sid) return;
+      NS.qr.hidden = true; showCodeBox('QRコードを出せませんでした。下の「コードで送る」を使ってね。');
+    }
+  }
+  async function startScan() {
+    const sid = net.sid;
+    NS.note.textContent = 'カメラを起動しています…';
+    try {
+      await loadLib('jsqr', QR_READ);
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+      if (sid !== net.sid) { stream.getTracks().forEach(t => t.stop()); return; }
+      scan.stream = stream; NS.video.srcObject = stream; NS.video.hidden = false;
+      await NS.video.play();
+      if (sid === net.sid) NS.note.textContent = '';
+    } catch (e) {
+      if (sid !== net.sid) return;
+      if (scan.stream) { scan.stream.getTracks().forEach(t => t.stop()); scan.stream = null; NS.video.hidden = true; }
+      showCodeBox('カメラが使えませんでした。下の「コードで送る」で、相手のコードを貼り付けてもつなげます。');
+      return;
+    }
+    const cv = document.createElement('canvas'), cx = cv.getContext('2d', { willReadFrequently: true });
+    const tick = () => {
+      if (sid !== net.sid) return;
+      const v = NS.video, w = v.videoWidth, h = v.videoHeight;
+      if (w && h) {
+        const k = Math.min(1, 640 / Math.max(w, h));
+        cv.width = Math.round(w * k); cv.height = Math.round(h * k);
+        cx.drawImage(v, 0, 0, cv.width, cv.height);
+        const img = cx.getImageData(0, 0, cv.width, cv.height);
+        const r = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if (r && r.data.startsWith('HD1~') && r.data !== scan.bad) {
+          if (net.onCode && net.onCode(r.data) !== false) return;
+          scan.bad = r.data;  // 違うQRだったら、同じものはもう読まない
+        }
+      }
+      scan.t = setTimeout(tick, 120);
+    };
+    tick();
+  }
+  $('nCopy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(NS.code.value); }
+    catch (e) { NS.code.select(); try { document.execCommand('copy'); } catch (err) {} }
+    NS.note.textContent = 'コピーしました。LINEなどで相手に送ってね。';
+  });
+  $('nPasteGo').addEventListener('click', () => { const v = NS.paste.value.trim(); if (v && net.onCode) net.onCode(v); });
+  function tryUnpack(code, kind) {
+    let r;
+    try { r = unpack(code); } catch (e) { NS.note.textContent = 'このコードは読み取れませんでした。もう一度試してね。'; return null; }
+    if (r.kind !== kind) {
+      NS.note.textContent = kind === 'a' ? 'それは部屋のQRです。相手の画面に出ている「返事のQR」を読み取ってね。' : 'それは返事のQRです。部屋を作った人の画面のQRを読み取ってね。';
+      return null;
+    }
+    return r;
+  }
+
+  function netBack() { stopScan(); closePC(); $('netSheet').hidden = true; $('modeSel').hidden = false; }
+  function netChoose() {
+    closePC(); net.role = null;
+    if (!window.RTCPeerConnection) {
+      netStep({ title: 'このブラウザでは2台で遊べません', text: 'Safari や Chrome の新しいバージョンで開いてね。', btns: [['もどる', netBack, true]] });
+      return;
+    }
+    netStep({ title: '部屋を作る？ 入る？', text: '1台目で「部屋を作る」、もう1台で「部屋に入る」を押してね。\n2台とも同じWi-Fiにつないでおこう（片方のテザリングに、もう片方をつないでもOK）。',
+      btns: [['部屋を作る', hostStart, true], ['部屋に入る', guestStart], ['もどる', netBack]] });
+  }
+  async function hostStart() {
+    net.role = 'host';
+    netStep({ title: '部屋を準備しています…' });
+    try {
+      const pc = newPC();
+      setupDC(pc.createDataChannel('duel', { ordered: true }));
+      await pc.setLocalDescription(await pc.createOffer());
+      await gathered(pc);
+      net.offer = pack(pc.localDescription.sdp, 'o');
+      hostShow();
+    } catch (e) { netFail(e); }
+  }
+  function hostShow() {
+    netStep({ title: '① 相手にこのQRを読み取ってもらう', text: 'もう1台で「2台で遊ぶ」→「部屋に入る」を押して、このQRを写してもらってね。\n相手の画面に返事のQRが出たら、下のボタンへ。',
+      qr: net.offer, theirs: true, onCode: hostGotAnswer, btns: [['② 相手のQRを読み取る', hostScan, true], ['やめる', netChoose]] });
+  }
+  function hostScan() {
+    netStep({ title: '② 相手のQRを読み取る', text: '相手の画面に出ている返事のQRを、カメラに写してね。', scan: true, theirs: true, onCode: hostGotAnswer,
+      btns: [['①のQRにもどる', hostShow]] });
+  }
+  function hostGotAnswer(code) {
+    const r = tryUnpack(code, 'a');
+    if (!r) return false;
+    netStep({ title: 'つないでいます…', text: 'すぐに始まります。' });
+    net.pc.setRemoteDescription({ type: 'answer', sdp: r.sdp }).catch(netFail);
+    clearTimeout(net.timer); net.timer = setTimeout(() => { if (!online) netFail(new Error('timeout')); }, 15000);
+    return true;
+  }
+  function guestStart() {
+    net.role = 'guest'; closePC();
+    netStep({ title: '① 部屋のQRを読み取る', text: '部屋を作った人の画面に出ているQRを、カメラに写してね。', scan: true, theirs: true, onCode: guestGotOffer,
+      btns: [['もどる', netChoose]] });
+  }
+  function guestGotOffer(code) {
+    const r = tryUnpack(code, 'o');
+    if (!r) return false;
+    netStep({ title: '返事を準備しています…' });
+    (async () => {
+      const pc = newPC();
+      pc.ondatachannel = e => setupDC(e.channel);
+      await pc.setRemoteDescription({ type: 'offer', sdp: r.sdp });
+      await pc.setLocalDescription(await pc.createAnswer());
+      await gathered(pc);
+      if (online) return;
+      const ans = pack(pc.localDescription.sdp, 'a');
+      netStep({ title: '② この返事のQRを相手に読み取ってもらう', text: '相手が「② 相手のQRを読み取る」でこのQRを写すと、自動でつながります。', qr: ans,
+        btns: [['最初からやり直す', netChoose]] });
+    })().catch(netFail);
+    return true;
+  }
+  function netFail(e) {
+    if (online) return;
+    if (e) console.warn(e);
+    closePC();
+    netStep({ title: 'つながりませんでした',
+      text: '次のような場合はつながらないことがあります。\n・2台が別々のWi-Fiにつながっている（片方がモバイル通信のときも）\n・会社や学校、お店のゲスト用Wi-Fiで、端末どうしの通信が止められている\n片方のスマホのテザリング（インターネット共有）に、もう片方をつなぐと、つながりやすくなります。',
+      btns: [['もう一度', netChoose, true], ['1台で遊ぶ', () => { $('netSheet').hidden = true; }]] });
+  }
+  $('mOne').addEventListener('click', () => { $('modeSel').hidden = true; });
+  $('mTwo').addEventListener('click', netChoose);
+
   // ---------- Input: touch ----------
   // 上半分（奥側の人）は画面が180°回っているので、指の動きの向きも反転して扱う
-  const flipOf = p => p.i ? -1 : 1;
+  const flipOf = p => p.i && !online ? -1 : 1;
   const canLook = () => phase === 'playing' || phase === 'countdown';
   const canAct = () => phase === 'playing';
   const lookTouches = new Map();
-  const playerAtY = y => y < innerHeight / 2 ? players[1] : players[0];
+  const playerAtY = y => online ? me() : y < innerHeight / 2 ? players[1] : players[0];
   function setStick(p, t) {
     const s = flipOf(p), max = 46 * (document.body.classList.contains('tablet') ? 1.25 : 1);
     let dx = (t.clientX - p.stick.cx) * s, dy = (t.clientY - p.stick.cy) * s;
@@ -1022,7 +1415,8 @@
   // 自分の画面の左側（奥の人は画面の右側）を触ったら、その場所にスティックを出す
   function floatStick(p, t) {
     const half = p.el.getBoundingClientRect(), st = p.ui.stick, size = st.offsetWidth;
-    const lx = p.i ? half.right - t.clientX : t.clientX - half.left, ly = p.i ? half.bottom - t.clientY : t.clientY - half.top;
+    const fl = flipOf(p) < 0;
+    const lx = fl ? half.right - t.clientX : t.clientX - half.left, ly = fl ? half.bottom - t.clientY : t.clientY - half.top;
     st.classList.add('float'); st.style.left = (lx - size / 2) + 'px'; st.style.top = (ly - size / 2) + 'px'; st.style.bottom = 'auto';
     p.stick.id = t.identifier; p.stick.active = true; p.stick.cx = t.clientX; p.stick.cy = t.clientY; setStick(p, t);
   }
@@ -1033,7 +1427,7 @@
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
     for (const t of e.changedTouches) {
-      const p = playerAtY(t.clientY), leftSide = p.i ? t.clientX > innerWidth * .58 : t.clientX < innerWidth * .42;
+      const p = playerAtY(t.clientY), leftSide = flipOf(p) < 0 ? t.clientX > innerWidth * .58 : t.clientX < innerWidth * .42;
       if (canAct() && !p.dead && p.stick.id === null && leftSide) { floatStick(p, t); continue; }
       lookTouches.set(t.identifier, { p, x: t.clientX, y: t.clientY });
     }
@@ -1067,26 +1461,27 @@
   };
   addEventListener('keydown', e => {
     const m = KEYMAP[e.code];
-    if (m) { players[m[0]].keys[m[1]] = canAct(); return; }
+    if (m) { players[online ? localIdx : m[0]].keys[m[1]] = canAct(); return; }
     if (!canAct()) { if (e.code === 'Escape') pause(); return; }
-    if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) players[0].jumpQ = true; }
-    if (e.code === 'KeyB' && !e.repeat) players[1].jumpQ = true;
-    if (e.code === 'KeyR') startReload(players[0]);
-    if (e.code === 'KeyY') startReload(players[1]);
-    if (e.code === 'KeyG' && !e.repeat) startSlide(players[0]);
-    if (e.code === 'KeyN' && !e.repeat) startSlide(players[1]);
+    const P0 = players[online ? localIdx : 0], P1 = players[online ? localIdx : 1];
+    if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) P0.jumpQ = true; }
+    if (e.code === 'KeyB' && !e.repeat) P1.jumpQ = true;
+    if (e.code === 'KeyR') startReload(P0);
+    if (e.code === 'KeyY') startReload(P1);
+    if (e.code === 'KeyG' && !e.repeat) startSlide(P0);
+    if (e.code === 'KeyN' && !e.repeat) startSlide(P1);
     if (e.code === 'Escape' || e.code === 'KeyP') pause();
   });
-  addEventListener('keyup', e => { const m = KEYMAP[e.code]; if (m) players[m[0]].keys[m[1]] = false; });
+  addEventListener('keyup', e => { const m = KEYMAP[e.code]; if (m) players[online ? localIdx : m[0]].keys[m[1]] = false; });
 
-  $('pauseBtn').addEventListener('click', pause);
+  $('pauseBtn').addEventListener('click', () => pause());
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
   function onResize() {
     document.body.classList.toggle('tablet', isTouch && Math.min(innerWidth, innerHeight) >= 700);
     renderer.setPixelRatio(pixelRatio());
     renderer.setSize(innerWidth, innerHeight);
-    for (const p of players) { p.cam.aspect = p.gunCam.aspect = innerWidth / (innerHeight / 2); p.cam.updateProjectionMatrix(); p.gunCam.updateProjectionMatrix(); }
-    const sideways = isTouch && innerWidth > innerHeight && innerHeight < 520;
+    for (const p of players) { p.cam.aspect = p.gunCam.aspect = innerWidth / (online ? innerHeight : innerHeight / 2); p.cam.updateProjectionMatrix(); p.gunCam.updateProjectionMatrix(); }
+    const sideways = isTouch && !online && innerWidth > innerHeight && innerHeight < 520;
     $('rotate').hidden = !sideways;
     if (sideways) pause();
   }
@@ -1096,6 +1491,16 @@
   // 1つのシーンを上下2回に分けて描く。自分の体は自分の画面には出さない
   function renderAll() {
     const W = innerWidth, H = innerHeight, h = H / 2;
+    if (online) {
+      const p = me(), f = foeOf(p);
+      renderer.setScissorTest(false); renderer.setViewport(0, 0, W, H);
+      p.model.g.visible = false;
+      f.model.g.visible = !f.dead && (f.invT <= 0 || Math.floor(performance.now() / 100) % 2 === 0);
+      renderer.clear(); renderer.render(scene, p.cam);
+      renderer.clearDepth(); p.gun.visible = !p.dead; f.gun.visible = false;
+      renderer.render(gunScene, p.gunCam);
+      return;
+    }
     renderer.setScissorTest(true);
     for (const p of players) {
       const f = foeOf(p), y = p.i ? h : 0;
@@ -1121,17 +1526,17 @@
     const dt = Math.min(.05, (t - last) / 1000); last = t;
     if (phase === 'playing') {
       gt += dt;
-      for (const p of players) updatePlayer(p, dt);
-      separatePlayers();
+      for (const p of players) { if (isRemote(p)) updateRemote(p, dt); else updatePlayer(p, dt); }
+      if (!online) separatePlayers();
       updatePickups(dt);
       updateDrops(dt);
     } else {
       if (phase === 'countdown') updateCountdown(dt);
-      for (const p of players) placeCamera(p, dt);
+      for (const p of players) { if (isRemote(p)) updateRemote(p, dt); else placeCamera(p, dt); }
     }
     updateEffects(dt);
     updateReferee(dt);
-    for (const p of players) { animateGun(p, dt); updateHUD(p); }
+    for (const p of players) { animateGun(p, dt); if (!isRemote(p)) updateHUD(p); }
     renderAll();
   }
   requestAnimationFrame(frame);
