@@ -146,6 +146,7 @@
   #tFire { right: calc(20px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 20px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(96px * var(--s)); height: calc(96px * var(--s)); background: rgba(255, 74, 61, .34); font-size: 15px; }
   #tJump { right: calc(126px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 6px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(60px * var(--s)); height: calc(60px * var(--s)); }
   #tSlide { right: calc(194px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 40px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(56px * var(--s)); height: calc(56px * var(--s)); }
+  #tCrouch { right: calc(198px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 106px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(54px * var(--s)); height: calc(54px * var(--s)); }
   #tAim { right: calc(132px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 84px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(58px * var(--s)); height: calc(58px * var(--s)); }
   #tReload { right: calc(44px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 128px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(58px * var(--s)); height: calc(58px * var(--s)); }
   @media (orientation: portrait) { #touch { --lift: 130px; } }
@@ -287,6 +288,7 @@
   <button class="tbtn" id="tAim" type="button">のぞく</button>
   <button class="tbtn" id="tJump" type="button">ジャンプ</button>
   <button class="tbtn" id="tSlide" type="button">スライド</button>
+  <button class="tbtn" id="tCrouch" type="button">しゃがむ</button>
   <button class="tbtn" id="tReload" type="button">リロード</button>
   <button class="tbtn" id="tPause" type="button" aria-label="一時停止">II</button>
 </div>
@@ -323,10 +325,11 @@
       <dt><kbd>Space</kbd></dt><dd>ジャンプ（ふちがオレンジの箱には乗れる）</dd>
       <dt><kbd>Shift</kbd></dt><dd>ダッシュ</dd>
       <dt><kbd>C</kbd></dt><dd>スライディング（走りながら）</dd>
+      <dt><kbd>X</kbd></dt><dd>しゃがむ（もう一度押すと立つ）</dd>
       <dt><kbd>R</kbd></dt><dd>リロード</dd>
       <dt><kbd>Esc</kbd></dt><dd>一時停止</dd>
     </dl>
-    <p class="touch-hint">画面の左側を触るとそこにスティックが出て移動、右側をなぞると向きが変わる。「のぞく」でのぞき込むと弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込み。スマホは横向きがおすすめ。</p>
+    <p class="touch-hint">画面の左側を触るとそこにスティックが出て移動、右側をなぞると向きが変わる。「のぞく」でのぞき込むと弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込み。「しゃがむ」と低い箱の陰に隠れられる。スマホは横向きがおすすめ。</p>
   </div>
 </div>
 
@@ -731,7 +734,7 @@
   let score = 0, kills = 0, shotsFired = 0, shotsHit = 0, wave = 0, waveActive = false, interT = 0, spawnQueue = [], spawnT = 0, gt = 0;
   let dmgFlash = 0, dmgDirT = 0, adsT = 0;
   // スピードアップ（残り秒数）とスライディング
-  let speedT = 0, slideT = 0, slideCD = 0, slideV = 0, slideDX = 0, slideDZ = 0, crouchT = 0;
+  let speedT = 0, slideT = 0, slideCD = 0, slideV = 0, slideDX = 0, slideDZ = 0, crouchT = 0, leanT = 0, crouching = false;
   const SLIDE_TIME = .7, SPEED_TIME = 10, SPEED_MUL = 1.45;
   let sens = store.get('hr.sens', 1), best = store.get('hr.best', 0);
   const enemies = [], bolts = [], sparks = [], tracers = [], pickups = [];
@@ -857,7 +860,7 @@
   function fireBolt(e, yawOff = 0, aim = null) {
     const from = e.pos.clone();
     const target = aim ? new V3(aim.x + rand(-.3, .3), aim.y + rand(-.2, .2), aim.z + rand(-.3, .3))
-      : new V3(player.pos.x + rand(-.7, .7), player.pos.y + 1.25 + rand(-.3, .3), player.pos.z + rand(-.7, .7));
+      : new V3(player.pos.x + rand(-.7, .7), player.pos.y + 1.25 - .6 * crouchT + rand(-.3, .3), player.pos.z + rand(-.7, .7));
     const dir = target.sub(from).normalize();
     if (yawOff) dir.applyAxisAngle(new V3(0, 1, 0), yawOff);
     from.addScaledVector(dir, e.type === 'boss' ? 1.9 : e.radius * e.scale * .7 + .2);
@@ -873,7 +876,7 @@
   }
   const tmp = new V3(), desired = new V3(), headPos = new V3();
   function updateEnemies(dt) {
-    headPos.set(player.pos.x, player.pos.y + 1.4, player.pos.z);
+    headPos.set(player.pos.x, player.pos.y + 1.4 - .7 * crouchT, player.pos.z);
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i];
       e.t += dt;
@@ -1035,9 +1038,10 @@
     if (stick.active) { mx = stick.x; mz = -stick.y; }
     const len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
     const sprint = (keys.ShiftLeft || keys.ShiftRight) && mz > 0 && !aiming;
+    if (sprint && crouching) setCrouch(false);  // ダッシュすると立ち上がる
     const boost = speedT > 0 ? SPEED_MUL : 1;
     speedT = Math.max(0, speedT - dt); slideCD = Math.max(0, slideCD - dt);
-    const speed = (aiming ? 4 : sprint ? 10.5 : 7) * boost;
+    const speed = (aiming ? 4 : sprint ? 10.5 : 7) * boost * (crouching ? .5 : 1);
     const sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
     const tx = (-sy * mz + cy * mx) * speed, tz = (-cy * mz - sy * mx) * speed;
     if (slideT > 0) {
@@ -1057,7 +1061,10 @@
     }
     player.pos.x += player.vx * dt; player.pos.z += player.vz * dt;
     const ground = pushOut(player.pos, PR, player.pos.y);
-    if (jumpQueued && player.onGround) { player.vy = 7; player.onGround = false; slideT = 0; }
+    if (jumpQueued && player.onGround) {
+      if (crouching) setCrouch(false);  // しゃがんでいるときのジャンプは、立ち上がるだけ
+      else { player.vy = 7; player.onGround = false; slideT = 0; }
+    }
     jumpQueued = false;
     player.vy -= 20 * dt; player.pos.y += player.vy * dt;
     if (player.pos.y <= ground) {
@@ -1069,12 +1076,14 @@
     if (player.onGround && hs > .5) bobPhase += dt * hs * 1.25;
     landDip = Math.max(0, landDip - dt * .6);
     const bobY = player.onGround ? Math.sin(bobPhase * 2) * .035 * Math.min(1, hs / 7) : 0;
-    crouchT += ((slideT > 0 ? 1 : 0) - crouchT) * (1 - Math.exp(-14 * dt));
+    const ease = 1 - Math.exp(-14 * dt);
+    crouchT += ((slideT > 0 || crouching ? 1 : 0) - crouchT) * ease;
+    leanT += ((slideT > 0 ? 1 : 0) - leanT) * ease;  // 体を傾けるのはスライド中だけ
     camera.position.set(player.pos.x, player.pos.y + EYE + bobY - landDip - .72 * crouchT, player.pos.z);
-    camera.rotation.set(player.pitch, player.yaw, .07 * crouchT);
+    camera.rotation.set(player.pitch, player.yaw, .07 * leanT);
 
     adsT += ((aiming ? 1 : 0) - adsT) * (1 - Math.exp(-14 * dt));
-    const fov = baseFov() * (1 - .3 * adsT) + 7 * Math.min(1, speedT) + 6 * crouchT;
+    const fov = baseFov() * (1 - .3 * adsT) + 7 * Math.min(1, speedT) + 6 * leanT;
     if (Math.abs(camera.fov - fov) > .01) { camera.fov = fov; camera.updateProjectionMatrix(); }
     const gfov = 60 * baseFov() / 75;
     if (Math.abs(gunCam.fov - gfov) > .01) { gunCam.fov = gfov; gunCam.updateProjectionMatrix(); }
@@ -1089,12 +1098,19 @@
     return a >= 1.2 ? 75 : Math.min(105, Math.max(75, THREE.MathUtils.radToDeg(2 * Math.atan(1 / a))));
   }
   function startSlide() {
-    if (state !== 'playing' || !player.onGround || slideT > 0 || slideCD > 0) return;
+    if (state !== 'playing' || crouching || !player.onGround || slideT > 0 || slideCD > 0) return;
     const hs = Math.hypot(player.vx, player.vz);
     if (hs < 3.5) return;  // 走っている勢いがないと滑れない
     slideDX = player.vx / hs; slideDZ = player.vz / hs;
     slideV = Math.min(17, Math.max(hs * 1.25, 11.5)) * (speedT > 0 ? 1.15 : 1);
     slideT = SLIDE_TIME; sfx.slide();
+  }
+  // しゃがむ：速さは半分、弾のばらつきは7割。目の高さが下がって、低い箱の陰に隠れられる
+  function setCrouch(on) { crouching = on; $('tCrouch').classList.toggle('on', on); }
+  function toggleCrouch() {
+    if (state !== 'playing') return;
+    if (slideT > 0) { slideT = 0; slideCD = .45; setCrouch(true); }  // 滑っている途中なら、そのまましゃがむ
+    else setCrouch(!crouching);
   }
   // 腰だめ撃ちはばらつきが大きく、のぞき込む（ADS）とほぼまっすぐ飛ぶ
   function spreadNow() {
@@ -1104,6 +1120,7 @@
     if (moving) sp *= 1 + .7 * (1 - adsT) + .25 * adsT;
     if (!player.onGround) sp *= 2.2;
     if (slideT > 0) sp *= 1.4;
+    else if (crouching && player.onGround) sp *= .7;
     return sp;
   }
   function startReload() {
@@ -1292,7 +1309,7 @@
     Object.assign(player, { vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0, onGround: true, hp: 100 });
     player.pos.set(0, 0, 33);
     ammo = MAG; reloadT = 0; bloom = 0; recoil = 0; score = 0; kills = 0; shotsFired = 0; shotsHit = 0;
-    speedT = 0; slideT = 0; slideCD = 0; crouchT = 0;
+    speedT = 0; slideT = 0; slideCD = 0; crouchT = 0; leanT = 0; setCrouch(false);
     wave = 0; waveActive = false; interT = 1.2; spawnQueue = []; gt = 0; lastShot = -1; dmgFlash = 0; dmgDirT = 0;
     camera.fov = baseFov(); camera.updateProjectionMatrix();
   }
@@ -1822,6 +1839,7 @@
     if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) jumpQueued = true; }
     if (e.code === 'KeyR') startReload();
     if (e.code === 'KeyC' && !e.repeat) startSlide();
+    if (e.code === 'KeyX' && !e.repeat) toggleCrouch();
     if (e.code === 'Escape' || e.code === 'KeyP') {
       if (document.pointerLockElement) document.exitPointerLock(); else setPaused();
     }
@@ -1919,6 +1937,7 @@
   const tb = (id, fn) => $(id).addEventListener('touchstart', e => { e.preventDefault(); if (state === 'playing') fn(); }, { passive: false });
   tb('tJump', () => { jumpQueued = true; });
   tb('tSlide', () => startSlide());
+  tb('tCrouch', () => toggleCrouch());
   tb('tReload', () => startReload());
   tb('tAim', () => { aiming = !aiming; $('tAim').classList.toggle('on', aiming); });
   tb('tPause', () => setPaused());

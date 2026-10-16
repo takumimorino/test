@@ -14,6 +14,8 @@
     --muted: #8d9aa6;
     --p1: #ffae3b;
     --p2: #55e0b8;
+    --p3: #ff6b9a;
+    --p4: #6aa8ff;
     --alarm: #ff4a3d;
     --line: rgba(236, 230, 216, .16);
     --glass: rgba(12, 16, 22, .55);
@@ -36,6 +38,8 @@
   .half { position: fixed; left: 0; right: 0; height: 50%; overflow: hidden; pointer-events: none; }
   .half.p1 { bottom: 0; --edge: env(safe-area-inset-bottom, 0px); --c: var(--p1); --fc: var(--p2); }
   .half.p2 { top: 0; transform: rotate(180deg); --edge: env(safe-area-inset-top, 0px); --c: var(--p2); --fc: var(--p1); }
+  .half.p3 { --c: var(--p3); --fc: var(--muted); }
+  .half.p4 { --c: var(--p4); --fc: var(--muted); }
   .seam { position: fixed; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: rgba(236, 230, 216, .55); pointer-events: none; z-index: 2; }
 
   .hud { position: absolute; inset: 0; font-family: var(--mono); font-variant-numeric: tabular-nums; }
@@ -114,6 +118,7 @@
   .jump { right: calc(112px * var(--s)); bottom: calc(var(--edge) + 36px * var(--s)); width: calc(54px * var(--s)); height: calc(54px * var(--s)); }
   .slide { right: calc(172px * var(--s)); bottom: calc(var(--edge) + 62px * var(--s)); width: calc(52px * var(--s)); height: calc(52px * var(--s)); }
   .zoom { right: calc(116px * var(--s)); bottom: calc(var(--edge) + 102px * var(--s)); width: calc(50px * var(--s)); height: calc(50px * var(--s)); }
+  .crouch { right: calc(176px * var(--s)); bottom: calc(var(--edge) + 124px * var(--s)); width: calc(50px * var(--s)); height: calc(50px * var(--s)); }
   .reload { right: calc(34px * var(--s)); bottom: calc(var(--edge) + 146px * var(--s)); width: calc(50px * var(--s)); height: calc(50px * var(--s)); }
   body.tablet .tb { font-size: 13px; }
   .boost { position: absolute; left: 50%; top: calc(50% + 40px); transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 2px 9px;
@@ -127,13 +132,15 @@
   .eyebrow { font-weight: 700; font-size: 11px; letter-spacing: .16em; color: var(--c); }
   .ptitle { margin: 0; font-family: var(--display); font-weight: 800; font-size: 50px; line-height: .84; }
   .ptitle span { color: var(--c); display: block; }
-  .ptext { margin: 0; font-size: 13px; line-height: 1.65; color: #cfc9bc; }
+  .ptext { margin: 0; font-size: 13px; line-height: 1.65; color: #cfc9bc; white-space: pre-line; }
   .pstats { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 4px 22px; font-family: var(--mono); }
   .pstats .big { font-family: var(--display); font-weight: 800; font-size: 28px; line-height: 1; }
   .prow { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; }
   .ready { font-family: var(--body); font-weight: 700; font-size: 17px; letter-spacing: .08em; background: var(--c); color: #12100a; border: 1px solid var(--c);
     border-radius: 2px; padding: 12px 26px; cursor: pointer; touch-action: manipulation; }
   .ready.wait { background: transparent; color: var(--c); }
+  .invite { font-family: var(--body); font-weight: 700; font-size: 14px; background: transparent; color: var(--c); border: 1px dashed var(--c);
+    border-radius: 2px; padding: 11px 16px; cursor: pointer; touch-action: manipulation; }
   .ready:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .sens { display: grid; gap: 4px; font-weight: 700; font-size: 11px; color: var(--muted); }
   .sens input { width: 130px; accent-color: var(--c); touch-action: pan-x; }
@@ -194,19 +201,19 @@
 <button class="pause" id="pauseBtn" type="button" aria-label="一時停止" hidden>II</button>
 <div class="sheet" id="modeSel">
   <div class="sbox">
-    <div class="eyebrow" style="color:var(--p1)">2 PLAYERS · FPS</div>
+    <div class="eyebrow" style="color:var(--p1)">2–4 PLAYERS · FPS</div>
     <h1 class="stitle">HOLLOW<span>DUEL</span></h1>
     <p class="stext">どうやって遊ぶ？</p>
     <div class="nbtns">
       <button class="sbtn main" id="mOne" type="button">1台で遊ぶ<small>スマホを机に置いて向かい合い、上下に分かれた画面で対戦</small></button>
-      <button class="sbtn" id="mTwo" type="button">2台で遊ぶ<small>それぞれ自分のスマホで。QRコードを読み取り合ってつなぐ（同じWi-Fiで）</small></button>
+      <button class="sbtn" id="mTwo" type="button">2台以上で遊ぶ<small>1人1台のスマホで、4人まで。QRコードを読み取り合ってつなぐ（同じWi-Fiで）</small></button>
     </div>
     <a class="back" href="index.html" style="color:var(--muted)">← ゲーム選択にもどる</a>
   </div>
 </div>
 <div class="sheet" id="netSheet" hidden>
   <div class="sbox">
-    <div class="eyebrow" style="color:var(--p2)" id="nEye">2台で遊ぶ</div>
+    <div class="eyebrow" style="color:var(--p2)" id="nEye">2台以上で遊ぶ</div>
     <h2 class="stitle2" id="nTitle"></h2>
     <p class="stext" id="nText"></p>
     <div class="qr" id="nQR" hidden></div>
@@ -246,7 +253,8 @@
   // ---------- Constants ----------
   const HALF = 28, WALL_H = 6, EYE = 1.62, PR = .45, MAG = 30, RELOAD = 1.35, FIRE_INT = .11;
   const GOAL = 5, RESPAWN = 2.5, INV = 1.5, DMG_BODY = 14, DMG_HEAD = 34;
-  const COLORS = [0xffae3b, 0x55e0b8], NAMES = ['オレンジ', 'ミント'];
+  const COLORS = [0xffae3b, 0x55e0b8, 0xff6b9a, 0x6aa8ff], NAMES = ['オレンジ', 'ミント', 'ピンク', 'ブルー'];
+  const HEX = ['#ffae3b', '#55e0b8', '#ff6b9a', '#6aa8ff'], MAXP = 4;  // 2台以上で遊ぶときは4人まで
 
   // ---------- Renderer & scenes ----------
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -566,6 +574,7 @@
       <button class="tb zoom" type="button">のぞく</button>
       <button class="tb jump" type="button">ジャンプ</button>
       <button class="tb slide" type="button">スライド</button>
+      <button class="tb crouch" type="button">しゃがむ</button>
       <button class="tb reload" type="button">リロード</button>
     </div>
     <div class="panel">
@@ -576,6 +585,7 @@
         <div class="pstats" hidden></div>
         <div class="prow">
           <button class="ready" type="button">準備OK</button>
+          <button class="invite" type="button" hidden>もう1人呼ぶ</button>
           <label class="sens">視点の速さ <input type="range" min="0.4" max="3" step="0.1" value="1"></label>
         </div>
         <p class="pnote"></p>
@@ -584,9 +594,16 @@
       </div>
     </div>`;
   const SPAWNS = [[0, 24], [0, -24], [-24, 0], [24, 0], [-22, 22], [22, -22], [-22, -22], [22, 22]];
+  const KEYS_TEXT = ['キーボード：WASD 移動 / Q・E 向き / F 撃つ / Space ジャンプ / G スライド / X しゃがむ / R リロード',
+    'キーボード：IJKL 移動 / U・O 向き / H 撃つ / B ジャンプ / N スライド / M しゃがむ / Y リロード'];
 
   function makePlayer(i) {
-    const el = $('half' + i); el.innerHTML = HALF_HTML;
+    let el = $('half' + i);
+    if (!el) {  // 3人目・4人目の画面（2台以上で遊ぶときだけ。自分の画面以外は表示しない）
+      el = document.createElement('section'); el.className = `half p${i + 1}`; el.id = 'half' + i; el.setAttribute('aria-label', `${NAMES[i]}の画面`);
+      $('half0').after(el);
+    }
+    el.innerHTML = HALF_HTML;
     const q = s => el.querySelector(s);
     const cam = new THREE.PerspectiveCamera(75, 1, .05, 160); cam.rotation.order = 'YXZ';
     const gunCam = new THREE.PerspectiveCamera(60, 1, .01, 10);
@@ -599,41 +616,42 @@
       hp: 100, ammo: MAG, reloadT: 0, lastShot: -1, lastShotAt: -9, bloom: 0, recoil: 0, flashT: 0, landDip: 0, bobPhase: 0,
       aiming: false, adsT: 0, firing: false, jumpQ: false, kills: 0, shots: 0, hits: 0, heads: 0,
       dead: false, respawnT: 0, deathT: 0, invT: 0, dmgFlash: 0, dmgDirT: 0, hitFlash: 0, hitTimer: 0,
-      speedT: 0, slideT: 0, slideCD: 0, slideV: 0, slideDX: 0, slideDZ: 0, crouchT: 0,
+      speedT: 0, slideT: 0, slideCD: 0, slideV: 0, slideDX: 0, slideDZ: 0, crouchT: 0, leanT: 0, crouching: false, gone: false, deaths: 0,
       stick: { active: false, x: 0, y: 0, id: null, cx: 0, cy: 0 }, keys: {},
       sens: store.get('hd.sens' + i, 1), cache: {},
       ui: {
         me: q('.me'), foe: q('.foe'), hpbar: q('.hpbar'), hpnum: q('.hpnum'), ammo: q('.ammo-n'), ammoS: q('.ammo-s'), radar: q('.radar'),
         xhair: q('.xhair'), hitm: q('.hitm'), banner: q('.banner'), bT: q('.bT'), bS: q('.bS'), talk: q('.talk'), talkTxt: q('.talk .txt'),
         vig: q('.vig'), dmgdir: q('.dmgdir'), dead: q('.dead'), deadS: q('.dead-s'),
-        stick: q('.stick'), knob: q('.knob'), fire: q('.fire'), zoom: q('.zoom'), jump: q('.jump'), reload: q('.reload'), slide: q('.slide'),
+        stick: q('.stick'), knob: q('.knob'), fire: q('.fire'), zoom: q('.zoom'), jump: q('.jump'), reload: q('.reload'), slide: q('.slide'), crouch: q('.crouch'),
         boost: q('.boost'), boostBar: q('.boost .bar i'),
         panel: q('.panel'), eyebrow: q('.eyebrow'), ptitle: q('.ptitle'), ptext: q('.ptext'), pstats: q('.pstats'),
-        ready: q('.ready'), sens: q('.sens input'), pnote: q('.pnote'), keys: q('.keys')
+        ready: q('.ready'), invite: q('.invite'), sens: q('.sens input'), pnote: q('.pnote'), keys: q('.keys')
       }
     };
     p.rctx = p.ui.radar.getContext('2d');
     p.ui.sens.value = p.sens;
     p.ui.sens.addEventListener('input', e => { p.sens = +e.target.value; store.set('hd.sens' + i, p.sens); });
-    p.ui.keys.textContent = i === 0
-      ? 'キーボード：WASD 移動 / Q・E 向き / F 撃つ / Space ジャンプ / G スライド / R リロード'
-      : 'キーボード：IJKL 移動 / U・O 向き / H 撃つ / B ジャンプ / N スライド / Y リロード';
+    p.ui.keys.textContent = KEYS_TEXT[i === 1 ? 1 : 0];
     return p;
   }
   const players = [makePlayer(0), makePlayer(1)];
-  const foeOf = p => players[1 - p.i];
+  const others = p => players.filter(q => q !== p && !q.gone);
 
   function spawn(p, first) {
-    let pt = p.i ? [0, -24] : [0, 24];
-    if (!first) {
-      const f = foeOf(p), d = s => Math.hypot(s[0] - f.pos.x, s[1] - f.pos.z);
-      pt = SPAWNS.reduce((best, s) => d(s) > d(best) ? s : best);
+    let pt = SPAWNS[p.i];
+    if (!first) {  // 生きているほかの人から、いちばん遠い場所で復活
+      const foes = others(p).filter(q => !q.dead);
+      if (foes.length) {
+        const d = s => Math.min(...foes.map(f => Math.hypot(s[0] - f.pos.x, s[1] - f.pos.z)));
+        pt = SPAWNS.reduce((best, s) => d(s) > d(best) ? s : best);
+      }
     }
     Object.assign(p, { vx: 0, vz: 0, vy: 0, pitch: 0, onGround: true, hp: 100, ammo: MAG, reloadT: 0, bloom: 0, dead: false, invT: first ? 0 : INV, aiming: false,
-      speedT: 0, slideT: 0, slideCD: 0, crouchT: 0 });
+      speedT: 0, slideT: 0, slideCD: 0, crouchT: 0, leanT: 0, crouching: false });
     p.pos.set(pt[0], 0, pt[1]);
     p.yaw = Math.atan2(pt[0], pt[1]);  // アリーナの中央を向く
-    p.ui.zoom.classList.remove('on');
+    p.ui.zoom.classList.remove('on'); p.ui.crouch.classList.remove('on');
   }
 
   // ---------- Effects ----------
@@ -673,7 +691,7 @@
       if (k.cd > 0) { k.cd -= dt; k.g.visible = k.cd <= 0; continue; }
       k.g.rotation.y += dt * 2; k.g.position.y = .8 + Math.sin(k.t * 3) * .12;
       for (const p of players) {
-        if (isRemote(p) || p.dead || p.hp >= 100 || p.pos.y > 1.6 || Math.hypot(p.pos.x - k.x, p.pos.z - k.z) > 1.3) continue;
+        if (p.gone || isRemote(p) || p.dead || p.hp >= 100 || p.pos.y > 1.6 || Math.hypot(p.pos.x - k.x, p.pos.z - k.z) > 1.3) continue;
         p.hp = Math.min(100, p.hp + 40); sfx.pickup(); k.cd = 12; k.g.visible = false;
         if (online) send({ t: 'heal', k: pickups.indexOf(k) });
         break;
@@ -694,7 +712,7 @@
       const d = drops[k]; d.t += dt; d.life -= dt;
       d.g.rotation.y += dt * 2.4; d.g.position.y = .8 + Math.sin(d.t * 3) * .12;
       d.g.visible = d.life > 3 || Math.sin(d.t * 20) > 0;
-      const p = players.find(q => !isRemote(q) && !q.dead && q.pos.y < 1.6 && Math.hypot(q.pos.x - d.g.position.x, q.pos.z - d.g.position.z) < 1.3);
+      const p = players.find(q => !q.gone && !isRemote(q) && !q.dead && q.pos.y < 1.6 && Math.hypot(q.pos.x - d.g.position.x, q.pos.z - d.g.position.z) < 1.3);
       if (p) { p.speedT = SPEED_TIME; sfx.speed(); banner(p, 'SPEED UP', `${SPEED_TIME}秒間、足が速くなる`); if (online) send({ t: 'take', id: d.id }); }
       if (p || d.life <= 0) { scene.remove(d.g); drops.splice(k, 1); }
     }
@@ -707,7 +725,7 @@
     if (!p.dead && p.onGround && hs > .5) p.bobPhase += dt * hs * 1.25;
     p.landDip = Math.max(0, p.landDip - dt * .6);
     let y = p.pos.y + EYE + (p.onGround ? Math.sin(p.bobPhase * 2) * .035 * Math.min(1, hs / 7) : 0) - p.landDip;
-    let pitch = p.pitch, roll = (p.i && !online ? Math.PI : 0) + .07 * p.crouchT;
+    let pitch = p.pitch, roll = (p.i && !online ? Math.PI : 0) + .07 * p.leanT;
     y -= .72 * p.crouchT;
     if (p.dead) {
       const d = Math.min(1, p.deathT / .6);
@@ -717,7 +735,7 @@
     p.cam.rotation.set(pitch, p.yaw, roll);
     p.cam.updateMatrixWorld();
     p.adsT += ((p.aiming && !p.dead ? 1 : 0) - p.adsT) * (1 - Math.exp(-14 * dt));
-    const base = baseFov(p.cam.aspect), fov = base * (1 - .3 * p.adsT) + 7 * Math.min(1, p.speedT) + 6 * p.crouchT, gfov = 60 * base / 75;
+    const base = baseFov(p.cam.aspect), fov = base * (1 - .3 * p.adsT) + 7 * Math.min(1, p.speedT) + 6 * p.leanT, gfov = 60 * base / 75;
     if (Math.abs(p.cam.fov - fov) > .01) { p.cam.fov = fov; p.cam.updateProjectionMatrix(); }
     if (Math.abs(p.gunCam.fov - gfov) > .01) { p.gunCam.fov = gfov; p.gunCam.updateProjectionMatrix(); }
   }
@@ -736,7 +754,7 @@
     if (k.tl) p.yaw += 2.4 * dt; if (k.tr) p.yaw -= 2.4 * dt;
     const len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
     p.speedT = Math.max(0, p.speedT - dt); p.slideCD = Math.max(0, p.slideCD - dt);
-    const speed = (p.aiming ? 4 : 7) * (p.speedT > 0 ? SPEED_MUL : 1);
+    const speed = (p.aiming ? 4 : 7) * (p.speedT > 0 ? SPEED_MUL : 1) * (p.crouching ? .5 : 1);
     const sy = Math.sin(p.yaw), cy = Math.cos(p.yaw);
     const tx = (-sy * mz + cy * mx) * speed, tz = (-cy * mz - sy * mx) * speed;
     if (p.slideT > 0) {
@@ -756,7 +774,10 @@
     }
     p.pos.x += p.vx * dt; p.pos.z += p.vz * dt;
     const ground = pushOut(p.pos, PR, p.pos.y);
-    if (p.jumpQ && p.onGround) { p.vy = 7; p.onGround = false; p.slideT = 0; }
+    if (p.jumpQ && p.onGround) {
+      if (p.crouching) setCrouch(p, false);  // しゃがんでいるときのジャンプは、立ち上がるだけ
+      else { p.vy = 7; p.onGround = false; p.slideT = 0; }
+    }
     p.jumpQ = false;
     p.vy -= 20 * dt; p.pos.y += p.vy * dt;
     if (p.pos.y <= ground) {
@@ -764,7 +785,9 @@
       p.pos.y = ground; p.vy = 0; p.onGround = true;
     } else if (p.pos.y > ground + .05) p.onGround = false;
     p.invT = Math.max(0, p.invT - dt);
-    p.crouchT += ((p.slideT > 0 ? 1 : 0) - p.crouchT) * (1 - Math.exp(-14 * dt));
+    const ease = 1 - Math.exp(-14 * dt);
+    p.crouchT += ((p.slideT > 0 || p.crouching ? 1 : 0) - p.crouchT) * ease;
+    p.leanT += ((p.slideT > 0 ? 1 : 0) - p.leanT) * ease;  // 体を傾けるのはスライド中だけ
     placeCamera(p, dt);
     if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; p.ammo = MAG; } }
     p.bloom = Math.max(0, p.bloom - dt * .05);
@@ -783,12 +806,19 @@
     p.reloadT = RELOAD; sfx.reload();
   }
   function startSlide(p) {
-    if (!canAct() || p.dead || !p.onGround || p.slideT > 0 || p.slideCD > 0) return;
+    if (!canAct() || p.dead || p.crouching || !p.onGround || p.slideT > 0 || p.slideCD > 0) return;
     const hs = Math.hypot(p.vx, p.vz);
     if (hs < 3.5) return;  // 走っている勢いがないと滑れない
     p.slideDX = p.vx / hs; p.slideDZ = p.vz / hs;
     p.slideV = Math.min(17, Math.max(hs * 1.4, 11.5)) * (p.speedT > 0 ? 1.15 : 1);
     p.slideT = SLIDE_TIME; sfx.slide();
+  }
+  // しゃがむ：速さは半分、弾のばらつきは7割。目の高さが下がって、低い箱の陰に隠れられる
+  function setCrouch(p, on) { p.crouching = on; p.ui.crouch.classList.toggle('on', on); }
+  function toggleCrouch(p) {
+    if (!canAct() || p.dead) return;
+    if (p.slideT > 0) { p.slideT = 0; p.slideCD = .45; setCrouch(p, true); }  // 滑っている途中なら、そのまましゃがむ
+    else setCrouch(p, !p.crouching);
   }
   // 腰だめ撃ちはばらつきが大きく、のぞき込む（ADS）とほぼまっすぐ飛ぶ
   function spreadNow(p) {
@@ -797,6 +827,7 @@
     if (moving) sp *= 1 + .7 * (1 - a) + .25 * a;
     if (!p.onGround) sp *= 2.2;
     if (p.slideT > 0) sp *= 1.4;
+    else if (p.crouching && p.onGround) sp *= .7;
     return sp;
   }
   function look(p, dx, dy) {
@@ -812,34 +843,34 @@
     if (p.reloadT > 0 || p.dead) return;
     if (p.ammo <= 0) { sfx.dry(); startReload(p); return; }
     p.ammo--; p.shots++; p.lastShotAt = gt;
-    const foe = foeOf(p);
+    const foes = others(p).filter(q => !q.dead);
     const spread = spreadNow(p);
     p.bloom = p.adsT > .5 ? Math.min(.012, p.bloom + .0015) : Math.min(.05, p.bloom + .006);
     const fwd = new V3(0, 0, -1).applyQuaternion(p.cam.quaternion), aimDir = fwd.clone();
-    if (!foe.dead) {
-      // エイムアシスト：のぞき込んでいるときだけしっかり吸い付き、腰だめは弱い。
-      // 狙いの中心を寄せたあとでばらつきを足すので、腰だめのぶれは残る
-      const chest = new V3(foe.pos.x, foe.pos.y + 1.2 - .6 * foe.crouchT, foe.pos.z);
-      const to = chest.clone().sub(p.cam.position);
-      if (fwd.angleTo(to) < .02 + .055 * p.adsT && hasLOS(p.cam.position, chest)) aimDir.copy(to).normalize();
+    // エイムアシスト：のぞき込んでいるときだけしっかり吸い付き、腰だめは弱い。いちばん狙いに近い相手に寄せる。
+    // 狙いの中心を寄せたあとでばらつきを足すので、腰だめのぶれは残る
+    let best = .02 + .055 * p.adsT;
+    for (const q of foes) {
+      const chest = new V3(q.pos.x, q.pos.y + 1.2 - .6 * q.crouchT, q.pos.z), to = chest.clone().sub(p.cam.position), ang = fwd.angleTo(to);
+      if (ang < best && hasLOS(p.cam.position, chest)) { best = ang; aimDir.copy(to).normalize(); }
     }
     const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
     const right = new V3(1, 0, 0).applyQuaternion(p.cam.quaternion), up = new V3(0, 1, 0).applyQuaternion(p.cam.quaternion);
     dir.copy(aimDir).addScaledVector(right, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r).normalize();
     ray.set(p.cam.position, dir); ray.far = 120;
-    const targets = [floor, ...solids]; if (!foe.dead) targets.push(foe.model.g);
-    const hits = ray.intersectObjects(targets, true);
+    const hits = ray.intersectObjects([floor, ...solids, ...foes.map(q => q.model.g)], true);
     let end;
     if (hits.length) {
       const h = hits[0]; end = h.point.clone();
-      if (ownerOf(h.object, foe)) {
+      const foe = foes.find(q => ownerOf(h.object, q));
+      if (foe) {
         const weak = !!h.object.userData.weak;
         if (foe.invT > 0) burst(end, 0xece6d8, 4, 2);
         else {
           p.hits++;
           const dmg = weak ? DMG_HEAD : DMG_BODY;
           let down;
-          if (online) { send({ t: 'hit', d: dmg, w: weak ? 1 : 0 }); down = foe.hp - dmg <= 0; foe.hitFlash = .1; }
+          if (online) { send({ t: 'hit', to: foe.i, d: dmg, w: weak ? 1 : 0 }); down = foe.hp - dmg <= 0; foe.hitFlash = .1; }
           else down = damagePlayer(foe, dmg, p, weak);
           burst(end, weak ? 0xff4a3d : foe.color, weak ? 9 : 5, 4);
           hitMarker(p, weak, down); sfx.hit(weak);
@@ -865,26 +896,26 @@
     v.ui.dmgdir.style.transform = `rotate(${Math.atan2(cy * sx - sy * sz, -sy * sx - cy * sz)}rad)`;
     if (v.hp > 0) return false;
     v.hp = 0;
-    if (online) send({ t: 'died', w: weak ? 1 : 0, x: v.pos.x, y: v.pos.y, z: v.pos.z, n: v.deaths || 0 });
+    if (online) send({ t: 'died', k: from.i, w: weak ? 1 : 0, x: v.pos.x, y: v.pos.y, z: v.pos.z, n: v.deaths || 0 });
     killed(v, from, weak);
     return true;
   }
   let deathSeq = 0;
   function killed(v, from, weak) {
-    v.hp = 0; v.dead = true; v.respawnT = RESPAWN; v.deathT = 0; v.firing = false; v.aiming = false; v.ui.zoom.classList.remove('on');
+    v.hp = 0; v.dead = true; v.respawnT = RESPAWN; v.deathT = 0; v.firing = false; v.aiming = false; v.ui.zoom.classList.remove('on'); setCrouch(v, false);
     v.deaths = (v.deaths || 0) + 1;
     from.kills++; if (weak) from.heads++;
     burst(new V3(v.pos.x, v.pos.y + 1.1, v.pos.z), v.color, 24, 6); sfx.kill();
     v.speedT = 0; v.slideT = 0; dropSpeed(v.pos, `${v.i}-${v.deaths}`);
     banner(from, 'KILL', weak ? 'ヘッドショット！' : `${from.kills} / ${GOAL}`);
     faceT = 1.5;
-    const total = players[0].kills + players[1].kills;
+    const total = players.reduce((n, q) => n + q.kills, 0);
     if (from.kills >= GOAL) say(`勝者、${from.name}。おめでとうございます。`);
     else if (total === 1) say(`先制は${from.name}。いい一発でした。`);
     else if (from.kills === GOAL - 1 && v.kills === GOAL - 1) say(`${GOAL - 1}対${GOAL - 1}。……見ている私が緊張してきました。`);
     else if (from.kills === GOAL - 1) say(`${from.name}、あと1本です。`);
     else if (weak && Math.random() < .5) say('頭に命中。記録しておきます。');
-    if (from.kills >= GOAL && !(online && localIdx === 1)) endMatch(from);
+    if (from.kills >= GOAL && !(online && localIdx !== 0)) endMatch(from);  // 2台以上のときは、部屋を作った人のスマホが終わりを決める
   }
   function hitMarker(p, weak, kill) {
     p.ui.hitm.className = 'hitm on' + (weak ? ' weak' : '') + (kill ? ' kill' : '');
@@ -934,8 +965,9 @@
     const el = p.ui.banner; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
   }
   function updateHUD(p) {
-    const f = foeOf(p), u = p.ui;
-    setText(p, 'me', u.me, String(p.kills)); setText(p, 'foe', u.foe, String(f.kills));
+    const f = topRival(p), u = p.ui;
+    setText(p, 'me', u.me, String(p.kills)); setText(p, 'foe', u.foe, String(f ? f.kills : 0));
+    if (f && p.cache.fc !== f.i) { p.cache.fc = f.i; u.foe.style.color = HEX[f.i]; }  // 右の数字は、いちばん倒している相手の色
     const hp = Math.ceil(p.hp);
     setText(p, 'hp', u.hpnum, String(hp));
     u.hpbar.style.width = hp + '%'; u.hpbar.classList.toggle('low', hp <= 30);
@@ -953,7 +985,7 @@
   }
   // 自分を中心に、向いている方向が上。相手は撃った直後の1.5秒だけ映る
   function drawRadar(p) {
-    const c = p.rctx, S = 160, R = S / 2, sc = R / 30, f = foeOf(p);
+    const c = p.rctx, S = 160, R = S / 2, sc = R / 30;
     c.clearRect(0, 0, S, S);
     c.save();
     c.beginPath(); c.arc(R, R, R - 2, 0, Math.PI * 2); c.clip();
@@ -965,31 +997,35 @@
     }
     for (const k of pickups) if (k.g.visible) { c.fillStyle = '#55e0b8'; c.fillRect(k.x * sc - 5, k.z * sc - 5, 10, 10); }
     for (const d of drops) { c.fillStyle = '#ffd447'; c.fillRect(d.g.position.x * sc - 5, d.g.position.z * sc - 5, 10, 10); }
-    if (!f.dead && gt - f.lastShotAt < 1.5) {
-      c.fillStyle = f.i ? '#55e0b8' : '#ffae3b';
+    for (const f of others(p)) {
+      if (f.dead || gt - f.lastShotAt >= 1.5) continue;
+      c.fillStyle = HEX[f.i];
       c.beginPath(); c.arc(f.pos.x * sc, f.pos.z * sc, 8, 0, Math.PI * 2); c.fill();
     }
     c.restore();
-    c.fillStyle = p.i ? '#55e0b8' : '#ffae3b';
+    c.fillStyle = HEX[p.i];
     c.beginPath(); c.moveTo(R, R - 12); c.lineTo(R + 8, R + 8); c.lineTo(R, R + 3); c.lineTo(R - 8, R + 8); c.closePath(); c.fill();
     c.strokeStyle = 'rgba(236,230,216,.35)'; c.lineWidth = 2;
     c.beginPath(); c.arc(R, R, R - 2, 0, Math.PI * 2); c.stroke();
   }
 
   // ---------- Match flow ----------
-  // lobby → (2人とも準備OK) → countdown → playing → result。途中で paused になることもある
+  // lobby → (全員が準備OK) → countdown → playing → result。途中で paused になることもある
   let phase = 'lobby', countT = 0, lastCount = 0, gt = 0, firstMatch = true, winner = null;
-  // 2台で遊ぶとき：online = true、localIdx はこのスマホのプレイヤー（部屋を作った人 0、入った人 1）
+  // 2台以上で遊ぶとき：online = true、localIdx はこのスマホのプレイヤー（部屋を作った人が 0、入った順に 1, 2, 3）
   let online = false, localIdx = 0;
   const me = () => players[localIdx];
   const isRemote = p => online && p.i !== localIdx;
-  const ready = [false, false];
+  const ready = [false, false, false, false];
+  const active = () => players.filter(p => !p.gone);
+  const allReady = () => active().every(p => ready[p.i]);
+  // いちばん多く倒している相手（2人なら相手そのもの）
+  function topRival(p) { let t = null; for (const q of others(p)) if (!t || q.kills > t.kills) t = q; return t; }
   const pad = (n, w) => String(n).padStart(w, '0');
   function newMatch() {
     for (const s of sparks) scene.remove(s.m); sparks.length = 0;
     for (const t of tracers) { scene.remove(t.l); t.l.geometry.dispose(); t.l.material.dispose(); } tracers.length = 0;
-    for (const p of players) { Object.assign(p, { kills: 0, shots: 0, hits: 0, heads: 0, lastShotAt: -9, dmgFlash: 0, dmgDirT: 0 }); }
-    spawn(players[0], true); spawn(players[1], true);
+    for (const p of players) { Object.assign(p, { kills: 0, shots: 0, hits: 0, heads: 0, lastShotAt: -9, dmgFlash: 0, dmgDirT: 0 }); spawn(p, true); }
     for (const k of pickups) { k.cd = 0; k.g.visible = true; }
     for (const d of drops) scene.remove(d.g); drops.length = 0;
     winner = null;
@@ -997,14 +1033,14 @@
   function startCountdown() {
     const resume = phase === 'paused';
     if (!resume) newMatch();
-    phase = 'countdown'; countT = 3; lastCount = 4; ready[0] = ready[1] = false;
+    phase = 'countdown'; countT = 3; lastCount = 4; ready.fill(false);
     updatePanels();
     if (firstMatch && !resume) say('第7射撃場、対戦モードです。審判はコダマが務めます。');
     firstMatch = false;
   }
   function endMatch(w) {
-    phase = 'result'; winner = w; ready[0] = ready[1] = false;
-    if (online && localIdx === 0) send({ t: 'end', w: w.i, k: [players[0].kills, players[1].kills] });
+    phase = 'result'; winner = w; ready.fill(false);
+    if (online && localIdx === 0) send({ t: 'end', w: w.i, k: players.map(p => p.kills) });
     for (const p of players) { p.firing = false; p.aiming = false; p.stick.active = false; }
     sfx.win();
     setTimeout(updatePanels, 900);  // 最後の一発の演出を少しだけ見せてから結果を出す
@@ -1012,7 +1048,7 @@
   function pause(fromRemote) {
     if (phase !== 'playing' && phase !== 'countdown') return;
     if (online && !fromRemote) send({ t: 'pause' });
-    phase = 'paused'; ready[0] = ready[1] = false;
+    phase = 'paused'; ready.fill(false);
     for (const p of players) { p.firing = false; p.stick.active = false; p.ui.knob.style.transform = ''; }
     updatePanels();
   }
@@ -1020,39 +1056,52 @@
     initAudio();
     if (!['lobby', 'paused', 'result'].includes(phase) || (phase === 'result' && !winner)) return;
     ready[p.i] = !ready[p.i];
-    if (online) { send({ t: 'ready', v: ready[p.i] }); if (ready[0] && ready[1] && localIdx === 0) { send({ t: 'go' }); startCountdown(); } else updatePanels(); return; }
+    if (online) { send({ t: 'ready', v: ready[p.i] }); if (localIdx === 0) hostCheckGo(); else updatePanels(); return; }
     if (ready[0] && ready[1]) startCountdown(); else updatePanels();
+  }
+  // 部屋を作った人のスマホが、全員そろったかを見て開始の合図を出す（だれかを呼んでいる途中は始めない）
+  function hostCheckGo() {
+    if (online && localIdx === 0 && !net.pending && active().length >= 2 && allReady() && ['lobby', 'paused', 'result'].includes(phase)) {
+      send({ t: 'go' }); startCountdown();
+    } else updatePanels();
   }
   function updatePanels() {
     const show = phase === 'lobby' || phase === 'paused' || (phase === 'result' && winner);
     $('pauseBtn').hidden = !(phase === 'playing' || phase === 'countdown');
+    const n = active().length, many = online && n > 2, nReady = active().filter(p => ready[p.i]).length;
     for (const p of players) {
-      const u = p.ui, f = foeOf(p);
+      const u = p.ui, f = topRival(p);
       u.panel.hidden = !show;
+      u.invite.hidden = !(show && online && p.i === 0 && localIdx === 0 && phase !== 'paused' && n < MAXP);
       if (!show) continue;
+      u.invite.textContent = `もう1人呼ぶ（いま${n}人）`;
       u.pstats.hidden = true;
+      const score = many ? `${p.kills}キル` : `${p.kills} – ${f ? f.kills : 0}`;
       if (phase === 'lobby') {
-        u.eyebrow.textContent = online ? `2台で対戦 · あなたは${p.name}` : `2 PLAYERS · FPS · あなたは${p.name}`;
+        u.eyebrow.textContent = online ? `${n}人で対戦 · あなたは${p.name}` : `2 PLAYERS · FPS · あなたは${p.name}`;
         u.ptitle.innerHTML = 'HOLLOW<span>DUEL</span>';
-        u.ptext.textContent = `${online ? 'それぞれ自分のスマホで対戦。' : 'スマホを机に置いて、向かい合って対戦。'}先に${GOAL}回倒したほうの勝ち。頭に当てるとダメージ2倍。「のぞく」と弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込める。倒された人はスピードアップを落とす。`;
+        u.ptext.textContent = `${online ? 'それぞれ自分のスマホで対戦。' : 'スマホを机に置いて、向かい合って対戦。'}先に${GOAL}回倒した${many ? '人' : 'ほう'}の勝ち。頭に当てるとダメージ2倍。「のぞく」と弾がまっすぐ飛ぶ。「しゃがむ」と低い箱に隠れられる。走りながら「スライド」で滑り込める。倒された人はスピードアップを落とす。`
+          + (online && localIdx === 0 && n < MAXP ? `\n「もう1人呼ぶ」で${MAXP}人まで遊べる。` : '');
       } else if (phase === 'paused') {
-        u.eyebrow.textContent = `一時停止中 · ${p.kills} – ${f.kills}`;
+        u.eyebrow.textContent = `一時停止中 · ${score}`;
         u.ptitle.innerHTML = 'PAUSE';
-        u.ptext.textContent = '2人とも「再開」を押すと、3秒後に続きから始まります。';
+        u.ptext.textContent = `${many ? '全員' : '2人とも'}「再開」を押すと、3秒後に続きから始まります。`;
       } else {
         const win = winner === p;
-        u.eyebrow.textContent = `${p.kills} – ${f.kills} · ${GOAL}本先取`;
+        u.eyebrow.textContent = `${score} · ${GOAL}本先取`;
         u.ptitle.innerHTML = win ? 'YOU<span>WIN</span>' : 'YOU<span>LOSE</span>';
-        u.ptext.textContent = win ? 'コダマ「おめでとうございます。いい試合でした。」' : 'コダマ「次はきっと勝てます。……たぶん。」';
+        let t = win ? 'コダマ「おめでとうございます。いい試合でした。」' : 'コダマ「次はきっと勝てます。……たぶん。」';
+        if (many) t += '\n' + active().sort((a, b) => b.kills - a.kills).map((q, r) => `${r + 1}位 ${q === p ? 'あなた' : q.name} ${q.kills}`).join('　');
+        u.ptext.textContent = t;
         const acc = p.shots ? Math.round(p.hits / p.shots * 100) : 0;
         u.pstats.innerHTML = [['倒した数', p.kills], ['命中率', acc + '%'], ['ヘッドショット', p.heads]]
           .map(([l, v]) => `<div><div class="lbl">${l}</div><div class="big">${v}</div></div>`).join('');
         u.pstats.hidden = false;
       }
       const label = phase === 'lobby' ? '準備OK' : phase === 'paused' ? '再開' : 'もう一回';
-      u.ready.textContent = ready[p.i] ? '相手を待っています…' : label;
+      u.ready.textContent = ready[p.i] ? (many ? 'みんなを待っています…' : '相手を待っています…') : label;
       u.ready.classList.toggle('wait', ready[p.i]);
-      u.pnote.textContent = !ready[p.i] && ready[f.i] ? '相手は準備できています' : '';
+      u.pnote.textContent = many ? `準備OK ${nReady}/${n}人` : !ready[p.i] && f && ready[f.i] ? '相手は準備できています' : '';
     }
   }
   function updateCountdown(dt) {
@@ -1065,7 +1114,8 @@
     }
   }
 
-  // ---------- 2台で遊ぶ（WebRTC。QRコードを読み取り合ってつなぐ。仲介サーバーなし） ----------
+  // ---------- 2台以上で遊ぶ（WebRTC。QRコードを読み取り合ってつなぐ。仲介サーバーなし） ----------
+  // 部屋を作った人のスマホを中心に、入った人ごとに1本ずつつなぐ。入った人どうしのやりとりは、部屋を作った人のスマホが中継する
   const QR_GEN = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
   const QR_READ = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
   const libs = {};
@@ -1076,8 +1126,10 @@
       document.head.append(sc);
     }));
   }
-  const net = { pc: null, dc: null, role: null, timer: 0, offer: '' };
-  function send(m) { try { if (net.dc && net.dc.readyState === 'open') net.dc.send(JSON.stringify(m)); } catch (e) {} }
+  // links: つながっている相手（部屋を作った人なら入った全員、入った人なら部屋を作った人だけ）。pending: いまつないでいる途中の相手
+  const net = { role: null, links: [], pending: null, timer: 0, offer: '', sid: 0, iv: 0, lost: false, onCode: null };
+  function sendTo(L, m) { try { if (L.dc && L.dc.readyState === 'open') L.dc.send(JSON.stringify(m)); } catch (e) {} }
+  function send(m) { m.f = localIdx; for (const L of net.links) sendTo(L, m); }
 
   // QRを小さくするため、SDP から接続に必要な値だけを取り出して短い文字列にする（読む側で SDP を組み立て直す）
   const SETUP = { actpass: 'x', active: 'a', passive: 'p' }, SETUP_R = { x: 'actpass', a: 'active', p: 'passive' };
@@ -1110,20 +1162,20 @@
       `a=setup:${SETUP_R[st] || 'actpass'}`, 'a=mid:0', 'a=sctp-port:5000', 'a=max-message-size:262144'].join('\r\n') + '\r\n';
     return { kind, sdp };
   }
-  function newPC() {
-    closePC();
-    const pc = new RTCPeerConnection({ iceServers: [] });
-    pc.onconnectionstatechange = () => {
-      const st = pc.connectionState;
-      if (online && (st === 'failed' || st === 'closed')) netLost();
-      else if (!online && pc === net.pc && st === 'failed') netFail(new Error('ice failed'));
-    };
-    net.pc = pc;
-    return pc;
+  function newLink() {
+    const pc = new RTCPeerConnection({ iceServers: [] }), L = { pc, dc: null, idx: -1, up: false, down: false, closed: false };
+    pc.onconnectionstatechange = () => { const st = pc.connectionState; if (st === 'failed' || st === 'closed') linkDown(L); };
+    return L;
   }
-  function closePC() {
-    try { if (net.dc) net.dc.close(); if (net.pc) net.pc.close(); } catch (e) {}
-    net.pc = net.dc = null; clearTimeout(net.timer);
+  function closeLink(L) {
+    if (!L) return;
+    L.closed = true;
+    try { if (L.dc) L.dc.close(); L.pc.close(); } catch (e) {}
+  }
+  function closeAll() {
+    const all = [net.pending, ...net.links];
+    net.pending = null; net.links = []; clearTimeout(net.timer);
+    for (const L of all) closeLink(L);
   }
   function gathered(pc) {
     return new Promise(res => {
@@ -1132,14 +1184,85 @@
       pc.addEventListener('icegatheringstatechange', () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); res(); } });
     });
   }
-  function setupDC(dc) {
-    net.dc = dc;
-    dc.onopen = goOnline;
-    dc.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } onMsg(m); };
-    dc.onclose = () => { if (online) netLost(); };
+  function setupDC(L, dc) {
+    L.dc = dc;
+    dc.onopen = () => linkUp(L);
+    dc.onmessage = e => {
+      let m; try { m = JSON.parse(e.data); } catch (err) { return; }
+      if (!m || typeof m !== 'object') return;
+      if (net.role === 'host') {  // 入った人から届いたものは、送り主を付け直して、ほかの全員にも回す
+        if (L.idx < 0) return;
+        m.f = L.idx;
+        for (const o of net.links) if (o !== L) sendTo(o, m);
+      }
+      onMsg(m);
+    };
+    dc.onclose = () => linkDown(L);
+  }
+  function linkUp(L) {
+    if (L.closed || L.up) return;
+    L.up = true; clearTimeout(net.timer);
+    if (net.pending === L) net.pending = null;
+    if (net.role !== 'host') {
+      L.idx = 0; net.links = [L];
+      netStep({ title: 'つながりました', text: '部屋の準備を待っています…' });  // すぐに roster が届く
+      return;
+    }
+    if (!online) {  // 最初の1人がつながった。1台で遊ぶとき用の2人目の席は、いったん空き席にする
+      for (const q of players) if (q.i) markGone(q);
+      enterOnline(0);
+    }
+    let idx = players.findIndex(p => p.gone);  // 空き席（抜けた人の席も）があれば、そこに入ってもらう
+    if (idx < 0) idx = players.length;
+    if (idx >= MAXP) { closeLink(L); return; }
+    ensurePlayers(idx + 1);
+    const p = players[idx];
+    Object.assign(p, { gone: false, net: null, dead: false, kills: 0, shots: 0, hits: 0, heads: 0 });
+    spawn(p, true);
+    L.idx = idx; net.links.push(L); ready[idx] = false;
+    sendRoster();
+    $('netSheet').hidden = true;
+    if (active().length > 2) say(`${p.name}が入りました。いま${active().length}人です。`);
+    updatePanels();
+  }
+  // 部屋の人数と、それぞれの席番号を全員に知らせる
+  function sendRoster() {
+    const n = players.length, gone = players.filter(p => p.gone).map(p => p.i);
+    for (const L of net.links) sendTo(L, { t: 'roster', f: 0, n, gone, you: L.idx, ready: ready.slice(0, n) });
+  }
+  function linkDown(L) {
+    if (L.down) return;
+    L.down = true;
+    if (net.role === 'host') {
+      if (net.pending === L) { net.pending = null; if (!L.closed) netFail(new Error('link failed')); return; }
+      const i = net.links.indexOf(L);
+      if (i < 0) return;
+      net.links.splice(i, 1);
+      if (L.closed) return;
+      const p = players[L.idx];
+      markGone(p); send({ t: 'gone', i: p.i });
+      if (!net.links.length) { netLost(); return; }
+      say(`${p.name}が抜けました。`);
+      hostCheckGo();
+    } else if (online) netLost();
+    else if (!L.closed) netFail(new Error('link failed'));
+  }
+  function markGone(p) {
+    Object.assign(p, { gone: true, dead: false, net: null, firing: false });
+    ready[p.i] = false;
+  }
+  // 人数が増えたら、その人のぶんのプレイヤーを足す（2台以上で遊ぶときだけ）
+  function ensurePlayers(n) {
+    let added = false;
+    while (players.length < Math.min(n, MAXP)) {
+      const p = makePlayer(players.length);
+      p.gunCam.rotation.z = 0;
+      bindPlayer(p); spawn(p, true); players.push(p); added = true;
+    }
+    if (added) onResize();
   }
 
-  // 自分の状態を 1秒に20回送る。相手の体は、届いた位置へなめらかに寄せて描く
+  // 自分の状態を 1秒に20回送る。ほかの人の体は、届いた位置へなめらかに寄せて描く
   const r3 = v => Math.round(v * 1000) / 1000;
   function sendState() {
     const p = me();
@@ -1157,54 +1280,76 @@
     p.yaw += Math.atan2(Math.sin(s.yw - p.yaw), Math.cos(s.yw - p.yaw)) * k;
     p.pitch = s.pt; p.crouchT = s.c; p.invT = s.iv; p.hp = s.hp; p.aiming = !!s.a;
   }
-  // 当たったかどうかは撃った側が判定し、体力を減らして倒れるかどうかは撃たれた側が決める。
-  // 試合の終わりは部屋を作った側が決めて伝える（相打ちで両方の画面の勝者が食い違わないように）
+  // 当たったかどうかは撃った人が判定し、体力を減らして倒れるかどうかは撃たれた人が決める。
+  // 試合の終わりは部屋を作った人が決めて伝える（ほぼ同時に倒し合っても、全員の画面で勝者がそろうように）
   function onMsg(m) {
-    const p = me(), f = foeOf(p);
+    if (m.t === 'roster') { onRoster(m); return; }
+    const p = me(), from = players[m.f];
+    if (!online || !from || from === p) return;
     switch (m.t) {
-      case 's': f.net = m; break;
+      case 's': from.net = m; break;
       case 'hit':
-        if (phase === 'playing' && !p.dead && p.invT <= 0) damagePlayer(p, +m.d || 0, f, !!m.w);
+        if (m.to === localIdx && phase === 'playing' && !p.dead && p.invT <= 0) damagePlayer(p, +m.d || 0, from, !!m.w);
         break;
-      case 'died':
-        if (phase !== 'playing') break;
-        f.pos.set(+m.x || 0, +m.y || 0, +m.z || 0); f.deaths = +m.n || 0;
-        if (f.net) f.net.d = 1;
-        killed(f, p, !!m.w);
+      case 'died': {
+        const k = players[m.k];
+        if (phase !== 'playing' || !k) break;
+        from.pos.set(+m.x || 0, +m.y || 0, +m.z || 0); from.deaths = +m.n || 0;
+        if (from.net) from.net.d = 1;
+        killed(from, k, !!m.w);
         break;
+      }
       case 'shot': {
         if (!Array.isArray(m.a) || !Array.isArray(m.b)) break;
         const a = new V3().fromArray(m.a), b = new V3().fromArray(m.b);
-        tracer(a, b, f.color); burst(b, 0xbdb6a6, 3, 2);
-        f.lastShotAt = gt; f.flashT = .045;
-        sfx.shot(clamp(1 - a.distanceTo(p.pos) / 70, .25, .8));
+        tracer(a, b, from.color); burst(b, 0xbdb6a6, 3, 2);
+        from.lastShotAt = gt; from.flashT = .045;
+        sfx.shot(clamp(1 - a.distanceTo(p.pos) / 70, .15, .8));
         break;
       }
       case 'heal': { const k = pickups[m.k]; if (k) { k.cd = 12; k.g.visible = false; } break; }
       case 'take': { const i = drops.findIndex(d => d.id === m.id); if (i >= 0) { scene.remove(drops[i].g); drops.splice(i, 1); } break; }
       case 'ready':
         if (!['lobby', 'paused', 'result'].includes(phase)) break;
-        ready[f.i] = !!m.v;
-        if (ready[0] && ready[1] && localIdx === 0) { send({ t: 'go' }); startCountdown(); } else updatePanels();
+        ready[from.i] = !!m.v;
+        if (localIdx === 0) hostCheckGo(); else updatePanels();
         break;
-      case 'go': if (['lobby', 'paused', 'result'].includes(phase)) startCountdown(); break;
+      case 'go': if (m.f === 0 && ['lobby', 'paused', 'result'].includes(phase)) startCountdown(); break;
       case 'pause': pause(true); break;
       case 'end':
-        if (Array.isArray(m.k)) { players[0].kills = +m.k[0] || 0; players[1].kills = +m.k[1] || 0; }
+        if (Array.isArray(m.k)) m.k.forEach((k, i) => { if (players[i]) players[i].kills = +k || 0; });
         if (phase !== 'result' && players[m.w]) endMatch(players[m.w]);
         break;
+      case 'gone': {
+        const q = players[m.i];
+        if (q && q !== p && !q.gone) { markGone(q); say(`${q.name}が抜けました。`); updatePanels(); }
+        break;
+      }
     }
   }
-  function goOnline() { if (!online) enterOnline(net.role === 'host' ? 0 : 1); }
+  function onRoster(m) {
+    if (net.role === 'host') return;
+    const before = active().length;
+    ensurePlayers(+m.n || 2);
+    for (const q of players) {
+      const g = Array.isArray(m.gone) && m.gone.includes(q.i);
+      if (q.gone && !g) { Object.assign(q, { net: null, dead: false, kills: 0 }); spawn(q, true); }  // 抜けた人の席に新しい人が入った
+      q.gone = g;
+    }
+    if (Array.isArray(m.ready)) m.ready.forEach((v, i) => { ready[i] = !!v; });
+    if (!online) { enterOnline(+m.you || 0); return; }
+    if (active().length > before) say(`新しい人が入りました。いま${active().length}人です。`);
+    updatePanels();
+  }
   function enterOnline(idx) {
     clearTimeout(net.timer); stopScan();
     online = true; localIdx = idx; net.lost = false;
     document.body.classList.add('online');
-    players[idx].el.classList.add('local');
-    players[idx].ui.keys.textContent = players[0].ui.keys.textContent;  // 2台のときは、どちらも WASD で動かせる
-    for (const p of players) p.gunCam.rotation.z = 0;
+    for (const p of players) { p.el.classList.toggle('local', p.i === idx); p.gunCam.rotation.z = 0; }
+    me().ui.keys.textContent = KEYS_TEXT[0];  // 2台以上のときは、だれでも WASD で動かせる
     $('netSheet').hidden = true; $('modeSel').hidden = true;
-    phase = 'lobby'; ready[0] = ready[1] = false; winner = null;
+    phase = 'lobby'; winner = null;
+    if (net.role === 'host') ready.fill(false);
     newMatch(); onResize(); updatePanels();
     clearInterval(net.iv); net.iv = setInterval(sendState, 50);
   }
@@ -1213,12 +1358,12 @@
     net.lost = true; clearInterval(net.iv);
     phase = 'lobby'; $('pauseBtn').hidden = true;
     for (const p of players) { p.firing = false; p.stick.active = false; }
-    netStep({ title: '接続が切れました', text: '相手のスマホとの通信が切れました。続けるときは、2台ともページを読み込み直して、もう一度つないでね。',
+    netStep({ title: '接続が切れました',
+      text: (net.role === 'host' ? 'ほかの人のスマホとの通信が切れました。' : '部屋を作った人のスマホとの通信が切れました。') + '続けるときは、全員ページを読み込み直して、もう一度つないでね。',
       btns: [['読み込み直す', () => location.reload(), true]] });
   }
-  addEventListener('pagehide', () => { if (online) closePC(); });
-
-  // ---------- 2台で遊ぶ：つなぐ手順の画面 ----------
+  addEventListener('pagehide', () => { if (online) closeAll(); });
+  // ---------- 2台以上で遊ぶ：つなぐ手順の画面 ----------
   const NS = { title: $('nTitle'), text: $('nText'), qr: $('nQR'), video: $('nVideo'), btns: $('nBtns'), box: $('nCodeBox'),
     mine: $('nMine'), theirs: $('nTheirs'), code: $('nCode'), paste: $('nPaste'), note: $('nNote') };
   const scan = { stream: null, t: 0, bad: '' };
@@ -1309,46 +1454,64 @@
     return r;
   }
 
-  function netBack() { stopScan(); closePC(); $('netSheet').hidden = true; $('modeSel').hidden = false; }
+
+  const NET_TIPS = '次のような場合はつながらないことがあります。\n・別々のWi-Fiにつながっている（モバイル通信のスマホがあるときも）\n・会社や学校、お店のゲスト用Wi-Fiで、端末どうしの通信が止められている\n1台のスマホのテザリング（インターネット共有）に、ほかのスマホをつなぐと、つながりやすくなります。';
+  function netBack() { stopScan(); closeAll(); net.role = null; $('netSheet').hidden = true; $('modeSel').hidden = false; }
   function netChoose() {
-    closePC(); net.role = null;
+    closeAll(); net.role = null;
     if (!window.RTCPeerConnection) {
-      netStep({ title: 'このブラウザでは2台で遊べません', text: 'Safari や Chrome の新しいバージョンで開いてね。', btns: [['もどる', netBack, true]] });
+      netStep({ title: 'このブラウザでは2台以上で遊べません', text: 'Safari や Chrome の新しいバージョンで開いてね。', btns: [['もどる', netBack, true]] });
       return;
     }
-    netStep({ title: '部屋を作る？ 入る？', text: '1台目で「部屋を作る」、もう1台で「部屋に入る」を押してね。\n2台とも同じWi-Fiにつないでおこう（片方のテザリングに、もう片方をつないでもOK）。',
+    netStep({ title: '部屋を作る？ 入る？', text: `1台目で「部屋を作る」、ほかの人は「部屋に入る」を押してね（${MAXP}人まで）。\n全員同じWi-Fiにつないでおこう（1台のテザリングに、ほかのスマホをつないでもOK）。`,
       btns: [['部屋を作る', hostStart, true], ['部屋に入る', guestStart], ['もどる', netBack]] });
   }
+  // 部屋を作った人：入ってくる人ごとに、新しい QR を出して返事を読み取る
   async function hostStart() {
     net.role = 'host';
-    netStep({ title: '部屋を準備しています…' });
+    netStep({ title: online ? 'QRを準備しています…' : '部屋を準備しています…' });
     try {
-      const pc = newPC();
-      setupDC(pc.createDataChannel('duel', { ordered: true }));
-      await pc.setLocalDescription(await pc.createOffer());
-      await gathered(pc);
-      net.offer = pack(pc.localDescription.sdp, 'o');
+      closeLink(net.pending);
+      const L = newLink(); net.pending = L;
+      setupDC(L, L.pc.createDataChannel('duel', { ordered: true }));
+      await L.pc.setLocalDescription(await L.pc.createOffer());
+      await gathered(L.pc);
+      if (net.pending !== L) return;
+      net.offer = pack(L.pc.localDescription.sdp, 'o');
       hostShow();
     } catch (e) { netFail(e); }
   }
+  function inviteMore() {
+    if (!online || localIdx !== 0 || active().length >= MAXP || !['lobby', 'result'].includes(phase)) return;
+    if (ready[0]) { ready[0] = false; send({ t: 'ready', v: false }); }
+    hostStart();
+  }
+  function inviteCancel() {
+    const L = net.pending; net.pending = null; closeLink(L);
+    stopScan(); $('netSheet').hidden = true; updatePanels();
+  }
   function hostShow() {
-    netStep({ title: '① 相手にこのQRを読み取ってもらう', text: 'もう1台で「2台で遊ぶ」→「部屋に入る」を押して、このQRを写してもらってね。\n相手の画面に返事のQRが出たら、下のボタンへ。',
-      qr: net.offer, theirs: true, onCode: hostGotAnswer, btns: [['② 相手のQRを読み取る', hostScan, true], ['やめる', netChoose]] });
+    const who = online ? `${active().length + 1}人目の人` : '相手';
+    netStep({ title: `① ${who}にこのQRを読み取ってもらう`,
+      text: `${online ? '入る人のスマホ' : 'もう1台'}で「2台以上で遊ぶ」→「部屋に入る」を押して、このQRを写してもらってね。\n相手の画面に返事のQRが出たら、下のボタンへ。`,
+      qr: net.offer, theirs: true, onCode: hostGotAnswer, btns: [['② 相手のQRを読み取る', hostScan, true], ['やめる', online ? inviteCancel : netChoose]] });
   }
   function hostScan() {
     netStep({ title: '② 相手のQRを読み取る', text: '相手の画面に出ている返事のQRを、カメラに写してね。', scan: true, theirs: true, onCode: hostGotAnswer,
       btns: [['①のQRにもどる', hostShow]] });
   }
   function hostGotAnswer(code) {
+    const L = net.pending;
+    if (!L) return false;
     const r = tryUnpack(code, 'a');
     if (!r) return false;
     netStep({ title: 'つないでいます…', text: 'すぐに始まります。' });
-    net.pc.setRemoteDescription({ type: 'answer', sdp: r.sdp }).catch(netFail);
-    clearTimeout(net.timer); net.timer = setTimeout(() => { if (!online) netFail(new Error('timeout')); }, 15000);
+    L.pc.setRemoteDescription({ type: 'answer', sdp: r.sdp }).catch(netFail);
+    clearTimeout(net.timer); net.timer = setTimeout(() => { if (net.pending === L) netFail(new Error('timeout')); }, 15000);
     return true;
   }
   function guestStart() {
-    net.role = 'guest'; closePC();
+    closeAll(); net.role = 'guest';
     netStep({ title: '① 部屋のQRを読み取る', text: '部屋を作った人の画面に出ているQRを、カメラに写してね。', scan: true, theirs: true, onCode: guestGotOffer,
       btns: [['もどる', netChoose]] });
   }
@@ -1357,25 +1520,30 @@
     if (!r) return false;
     netStep({ title: '返事を準備しています…' });
     (async () => {
-      const pc = newPC();
-      pc.ondatachannel = e => setupDC(e.channel);
-      await pc.setRemoteDescription({ type: 'offer', sdp: r.sdp });
-      await pc.setLocalDescription(await pc.createAnswer());
-      await gathered(pc);
-      if (online) return;
-      const ans = pack(pc.localDescription.sdp, 'a');
-      netStep({ title: '② この返事のQRを相手に読み取ってもらう', text: '相手が「② 相手のQRを読み取る」でこのQRを写すと、自動でつながります。', qr: ans,
+      closeAll();
+      const L = newLink(); net.pending = L;
+      L.pc.ondatachannel = e => setupDC(L, e.channel);
+      await L.pc.setRemoteDescription({ type: 'offer', sdp: r.sdp });
+      await L.pc.setLocalDescription(await L.pc.createAnswer());
+      await gathered(L.pc);
+      if (online || net.pending !== L) return;
+      const ans = pack(L.pc.localDescription.sdp, 'a');
+      netStep({ title: '② この返事のQRを相手に読み取ってもらう', text: '部屋を作った人が「② 相手のQRを読み取る」でこのQRを写すと、自動でつながります。', qr: ans,
         btns: [['最初からやり直す', netChoose]] });
     })().catch(netFail);
     return true;
   }
   function netFail(e) {
-    if (online) return;
     if (e) console.warn(e);
-    closePC();
-    netStep({ title: 'つながりませんでした',
-      text: '次のような場合はつながらないことがあります。\n・2台が別々のWi-Fiにつながっている（片方がモバイル通信のときも）\n・会社や学校、お店のゲスト用Wi-Fiで、端末どうしの通信が止められている\n片方のスマホのテザリング（インターネット共有）に、もう片方をつなぐと、つながりやすくなります。',
-      btns: [['もう一度', netChoose, true], ['1台で遊ぶ', () => { $('netSheet').hidden = true; }]] });
+    if (net.role === 'host' && online) {  // 2人目以降を呼んでいる途中でうまくいかなかった。今いる人とのつながりはそのまま
+      const L = net.pending; net.pending = null; closeLink(L);
+      netStep({ title: 'つながりませんでした', text: NET_TIPS,
+        btns: [['もう一度', inviteMore, true], ['もどる', () => { $('netSheet').hidden = true; updatePanels(); }]] });
+      return;
+    }
+    if (online) return;
+    closeAll();
+    netStep({ title: 'つながりませんでした', text: NET_TIPS, btns: [['もう一度', netChoose, true], ['1台で遊ぶ', () => { $('netSheet').hidden = true; }]] });
   }
   $('mOne').addEventListener('click', () => { $('modeSel').hidden = true; });
   $('mTwo').addEventListener('click', netChoose);
@@ -1394,7 +1562,7 @@
     p.stick.x = dx / max; p.stick.y = dy / max;
     p.ui.knob.style.transform = `translate(${dx}px,${dy}px)`;
   }
-  for (const p of players) {
+  function bindPlayer(p) {
     const u = p.ui;
     u.stick.addEventListener('touchstart', e => {
       e.preventDefault(); const t = e.changedTouches[0], r = u.stick.getBoundingClientRect();
@@ -1411,8 +1579,11 @@
     tb(u.slide, () => startSlide(p));
     tb(u.reload, () => startReload(p));
     tb(u.zoom, () => { p.aiming = !p.aiming; u.zoom.classList.toggle('on', p.aiming); });
+    tb(u.crouch, () => toggleCrouch(p));
     u.ready.addEventListener('click', () => pressReady(p));
+    u.invite.addEventListener('click', inviteMore);
   }
+  for (const p of players) bindPlayer(p);
   // 自分の画面の左側（奥の人は画面の右側）を触ったら、その場所にスティックを出す
   function floatStick(p, t) {
     const half = p.el.getBoundingClientRect(), st = p.ui.stick, size = st.offsetWidth;
@@ -1471,6 +1642,8 @@
     if (e.code === 'KeyY') startReload(P1);
     if (e.code === 'KeyG' && !e.repeat) startSlide(P0);
     if (e.code === 'KeyN' && !e.repeat) startSlide(P1);
+    if (e.code === 'KeyX' && !e.repeat) toggleCrouch(P0);
+    if (e.code === 'KeyM' && !e.repeat) toggleCrouch(P1);
     if (e.code === 'Escape' || e.code === 'KeyP') pause();
   });
   addEventListener('keyup', e => { const m = KEYMAP[e.code]; if (m) players[online ? localIdx : m[0]].keys[m[1]] = false; });
@@ -1493,25 +1666,21 @@
   function renderAll() {
     const W = innerWidth, H = innerHeight, h = H / 2;
     if (online) {
-      const p = me(), f = foeOf(p);
+      const p = me(), blink = Math.floor(performance.now() / 100) % 2 === 0;
       renderer.setScissorTest(false); renderer.setViewport(0, 0, W, H);
-      p.model.g.visible = false;
-      f.model.g.visible = !f.dead && (f.invT <= 0 || Math.floor(performance.now() / 100) % 2 === 0);
+      for (const q of players) { q.model.g.visible = q !== p && !q.gone && !q.dead && (q.invT <= 0 || blink); q.gun.visible = q === p && !p.dead; }
       renderer.clear(); renderer.render(scene, p.cam);
-      renderer.clearDepth(); p.gun.visible = !p.dead; f.gun.visible = false;
-      renderer.render(gunScene, p.gunCam);
+      renderer.clearDepth(); renderer.render(gunScene, p.gunCam);
       return;
     }
     renderer.setScissorTest(true);
     for (const p of players) {
-      const f = foeOf(p), y = p.i ? h : 0;
+      const y = p.i ? h : 0;
       renderer.setViewport(0, y, W, h); renderer.setScissor(0, y, W, h);
-      p.model.g.visible = false;
-      f.model.g.visible = !f.dead && (f.invT <= 0 || Math.floor(gt * 10) % 2 === 0);
+      for (const q of players) { q.model.g.visible = q !== p && !q.dead && (q.invT <= 0 || Math.floor(gt * 10) % 2 === 0); q.gun.visible = q === p && !p.dead; }
       renderer.clear();
       renderer.render(scene, p.cam);
       renderer.clearDepth();
-      p.gun.visible = !p.dead; f.gun.visible = false;
       renderer.render(gunScene, p.gunCam);
     }
     renderer.setScissorTest(false);
@@ -1527,17 +1696,17 @@
     const dt = Math.min(.05, (t - last) / 1000); last = t;
     if (phase === 'playing') {
       gt += dt;
-      for (const p of players) { if (isRemote(p)) updateRemote(p, dt); else updatePlayer(p, dt); }
+      for (const p of players) { if (p.gone) continue; if (isRemote(p)) updateRemote(p, dt); else updatePlayer(p, dt); }
       if (!online) separatePlayers();
       updatePickups(dt);
       updateDrops(dt);
     } else {
       if (phase === 'countdown') updateCountdown(dt);
-      for (const p of players) { if (isRemote(p)) updateRemote(p, dt); else placeCamera(p, dt); }
+      for (const p of players) { if (p.gone) continue; if (isRemote(p)) updateRemote(p, dt); else placeCamera(p, dt); }
     }
     updateEffects(dt);
     updateReferee(dt);
-    for (const p of players) { animateGun(p, dt); if (!isRemote(p)) updateHUD(p); }
+    for (const p of players) { if (p.gone) continue; animateGun(p, dt); if (!isRemote(p)) updateHUD(p); }
     renderAll();
   }
   requestAnimationFrame(frame);
