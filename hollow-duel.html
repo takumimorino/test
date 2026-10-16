@@ -100,17 +100,26 @@
   /* 操作ボタン。右側のボタン群は少し持ち上げて、手前の右下を視点操作用に空けておく */
   .ctl { position: absolute; inset: 0; pointer-events: none; }
   body:not(.touch) .ctl { display: none; }
-  .stick { position: absolute; left: 14px; bottom: calc(var(--edge) + 18px); width: 108px; height: 108px; border-radius: 50%;
+  .half { --s: 1; }
+  body.tablet .half { --s: 1.25; }
+  .stick { position: absolute; left: 14px; bottom: calc(var(--edge) + 18px); width: calc(108px * var(--s)); height: calc(108px * var(--s)); border-radius: 50%;
     border: 1px solid var(--line); background: var(--glass); pointer-events: auto; touch-action: none; }
-  .knob { position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; margin: -24px; border-radius: 50%; background: rgba(236, 230, 216, .3); }
+  .stick.float { opacity: .85; }
+  .knob { position: absolute; left: 50%; top: 50%; width: calc(48px * var(--s)); height: calc(48px * var(--s)); margin: calc(-24px * var(--s)); border-radius: 50%; background: rgba(236, 230, 216, .3); }
   .tb { position: absolute; pointer-events: auto; touch-action: none; border-radius: 50%; border: 1px solid var(--line); background: var(--glass);
     color: var(--ink); font: 700 11px/1.2 var(--body); padding: 0; }
   .tb.on { background: rgba(255, 255, 255, .22); border-color: var(--c); }
   .tb.held { filter: brightness(1.5); }
-  .fire { right: 16px; bottom: calc(var(--edge) + 50px); width: 86px; height: 86px; background: rgba(255, 74, 61, .34); font-size: 14px; }
-  .jump { right: 112px; bottom: calc(var(--edge) + 36px); width: 54px; height: 54px; }
-  .zoom { right: 116px; bottom: calc(var(--edge) + 102px); width: 50px; height: 50px; }
-  .reload { right: 34px; bottom: calc(var(--edge) + 146px); width: 50px; height: 50px; }
+  .fire { right: calc(16px * var(--s)); bottom: calc(var(--edge) + 50px * var(--s)); width: calc(86px * var(--s)); height: calc(86px * var(--s)); background: rgba(255, 74, 61, .34); font-size: 14px; }
+  .jump { right: calc(112px * var(--s)); bottom: calc(var(--edge) + 36px * var(--s)); width: calc(54px * var(--s)); height: calc(54px * var(--s)); }
+  .slide { right: calc(172px * var(--s)); bottom: calc(var(--edge) + 62px * var(--s)); width: calc(52px * var(--s)); height: calc(52px * var(--s)); }
+  .zoom { right: calc(116px * var(--s)); bottom: calc(var(--edge) + 102px * var(--s)); width: calc(50px * var(--s)); height: calc(50px * var(--s)); }
+  .reload { right: calc(34px * var(--s)); bottom: calc(var(--edge) + 146px * var(--s)); width: calc(50px * var(--s)); height: calc(50px * var(--s)); }
+  body.tablet .tb { font-size: 13px; }
+  .boost { position: absolute; left: 50%; top: calc(50% + 40px); transform: translateX(-50%); display: flex; align-items: center; gap: 6px; padding: 2px 9px;
+    font-family: var(--body); font-weight: 700; font-size: 11px; color: #1a1208; background: #ffd447; border-radius: 999px; }
+  .boost .bar { width: 50px; height: 4px; background: rgba(26, 18, 8, .25); }
+  .boost .bar i { display: block; height: 100%; background: #1a1208; }
 
   .panel { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 14px 16px calc(var(--edge) + 14px);
     background: rgba(8, 11, 15, .82); pointer-events: auto; overflow-y: auto; }
@@ -182,7 +191,9 @@
 
   // ---------- Renderer & scenes ----------
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2));
+  // 2画面ぶん描くので、画面全体で約220万画素までに抑える（iPad の大画面対策）
+  const pixelRatio = () => Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2, Math.sqrt(2.2e6 / (innerWidth * innerHeight)));
+  renderer.setPixelRatio(pixelRatio());
   renderer.setSize(innerWidth, innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -266,12 +277,18 @@
     lamp: new THREE.MeshBasicMaterial({ color: 0xffb450 }),
     stripe: new THREE.MeshStandardMaterial({ color: 0x9a948a, roughness: .9, transparent: true, opacity: .45 }),
     pick: new THREE.MeshStandardMaterial({ color: 0x55e0b8, emissive: 0x1f7a60, emissiveIntensity: 1.2 }),
-    suit: new THREE.MeshStandardMaterial({ color: 0x2b3138, roughness: .7, metalness: .2 })
+    suit: new THREE.MeshStandardMaterial({ color: 0x2b3138, roughness: .7, metalness: .2 }),
+    speed: new THREE.MeshStandardMaterial({ color: 0xffd447, emissive: 0xb88a00, emissiveIntensity: 1.1 })
   };
   const geo = {
     spark: new THREE.BoxGeometry(.07, .07, .07),
     pickH: new THREE.BoxGeometry(.55, .16, .16),
-    pickV: new THREE.BoxGeometry(.16, .55, .16)
+    pickV: new THREE.BoxGeometry(.16, .55, .16),
+    speed: (() => {
+      const sh = new THREE.Shape();
+      sh.moveTo(-.05, .55); sh.lineTo(-.28, -.02); sh.lineTo(-.02, -.02); sh.lineTo(-.14, -.55); sh.lineTo(.3, .12); sh.lineTo(.04, .12); sh.lineTo(.2, .55); sh.closePath();
+      const g = new THREE.ExtrudeGeometry(sh, { depth: .12, bevelEnabled: false }); g.center(); return g;
+    })()
   };
   const sparkMats = {};
   const sparkMat = c => sparkMats[c] || (sparkMats[c] = new THREE.MeshBasicMaterial({ color: c }));
@@ -464,7 +481,9 @@
     dry() { if (!actx) return; tone(1900, 1800, .02, 'square', .05); },
     pickup() { if (!actx) return; tone(520, 1040, .16, 'sine', .2); },
     beep(go) { if (!actx) return; tone(go ? 990 : 660, go ? 990 : 660, go ? .35 : .12, 'square', .08); },
-    win() { if (!actx) return; [523, 659, 784, 1046].forEach((f, i) => tone(f, f, .22, 'triangle', .14, i * .12)); }
+    win() { if (!actx) return; [523, 659, 784, 1046].forEach((f, i) => tone(f, f, .22, 'triangle', .14, i * .12)); },
+    speed() { if (!actx) return; tone(400, 1600, .3, 'sawtooth', .1); tone(800, 2400, .25, 'sine', .1, .08); },
+    slide() { if (!actx) return; noise(.45, 900, 'bandpass', .35); }
   };
 
   // ---------- Players ----------
@@ -478,14 +497,16 @@
       <div class="hitm"></div>
       <div class="banner"><div class="bT"></div><div class="bS"></div></div>
       <div class="talk"><span class="who">コダマ</span><span class="txt"></span></div>
+      <div class="boost" hidden>⚡ スピードアップ <span class="bar"><i></i></span></div>
     </div>
     <div class="vig"></div><div class="dmgdir"></div>
     <div class="dead" hidden><div class="dead-t">やられた…</div><div class="dead-s"></div></div>
     <div class="ctl">
       <div class="stick"><div class="knob"></div></div>
       <button class="tb fire" type="button">撃つ</button>
-      <button class="tb zoom" type="button">ズーム</button>
+      <button class="tb zoom" type="button">のぞく</button>
       <button class="tb jump" type="button">ジャンプ</button>
+      <button class="tb slide" type="button">スライド</button>
       <button class="tb reload" type="button">リロード</button>
     </div>
     <div class="panel">
@@ -519,13 +540,15 @@
       hp: 100, ammo: MAG, reloadT: 0, lastShot: -1, lastShotAt: -9, bloom: 0, recoil: 0, flashT: 0, landDip: 0, bobPhase: 0,
       aiming: false, adsT: 0, firing: false, jumpQ: false, kills: 0, shots: 0, hits: 0, heads: 0,
       dead: false, respawnT: 0, deathT: 0, invT: 0, dmgFlash: 0, dmgDirT: 0, hitFlash: 0, hitTimer: 0,
+      speedT: 0, slideT: 0, slideCD: 0, slideV: 0, slideDX: 0, slideDZ: 0, crouchT: 0,
       stick: { active: false, x: 0, y: 0, id: null, cx: 0, cy: 0 }, keys: {},
       sens: store.get('hd.sens' + i, 1), cache: {},
       ui: {
         me: q('.me'), foe: q('.foe'), hpbar: q('.hpbar'), hpnum: q('.hpnum'), ammo: q('.ammo-n'), ammoS: q('.ammo-s'), radar: q('.radar'),
         xhair: q('.xhair'), hitm: q('.hitm'), banner: q('.banner'), bT: q('.bT'), bS: q('.bS'), talk: q('.talk'), talkTxt: q('.talk .txt'),
         vig: q('.vig'), dmgdir: q('.dmgdir'), dead: q('.dead'), deadS: q('.dead-s'),
-        stick: q('.stick'), knob: q('.knob'), fire: q('.fire'), zoom: q('.zoom'), jump: q('.jump'), reload: q('.reload'),
+        stick: q('.stick'), knob: q('.knob'), fire: q('.fire'), zoom: q('.zoom'), jump: q('.jump'), reload: q('.reload'), slide: q('.slide'),
+        boost: q('.boost'), boostBar: q('.boost .bar i'),
         panel: q('.panel'), eyebrow: q('.eyebrow'), ptitle: q('.ptitle'), ptext: q('.ptext'), pstats: q('.pstats'),
         ready: q('.ready'), sens: q('.sens input'), pnote: q('.pnote'), keys: q('.keys')
       }
@@ -534,8 +557,8 @@
     p.ui.sens.value = p.sens;
     p.ui.sens.addEventListener('input', e => { p.sens = +e.target.value; store.set('hd.sens' + i, p.sens); });
     p.ui.keys.textContent = i === 0
-      ? 'キーボード：WASD 移動 / Q・E 向き / F 撃つ / Space ジャンプ / R リロード'
-      : 'キーボード：IJKL 移動 / U・O 向き / H 撃つ / B ジャンプ / Y リロード';
+      ? 'キーボード：WASD 移動 / Q・E 向き / F 撃つ / Space ジャンプ / G スライド / R リロード'
+      : 'キーボード：IJKL 移動 / U・O 向き / H 撃つ / B ジャンプ / N スライド / Y リロード';
     return p;
   }
   const players = [makePlayer(0), makePlayer(1)];
@@ -547,7 +570,8 @@
       const f = foeOf(p), d = s => Math.hypot(s[0] - f.pos.x, s[1] - f.pos.z);
       pt = SPAWNS.reduce((best, s) => d(s) > d(best) ? s : best);
     }
-    Object.assign(p, { vx: 0, vz: 0, vy: 0, pitch: 0, onGround: true, hp: 100, ammo: MAG, reloadT: 0, bloom: 0, dead: false, invT: first ? 0 : INV, aiming: false });
+    Object.assign(p, { vx: 0, vz: 0, vy: 0, pitch: 0, onGround: true, hp: 100, ammo: MAG, reloadT: 0, bloom: 0, dead: false, invT: first ? 0 : INV, aiming: false,
+      speedT: 0, slideT: 0, slideCD: 0, crouchT: 0 });
     p.pos.set(pt[0], 0, pt[1]);
     p.yaw = Math.atan2(pt[0], pt[1]);  // アリーナの中央を向く
     p.ui.zoom.classList.remove('on');
@@ -597,6 +621,25 @@
     }
   }
 
+  const SLIDE_TIME = .7, SPEED_TIME = 10, SPEED_MUL = 1.45;
+  // 倒された人は、その場にスピードアップアイテムを落とす（15秒で消える）
+  const drops = [];
+  function dropSpeed(pos) {
+    const g = new THREE.Group(); g.add(new THREE.Mesh(geo.speed, mat.speed));
+    g.position.set(pos.x, .8, pos.z); scene.add(g);
+    drops.push({ g, t: 0, life: 15 });
+  }
+  function updateDrops(dt) {
+    for (let k = drops.length - 1; k >= 0; k--) {
+      const d = drops[k]; d.t += dt; d.life -= dt;
+      d.g.rotation.y += dt * 2.4; d.g.position.y = .8 + Math.sin(d.t * 3) * .12;
+      d.g.visible = d.life > 3 || Math.sin(d.t * 20) > 0;
+      const p = players.find(q => !q.dead && q.pos.y < 1.6 && Math.hypot(q.pos.x - d.g.position.x, q.pos.z - d.g.position.z) < 1.3);
+      if (p) { p.speedT = SPEED_TIME; sfx.speed(); banner(p, 'SPEED UP', `${SPEED_TIME}秒間、足が速くなる`); }
+      if (p || d.life <= 0) { scene.remove(d.g); drops.splice(k, 1); }
+    }
+  }
+
   // ---------- Player update ----------
   function baseFov(a) { return a >= 1.2 ? 75 : Math.min(105, Math.max(75, THREE.MathUtils.radToDeg(2 * Math.atan(1 / a)))); }
   function placeCamera(p, dt) {
@@ -604,7 +647,8 @@
     if (!p.dead && p.onGround && hs > .5) p.bobPhase += dt * hs * 1.25;
     p.landDip = Math.max(0, p.landDip - dt * .6);
     let y = p.pos.y + EYE + (p.onGround ? Math.sin(p.bobPhase * 2) * .035 * Math.min(1, hs / 7) : 0) - p.landDip;
-    let pitch = p.pitch, roll = p.i ? Math.PI : 0;
+    let pitch = p.pitch, roll = (p.i ? Math.PI : 0) + .07 * p.crouchT;
+    y -= .72 * p.crouchT;
     if (p.dead) {
       const d = Math.min(1, p.deathT / .6);
       y = p.pos.y + EYE - 1.15 * d; pitch = p.pitch * (1 - d) - .25 * d; roll += .45 * d;
@@ -613,7 +657,7 @@
     p.cam.rotation.set(pitch, p.yaw, roll);
     p.cam.updateMatrixWorld();
     p.adsT += ((p.aiming && !p.dead ? 1 : 0) - p.adsT) * (1 - Math.exp(-14 * dt));
-    const base = baseFov(p.cam.aspect), fov = base * (1 - .3 * p.adsT), gfov = 60 * base / 75;
+    const base = baseFov(p.cam.aspect), fov = base * (1 - .3 * p.adsT) + 7 * Math.min(1, p.speedT) + 6 * p.crouchT, gfov = 60 * base / 75;
     if (Math.abs(p.cam.fov - fov) > .01) { p.cam.fov = fov; p.cam.updateProjectionMatrix(); }
     if (Math.abs(p.gunCam.fov - gfov) > .01) { p.gunCam.fov = gfov; p.gunCam.updateProjectionMatrix(); }
   }
@@ -631,14 +675,28 @@
     if (p.stick.active) { mx = p.stick.x; mz = -p.stick.y; }
     if (k.tl) p.yaw += 2.4 * dt; if (k.tr) p.yaw -= 2.4 * dt;
     const len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
-    const speed = p.aiming ? 4 : 7;
+    p.speedT = Math.max(0, p.speedT - dt); p.slideCD = Math.max(0, p.slideCD - dt);
+    const speed = (p.aiming ? 4 : 7) * (p.speedT > 0 ? SPEED_MUL : 1);
     const sy = Math.sin(p.yaw), cy = Math.cos(p.yaw);
     const tx = (-sy * mz + cy * mx) * speed, tz = (-cy * mz - sy * mx) * speed;
-    const f = 1 - Math.exp(-(p.onGround ? 12 : 3) * dt);
-    p.vx += (tx - p.vx) * f; p.vz += (tz - p.vz) * f;
+    if (p.slideT > 0) {
+      // スライディング：勢いよく滑り出して、だんだん減速。向きは少しだけ変えられる
+      p.slideT -= dt;
+      const pr = 1 - Math.max(0, p.slideT) / SLIDE_TIME, v = p.slideV * (1 - .6 * pr);
+      if (Math.hypot(tx, tz) > .1) {
+        const tl = Math.hypot(tx, tz), w = Math.min(1, dt * 2);
+        p.slideDX += (tx / tl - p.slideDX) * w; p.slideDZ += (tz / tl - p.slideDZ) * w;
+        const n = Math.hypot(p.slideDX, p.slideDZ) || 1; p.slideDX /= n; p.slideDZ /= n;
+      }
+      p.vx = p.slideDX * v; p.vz = p.slideDZ * v;
+      if (p.slideT <= 0) { p.slideT = 0; p.slideCD = .45; }
+    } else {
+      const f = 1 - Math.exp(-(p.onGround ? 12 : 3) * dt);
+      p.vx += (tx - p.vx) * f; p.vz += (tz - p.vz) * f;
+    }
     p.pos.x += p.vx * dt; p.pos.z += p.vz * dt;
     const ground = pushOut(p.pos, PR, p.pos.y);
-    if (p.jumpQ && p.onGround) { p.vy = 7; p.onGround = false; }
+    if (p.jumpQ && p.onGround) { p.vy = 7; p.onGround = false; p.slideT = 0; }
     p.jumpQ = false;
     p.vy -= 20 * dt; p.pos.y += p.vy * dt;
     if (p.pos.y <= ground) {
@@ -646,6 +704,7 @@
       p.pos.y = ground; p.vy = 0; p.onGround = true;
     } else if (p.pos.y > ground + .05) p.onGround = false;
     p.invT = Math.max(0, p.invT - dt);
+    p.crouchT += ((p.slideT > 0 ? 1 : 0) - p.crouchT) * (1 - Math.exp(-14 * dt));
     placeCamera(p, dt);
     if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; p.ammo = MAG; } }
     p.bloom = Math.max(0, p.bloom - dt * .05);
@@ -663,6 +722,23 @@
     if (p.reloadT > 0 || p.ammo === MAG || p.dead) return;
     p.reloadT = RELOAD; sfx.reload();
   }
+  function startSlide(p) {
+    if (!canAct() || p.dead || !p.onGround || p.slideT > 0 || p.slideCD > 0) return;
+    const hs = Math.hypot(p.vx, p.vz);
+    if (hs < 3.5) return;  // 走っている勢いがないと滑れない
+    p.slideDX = p.vx / hs; p.slideDZ = p.vz / hs;
+    p.slideV = Math.min(17, Math.max(hs * 1.4, 11.5)) * (p.speedT > 0 ? 1.15 : 1);
+    p.slideT = SLIDE_TIME; sfx.slide();
+  }
+  // 腰だめ撃ちはばらつきが大きく、のぞき込む（ADS）とほぼまっすぐ飛ぶ
+  function spreadNow(p) {
+    const moving = Math.hypot(p.vx, p.vz) > 1, a = p.adsT;
+    let sp = (.03 + p.bloom) * (1 - a) + (.0015 + p.bloom * .2) * a;
+    if (moving) sp *= 1 + .7 * (1 - a) + .25 * a;
+    if (!p.onGround) sp *= 2.2;
+    if (p.slideT > 0) sp *= 1.4;
+    return sp;
+  }
   function look(p, dx, dy) {
     const k = .0022 * p.sens * (p.aiming ? .6 : 1);
     p.yaw -= dx * k; p.pitch = clamp(p.pitch - dy * k, -1.4, 1.4);
@@ -677,20 +753,19 @@
     if (p.ammo <= 0) { sfx.dry(); startReload(p); return; }
     p.ammo--; p.shots++; p.lastShotAt = gt;
     const foe = foeOf(p);
-    const moving = Math.hypot(p.vx, p.vz) > 1;
-    let spread = (p.aiming ? .002 : .011) + p.bloom;
-    if (moving) spread *= 1.6; if (!p.onGround) spread *= 2.5;
-    spread *= .75;
-    p.bloom = Math.min(.03, p.bloom + .0035);
-    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
-    dir.set(Math.cos(a) * r, Math.sin(a) * r, -1).normalize().applyQuaternion(p.cam.quaternion);
+    const spread = spreadNow(p);
+    p.bloom = p.adsT > .5 ? Math.min(.012, p.bloom + .0015) : Math.min(.05, p.bloom + .006);
+    const fwd = new V3(0, 0, -1).applyQuaternion(p.cam.quaternion), aimDir = fwd.clone();
     if (!foe.dead) {
-      // 弱めのエイムアシスト：照準のすぐ近くにいる相手の胸元へ弾を寄せる
-      const fwd = new V3(0, 0, -1).applyQuaternion(p.cam.quaternion);
-      const chest = new V3(foe.pos.x, foe.pos.y + 1.2, foe.pos.z);
+      // エイムアシスト：のぞき込んでいるときだけしっかり吸い付き、腰だめは弱い。
+      // 狙いの中心を寄せたあとでばらつきを足すので、腰だめのぶれは残る
+      const chest = new V3(foe.pos.x, foe.pos.y + 1.2 - .6 * foe.crouchT, foe.pos.z);
       const to = chest.clone().sub(p.cam.position);
-      if (fwd.angleTo(to) < .075 && hasLOS(p.cam.position, chest)) dir.add(to.normalize().sub(fwd)).normalize();
+      if (fwd.angleTo(to) < .02 + .055 * p.adsT && hasLOS(p.cam.position, chest)) aimDir.copy(to).normalize();
     }
+    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
+    const right = new V3(1, 0, 0).applyQuaternion(p.cam.quaternion), up = new V3(0, 1, 0).applyQuaternion(p.cam.quaternion);
+    dir.copy(aimDir).addScaledVector(right, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r).normalize();
     ray.set(p.cam.position, dir); ray.far = 120;
     const targets = [floor, ...solids]; if (!foe.dead) targets.push(foe.model.g);
     const hits = ray.intersectObjects(targets, true);
@@ -714,7 +789,7 @@
     const s = p.i ? -1 : 1;  // 奥側のカメラは180°回っているので、銃口の位置も上下左右を反転
     tracer(p.cam.localToWorld(new V3(s * (p.aiming ? 0 : .16), s * (p.aiming ? -.07 : -.15), -.9)), end, p.color);
     p.pitch = Math.min(1.4, p.pitch + (p.aiming ? .003 : .005));  // 1人用より反動を弱めにして、撃ち合いを続けやすくする
-    p.yaw += (Math.random() - .5) * (p.aiming ? .002 : .005);
+    p.yaw += (Math.random() - .5) * (p.adsT > .5 ? .0015 : .006);
     p.recoil = 1; p.flashT = .045; sfx.shot();
     if (p.ammo === 0) startReload(p);
   }
@@ -727,6 +802,7 @@
     v.hp = 0; v.dead = true; v.respawnT = RESPAWN; v.deathT = 0; v.firing = false; v.aiming = false; v.ui.zoom.classList.remove('on');
     from.kills++; if (weak) from.heads++;
     burst(new V3(v.pos.x, v.pos.y + 1.1, v.pos.z), v.color, 24, 6); sfx.kill();
+    v.speedT = 0; v.slideT = 0; dropSpeed(v.pos);
     banner(from, 'KILL', weak ? 'ヘッドショット！' : `${from.kills} / ${GOAL}`);
     faceT = 1.5;
     const total = players[0].kills + players[1].kills;
@@ -757,6 +833,7 @@
     // 相手から見える体
     const m = p.model;
     m.g.position.copy(p.pos); m.g.rotation.y = p.yaw;
+    m.g.scale.y = 1 - .45 * p.crouchT;
     p.hitFlash = Math.max(0, p.hitFlash - dt);
     m.team.emissiveIntensity = p.hitFlash > 0 ? 1.4 : .25;
   }
@@ -792,9 +869,9 @@
     u.hpbar.style.width = hp + '%'; u.hpbar.classList.toggle('low', hp <= 30);
     setText(p, 'ammo', u.ammo, String(p.ammo)); u.ammo.classList.toggle('empty', p.ammo === 0);
     setText(p, 'ammoS', u.ammoS, p.reloadT > 0 ? 'リロード中…' : p.ammo <= 8 ? '弾が少ない' : '');
-    const moving = Math.hypot(p.vx, p.vz) > 1;
-    let spread = (p.aiming ? .002 : .011) + p.bloom; if (moving) spread *= 1.6; if (!p.onGround) spread *= 2.5;
-    u.xhair.style.setProperty('--gap', (5 + spread * 500).toFixed(1) + 'px');
+    u.xhair.style.setProperty('--gap', (4 + spreadNow(p) * 420).toFixed(1) + 'px');
+    u.boost.hidden = p.speedT <= 0 || p.dead;
+    if (p.speedT > 0) u.boostBar.style.width = (p.speedT / SPEED_TIME * 100).toFixed(1) + '%';
     u.xhair.classList.toggle('aim', p.adsT > .5);
     u.vig.style.opacity = p.dmgFlash.toFixed(3);
     u.dmgdir.style.opacity = p.dmgDirT.toFixed(3);
@@ -815,6 +892,7 @@
       c.fillRect(k.minX * sc, k.minZ * sc, (k.maxX - k.minX) * sc, (k.maxZ - k.minZ) * sc);
     }
     for (const k of pickups) if (k.g.visible) { c.fillStyle = '#55e0b8'; c.fillRect(k.x * sc - 5, k.z * sc - 5, 10, 10); }
+    for (const d of drops) { c.fillStyle = '#ffd447'; c.fillRect(d.g.position.x * sc - 5, d.g.position.z * sc - 5, 10, 10); }
     if (!f.dead && gt - f.lastShotAt < 1.5) {
       c.fillStyle = f.i ? '#55e0b8' : '#ffae3b';
       c.beginPath(); c.arc(f.pos.x * sc, f.pos.z * sc, 8, 0, Math.PI * 2); c.fill();
@@ -837,6 +915,7 @@
     for (const p of players) { Object.assign(p, { kills: 0, shots: 0, hits: 0, heads: 0, lastShotAt: -9, dmgFlash: 0, dmgDirT: 0 }); }
     spawn(players[0], true); spawn(players[1], true);
     for (const k of pickups) { k.cd = 0; k.g.visible = true; }
+    for (const d of drops) scene.remove(d.g); drops.length = 0;
     winner = null;
   }
   function startCountdown() {
@@ -876,7 +955,7 @@
       if (phase === 'lobby') {
         u.eyebrow.textContent = `2 PLAYERS · FPS · あなたは${p.name}`;
         u.ptitle.innerHTML = 'HOLLOW<span>DUEL</span>';
-        u.ptext.textContent = `スマホを机に置いて、向かい合って対戦。先に${GOAL}回倒したほうの勝ち。頭に当てるとダメージ2倍。撃つと、相手のレーダーに居場所が映る。`;
+        u.ptext.textContent = `スマホを机に置いて、向かい合って対戦。先に${GOAL}回倒したほうの勝ち。頭に当てるとダメージ2倍。「のぞく」と弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込める。倒された人はスピードアップを落とす。`;
       } else if (phase === 'paused') {
         u.eyebrow.textContent = `一時停止中 · ${p.kills} – ${f.kills}`;
         u.ptitle.innerHTML = 'PAUSE';
@@ -915,7 +994,7 @@
   const lookTouches = new Map();
   const playerAtY = y => y < innerHeight / 2 ? players[1] : players[0];
   function setStick(p, t) {
-    const s = flipOf(p), max = 46;
+    const s = flipOf(p), max = 46 * (document.body.classList.contains('tablet') ? 1.25 : 1);
     let dx = (t.clientX - p.stick.cx) * s, dy = (t.clientY - p.stick.cy) * s;
     const d = Math.hypot(dx, dy); if (d > max) { dx *= max / d; dy *= max / d; }
     p.stick.x = dx / max; p.stick.y = dy / max;
@@ -935,13 +1014,29 @@
     }, { passive: false });
     const tb = (el, fn) => el.addEventListener('touchstart', e => { e.preventDefault(); if (canAct() && !p.dead) fn(); }, { passive: false });
     tb(u.jump, () => { p.jumpQ = true; });
+    tb(u.slide, () => startSlide(p));
     tb(u.reload, () => startReload(p));
     tb(u.zoom, () => { p.aiming = !p.aiming; u.zoom.classList.toggle('on', p.aiming); });
     u.ready.addEventListener('click', () => pressReady(p));
   }
+  // 自分の画面の左側（奥の人は画面の右側）を触ったら、その場所にスティックを出す
+  function floatStick(p, t) {
+    const half = p.el.getBoundingClientRect(), st = p.ui.stick, size = st.offsetWidth;
+    const lx = p.i ? half.right - t.clientX : t.clientX - half.left, ly = p.i ? half.bottom - t.clientY : t.clientY - half.top;
+    st.classList.add('float'); st.style.left = (lx - size / 2) + 'px'; st.style.top = (ly - size / 2) + 'px'; st.style.bottom = 'auto';
+    p.stick.id = t.identifier; p.stick.active = true; p.stick.cx = t.clientX; p.stick.cy = t.clientY; setStick(p, t);
+  }
+  function resetStick(p) {
+    const st = p.ui.stick; st.classList.remove('float'); st.style.left = st.style.top = st.style.bottom = '';
+    p.stick.id = null; p.stick.active = false; p.stick.x = p.stick.y = 0; p.ui.knob.style.transform = '';
+  }
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
-    for (const t of e.changedTouches) lookTouches.set(t.identifier, { p: playerAtY(t.clientY), x: t.clientX, y: t.clientY });
+    for (const t of e.changedTouches) {
+      const p = playerAtY(t.clientY), leftSide = p.i ? t.clientX > innerWidth * .58 : t.clientX < innerWidth * .42;
+      if (canAct() && !p.dead && p.stick.id === null && leftSide) { floatStick(p, t); continue; }
+      lookTouches.set(t.identifier, { p, x: t.clientX, y: t.clientY });
+    }
   }, { passive: false });
   addEventListener('touchmove', e => {
     if (canLook()) e.preventDefault();
@@ -957,7 +1052,7 @@
   }, { passive: false });
   const endTouch = e => {
     for (const t of e.changedTouches) {
-      for (const p of players) if (p.stick.id === t.identifier) { p.stick.id = null; p.stick.active = false; p.stick.x = p.stick.y = 0; p.ui.knob.style.transform = ''; }
+      for (const p of players) if (p.stick.id === t.identifier) resetStick(p);
       const L = lookTouches.get(t.identifier);
       if (L && L.fire) { L.p.firing = false; L.p.ui.fire.classList.remove('held'); }
       lookTouches.delete(t.identifier);
@@ -978,6 +1073,8 @@
     if (e.code === 'KeyB' && !e.repeat) players[1].jumpQ = true;
     if (e.code === 'KeyR') startReload(players[0]);
     if (e.code === 'KeyY') startReload(players[1]);
+    if (e.code === 'KeyG' && !e.repeat) startSlide(players[0]);
+    if (e.code === 'KeyN' && !e.repeat) startSlide(players[1]);
     if (e.code === 'Escape' || e.code === 'KeyP') pause();
   });
   addEventListener('keyup', e => { const m = KEYMAP[e.code]; if (m) players[m[0]].keys[m[1]] = false; });
@@ -985,6 +1082,8 @@
   $('pauseBtn').addEventListener('click', pause);
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
   function onResize() {
+    document.body.classList.toggle('tablet', isTouch && Math.min(innerWidth, innerHeight) >= 700);
+    renderer.setPixelRatio(pixelRatio());
     renderer.setSize(innerWidth, innerHeight);
     for (const p of players) { p.cam.aspect = p.gunCam.aspect = innerWidth / (innerHeight / 2); p.cam.updateProjectionMatrix(); p.gunCam.updateProjectionMatrix(); }
     const sideways = isTouch && innerWidth > innerHeight && innerHeight < 520;
@@ -1025,6 +1124,7 @@
       for (const p of players) updatePlayer(p, dt);
       separatePlayers();
       updatePickups(dt);
+      updateDrops(dt);
     } else {
       if (phase === 'countdown') updateCountdown(dt);
       for (const p of players) placeCamera(p, dt);

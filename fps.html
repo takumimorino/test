@@ -133,21 +133,27 @@
   /* ---------- Touch ---------- */
   #touch { position: fixed; inset: 0; pointer-events: none; }
   #stick { position: absolute; left: calc(20px + env(safe-area-inset-left, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px));
-    width: 136px; height: 136px; border-radius: 50%; border: 1px solid var(--line); background: var(--glass); pointer-events: auto; touch-action: none; }
+    width: calc(136px * var(--s)); height: calc(136px * var(--s)); border-radius: 50%; border: 1px solid var(--line); background: var(--glass); pointer-events: auto; touch-action: none; }
+  #stick.float { opacity: .85; }
   #stick::after { content: "移動"; position: absolute; left: 0; right: 0; top: -20px; text-align: center; font-size: 11px; font-weight: 700; color: var(--muted); }
-  #knob { position: absolute; left: 50%; top: 50%; width: 58px; height: 58px; margin: -29px; border-radius: 50%; background: rgba(236, 230, 216, .3); }
+  #knob { position: absolute; left: 50%; top: 50%; width: calc(58px * var(--s)); height: calc(58px * var(--s)); margin: calc(-29px * var(--s)); border-radius: 50%; background: rgba(236, 230, 216, .3); }
   .tbtn { position: absolute; pointer-events: auto; touch-action: none; border-radius: 50%; border: 1px solid var(--line); background: var(--glass); color: var(--ink);
     font: 700 13px/1.2 var(--body); letter-spacing: .04em; padding: 0; }
   .tbtn.on { background: rgba(255, 174, 59, .45); border-color: var(--sodium); }
   .tbtn.held { filter: brightness(1.5); }
-  /* 右側のボタン群は --lift ぶん持ち上げて、画面右下を視点操作用に空けておく */
-  #touch { --lift: 64px; }
-  #tFire { right: calc(20px + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 20px + env(safe-area-inset-bottom, 0px)); width: 96px; height: 96px; background: rgba(255, 74, 61, .34); font-size: 15px; }
-  #tJump { right: calc(128px + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 4px + env(safe-area-inset-bottom, 0px)); width: 62px; height: 62px; }
-  #tAim { right: calc(134px + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 82px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; }
-  #tReload { right: calc(46px + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 128px + env(safe-area-inset-bottom, 0px)); width: 60px; height: 60px; }
+  /* 右側のボタン群は --lift ぶん持ち上げて、画面右下を視点操作用に空けておく。--s はボタンの大きさ（iPad では大きく） */
+  #touch { --lift: 64px; --s: 1; }
+  #tFire { right: calc(20px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 20px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(96px * var(--s)); height: calc(96px * var(--s)); background: rgba(255, 74, 61, .34); font-size: 15px; }
+  #tJump { right: calc(126px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 6px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(60px * var(--s)); height: calc(60px * var(--s)); }
+  #tSlide { right: calc(194px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 40px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(56px * var(--s)); height: calc(56px * var(--s)); }
+  #tAim { right: calc(132px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 84px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(58px * var(--s)); height: calc(58px * var(--s)); }
+  #tReload { right: calc(44px * var(--s) + env(safe-area-inset-right, 0px)); bottom: calc(var(--lift) + 128px * var(--s) + env(safe-area-inset-bottom, 0px)); width: calc(58px * var(--s)); height: calc(58px * var(--s)); }
   @media (orientation: portrait) { #touch { --lift: 130px; } }
   @media (max-height: 380px) { #touch { --lift: 40px; } }
+  /* iPad などの大きい画面：ボタンを大きく、親指が届く高さに */
+  body.tablet #touch { --s: 1.3; --lift: 110px; }
+  body.tablet .tbtn { font-size: 15px; }
+  body.tablet #tFire { font-size: 18px; }
   #tPause { left: 50%; top: calc(10px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); width: 46px; height: 46px; font-size: 15px; }
   body.touch .keys { display: none; }
   body.touch .touch-hint { display: block; }
@@ -165,6 +171,18 @@
   body.touch #ammo { font-size: 38px; }
   body.touch #ammoMag { font-size: 14px; }
   body.touch #banner { top: 34%; }
+  body.tablet .tl .big { font-size: 44px; }
+  body.tablet .row { font-size: 15px; }
+  body.tablet #map { width: 140px; height: 140px; }
+  body.tablet .bl { top: calc(150px + env(safe-area-inset-top, 0px)); }
+  body.tablet .br { top: calc(144px + env(safe-area-inset-top, 0px)); left: calc(240px + env(safe-area-inset-left, 0px)); }
+  body.tablet .hpwrap { width: 150px; height: 11px; }
+  body.tablet #hp { font-size: 34px; }
+  body.tablet #ammo { font-size: 48px; }
+  #boost { position: absolute; left: 50%; top: calc(50% + 46px); transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 3px 10px;
+    font-family: var(--body); font-weight: 700; font-size: 12px; color: #1a1208; background: #ffd447; border-radius: 999px; }
+  #boost .bar { width: 60px; height: 5px; background: rgba(26, 18, 8, .25); }
+  #boost .bar i { display: block; height: 100%; background: #1a1208; }
   /* ---------- Story ---------- */
   #gauge { position: absolute; left: 50%; top: calc(20px + env(safe-area-inset-top, 0px)); transform: translateX(-50%); width: min(420px, 44vw); display: grid; gap: 6px; text-align: center; }
   .gwrap { height: 8px; background: rgba(236, 230, 216, .14); }
@@ -255,6 +273,7 @@
   <div id="xhair"><i></i><i></i><i></i><i></i><b></b></div>
   <div id="hitm"></div>
   <div id="banner"><div id="bannerT"></div><div id="bannerS"></div></div>
+  <div id="boost" hidden>⚡ スピードアップ <span class="bar"><i id="boostBar"></i></span></div>
   <div id="gauge" hidden><div id="gaugeLbl" class="lbl"></div><div class="gwrap"><div id="gaugeFill"></div></div></div>
   <div id="talk" aria-live="polite"><div id="talkWho">コダマ</div><div id="talkText"></div></div>
 </div>
@@ -265,8 +284,9 @@
 <div id="touch" hidden>
   <div id="stick"><div id="knob"></div></div>
   <button class="tbtn" id="tFire" type="button">撃つ</button>
-  <button class="tbtn" id="tAim" type="button">ズーム</button>
+  <button class="tbtn" id="tAim" type="button">のぞく</button>
   <button class="tbtn" id="tJump" type="button">ジャンプ</button>
+  <button class="tbtn" id="tSlide" type="button">スライド</button>
   <button class="tbtn" id="tReload" type="button">リロード</button>
   <button class="tbtn" id="tPause" type="button" aria-label="一時停止">II</button>
 </div>
@@ -299,13 +319,14 @@
       <dt><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></dt><dd>移動</dd>
       <dt><kbd>マウス</kbd></dt><dd>視点</dd>
       <dt><kbd>左クリック</kbd></dt><dd>撃つ（押しっぱなしで連射）</dd>
-      <dt><kbd>右クリック</kbd></dt><dd>ズームしてねらう</dd>
+      <dt><kbd>右クリック</kbd></dt><dd>のぞき込む（弾がまっすぐ飛ぶ）</dd>
       <dt><kbd>Space</kbd></dt><dd>ジャンプ（ふちがオレンジの箱には乗れる）</dd>
       <dt><kbd>Shift</kbd></dt><dd>ダッシュ</dd>
+      <dt><kbd>C</kbd></dt><dd>スライディング（走りながら）</dd>
       <dt><kbd>R</kbd></dt><dd>リロード</dd>
       <dt><kbd>Esc</kbd></dt><dd>一時停止</dd>
     </dl>
-    <p class="touch-hint">左下のスティックで移動、画面の右側をなぞると向きが変わる。「撃つ」を押したまま指をずらせば、撃ちながらねらえる。スマホは横向きがおすすめ。</p>
+    <p class="touch-hint">画面の左側を触るとそこにスティックが出て移動、右側をなぞると向きが変わる。「のぞく」でのぞき込むと弾がまっすぐ飛ぶ。走りながら「スライド」で滑り込み。スマホは横向きがおすすめ。</p>
   </div>
 </div>
 
@@ -340,7 +361,9 @@
 
   // ---------- Renderer & scenes ----------
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2));
+  // 画素数が多すぎると重くなるので、画面全体で約260万画素までに抑える（iPad の大画面対策）
+  const pixelRatio = () => Math.min(window.devicePixelRatio || 1, isTouch ? 1.5 : 2, Math.sqrt(2.6e6 / (innerWidth * innerHeight)));
+  renderer.setPixelRatio(pixelRatio());
   renderer.setSize(innerWidth, innerHeight);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -448,7 +471,8 @@
     halo: new THREE.MeshBasicMaterial({ color: 0xff4a3d, transparent: true, opacity: .45, blending: THREE.AdditiveBlending, depthWrite: false }),
     pick: new THREE.MeshStandardMaterial({ color: 0x55e0b8, emissive: 0x1f7a60, emissiveIntensity: 1.2 }),
     gold: new THREE.MeshStandardMaterial({ color: 0xffae3b, metalness: .6, roughness: .35, emissive: 0x5a3000 }),
-    kHalo: new THREE.MeshBasicMaterial({ color: 0x55e0b8, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false })
+    kHalo: new THREE.MeshBasicMaterial({ color: 0x55e0b8, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }),
+    speed: new THREE.MeshStandardMaterial({ color: 0xffd447, emissive: 0xb88a00, emissiveIntensity: 1.1 })
   };
   const geo = {
     droneBody: new THREE.SphereGeometry(.55, 22, 16),
@@ -465,7 +489,12 @@
     pickV: new THREE.BoxGeometry(.16, .55, .16),
     board: new THREE.BoxGeometry(1.1, 1.1, .08),
     post: new THREE.BoxGeometry(.09, .95, .09),
-    kHalo: new THREE.SphereGeometry(1.0, 16, 12)
+    kHalo: new THREE.SphereGeometry(1.0, 16, 12),
+    speed: (() => {
+      const sh = new THREE.Shape();
+      sh.moveTo(-.05, .55); sh.lineTo(-.28, -.02); sh.lineTo(-.02, -.02); sh.lineTo(-.14, -.55); sh.lineTo(.3, .12); sh.lineTo(.04, .12); sh.lineTo(.2, .55); sh.closePath();
+      const g = new THREE.ExtrudeGeometry(sh, { depth: .12, bevelEnabled: false }); g.center(); return g;
+    })()
   };
   const sparkMats = {};
   const sparkMat = c => sparkMats[c] || (sparkMats[c] = new THREE.MeshBasicMaterial({ color: c }));
@@ -689,7 +718,9 @@
     blip() { if (!actx) return; const f = rand(560, 700); tone(f, f * .96, .035, 'triangle', .05); },
     powerDown() { if (!actx) return; tone(420, 35, 1.4, 'sawtooth', .12); noise(.6, 300, 'lowpass', .2); },
     powerUp() { if (!actx) return; tone(50, 480, .9, 'sawtooth', .08); tone(960, 960, .15, 'sine', .1, .9); },
-    chime() { if (!actx) return; tone(880, 880, .14, 'sine', .14); tone(1320, 1320, .2, 'sine', .12, .12); }
+    chime() { if (!actx) return; tone(880, 880, .14, 'sine', .14); tone(1320, 1320, .2, 'sine', .12, .12); },
+    speed() { if (!actx) return; tone(400, 1600, .3, 'sawtooth', .1); tone(800, 2400, .25, 'sine', .1, .08); },
+    slide() { if (!actx) return; noise(.45, 900, 'bandpass', .35); }
   };
 
   // ---------- State ----------
@@ -699,6 +730,9 @@
   let firing = false, aiming = false, mouseHeld = false, jumpQueued = false;
   let score = 0, kills = 0, shotsFired = 0, shotsHit = 0, wave = 0, waveActive = false, interT = 0, spawnQueue = [], spawnT = 0, gt = 0;
   let dmgFlash = 0, dmgDirT = 0, adsT = 0;
+  // スピードアップ（残り秒数）とスライディング
+  let speedT = 0, slideT = 0, slideCD = 0, slideV = 0, slideDX = 0, slideDZ = 0, crouchT = 0;
+  const SLIDE_TIME = .7, SPEED_TIME = 10, SPEED_MUL = 1.45;
   let sens = store.get('hr.sens', 1), best = store.get('hr.best', 0);
   const enemies = [], bolts = [], sparks = [], tracers = [], pickups = [];
   const keys = {};
@@ -808,7 +842,12 @@
       if (e.static) burst(e.pos, 0xece6d8, 16, 5);
       else { burst(e.pos, 0xffae3b, 22, 7); burst(e.pos, 0xff4a3d, 12, 5); }
       if (e.type === 'boss') { burst(e.pos, 0xffae3b, 40, 12); burst(e.pos, 0xff4a3d, 30, 9); }
-      if (!e.static && Math.random() < (e.type === 'heavy' ? 1 : .22)) dropPickup(e.pos);
+      if (!e.static) {
+        const r = Math.random();
+        if (e.type === 'heavy') { dropPickup(e.pos, 'heal'); if (r < .6) dropPickup(e.pos, 'speed', 1.2); }
+        else if (r < .2) dropPickup(e.pos, 'heal');
+        else if (r < .34) dropPickup(e.pos, 'speed');
+      }
       removeEnemy(e); sfx.kill();
       if (hooks.kill) hooks.kill(e, weak);
       return true;
@@ -927,11 +966,12 @@
       new THREE.LineBasicMaterial({ color: 0xffdca6, transparent: true, opacity: .8 }));
     scene.add(l); tracers.push({ l, life: .06 });
   }
-  function dropPickup(pos) {
+  function dropPickup(pos, type = 'heal', off = 0) {
     const g = new THREE.Group();
-    g.add(new THREE.Mesh(geo.pickH, mat.pick), new THREE.Mesh(geo.pickV, mat.pick));
-    g.position.set(pos.x, .75, pos.z); scene.add(g);
-    pickups.push({ g, t: 0, life: 25 });
+    if (type === 'speed') g.add(new THREE.Mesh(geo.speed, mat.speed));
+    else g.add(new THREE.Mesh(geo.pickH, mat.pick), new THREE.Mesh(geo.pickV, mat.pick));
+    g.position.set(pos.x + off, .75, pos.z); scene.add(g);
+    pickups.push({ g, t: 0, life: 25, type });
   }
   function updateEffects(dt) {
     for (let i = sparks.length - 1; i >= 0; i--) {
@@ -952,7 +992,7 @@
       if (core.active && p.distanceToSquared(core.pos) < .9 * .9) {
         damageCore(b.dmg * .8); scene.remove(b.m); bolts.splice(i, 1); continue;
       }
-      const py = clamp(p.y, player.pos.y + .2, player.pos.y + 1.65);
+      const py = clamp(p.y, player.pos.y + .2, player.pos.y + 1.65 - .7 * crouchT);
       const dx = p.x - player.pos.x, dy = p.y - py, dz = p.z - player.pos.z;
       if (dx * dx + dy * dy + dz * dz < .5 * .5) {
         hurt(b.dmg, tmp.copy(p).addScaledVector(b.vel, -1));
@@ -967,8 +1007,10 @@
       k.g.rotation.y += dt * 2; k.g.position.y = .75 + Math.sin(k.t * 3) * .12;
       k.g.visible = k.life > 4 || Math.sin(k.t * 20) > 0;
       const near = Math.hypot(k.g.position.x - player.pos.x, k.g.position.z - player.pos.z) < 1.3 && player.pos.y < 1.6;
-      if ((near && player.hp < 100) || k.life <= 0) {
-        if (near) { player.hp = Math.min(100, player.hp + 25); sfx.pickup(); }
+      const take = near && (k.type === 'speed' || player.hp < 100);
+      if (take || k.life <= 0) {
+        if (take && k.type === 'speed') { speedT = SPEED_TIME; sfx.speed(); banner('SPEED UP', `${SPEED_TIME}秒間、足が速くなる`); }
+        else if (take) { player.hp = Math.min(100, player.hp + 25); sfx.pickup(); }
         scene.remove(k.g); pickups.splice(i, 1);
       }
     }
@@ -993,14 +1035,29 @@
     if (stick.active) { mx = stick.x; mz = -stick.y; }
     const len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
     const sprint = (keys.ShiftLeft || keys.ShiftRight) && mz > 0 && !aiming;
-    const speed = aiming ? 4 : sprint ? 10.5 : 7;
+    const boost = speedT > 0 ? SPEED_MUL : 1;
+    speedT = Math.max(0, speedT - dt); slideCD = Math.max(0, slideCD - dt);
+    const speed = (aiming ? 4 : sprint ? 10.5 : 7) * boost;
     const sy = Math.sin(player.yaw), cy = Math.cos(player.yaw);
     const tx = (-sy * mz + cy * mx) * speed, tz = (-cy * mz - sy * mx) * speed;
-    const f = 1 - Math.exp(-(player.onGround ? 12 : 3) * dt);
-    player.vx += (tx - player.vx) * f; player.vz += (tz - player.vz) * f;
+    if (slideT > 0) {
+      // スライディング：勢いよく滑り出して、だんだん減速。向きは少しだけ変えられる
+      slideT -= dt;
+      const p = 1 - Math.max(0, slideT) / SLIDE_TIME, v = slideV * (1 - .6 * p);
+      if (Math.hypot(tx, tz) > .1) {
+        const tl = Math.hypot(tx, tz), k = Math.min(1, dt * 2);
+        slideDX += (tx / tl - slideDX) * k; slideDZ += (tz / tl - slideDZ) * k;
+        const n = Math.hypot(slideDX, slideDZ) || 1; slideDX /= n; slideDZ /= n;
+      }
+      player.vx = slideDX * v; player.vz = slideDZ * v;
+      if (slideT <= 0) { slideT = 0; slideCD = .45; }
+    } else {
+      const f = 1 - Math.exp(-(player.onGround ? 12 : 3) * dt);
+      player.vx += (tx - player.vx) * f; player.vz += (tz - player.vz) * f;
+    }
     player.pos.x += player.vx * dt; player.pos.z += player.vz * dt;
     const ground = pushOut(player.pos, PR, player.pos.y);
-    if (jumpQueued && player.onGround) { player.vy = 7; player.onGround = false; }
+    if (jumpQueued && player.onGround) { player.vy = 7; player.onGround = false; slideT = 0; }
     jumpQueued = false;
     player.vy -= 20 * dt; player.pos.y += player.vy * dt;
     if (player.pos.y <= ground) {
@@ -1012,11 +1069,12 @@
     if (player.onGround && hs > .5) bobPhase += dt * hs * 1.25;
     landDip = Math.max(0, landDip - dt * .6);
     const bobY = player.onGround ? Math.sin(bobPhase * 2) * .035 * Math.min(1, hs / 7) : 0;
-    camera.position.set(player.pos.x, player.pos.y + EYE + bobY - landDip, player.pos.z);
-    camera.rotation.set(player.pitch, player.yaw, 0);
+    crouchT += ((slideT > 0 ? 1 : 0) - crouchT) * (1 - Math.exp(-14 * dt));
+    camera.position.set(player.pos.x, player.pos.y + EYE + bobY - landDip - .72 * crouchT, player.pos.z);
+    camera.rotation.set(player.pitch, player.yaw, .07 * crouchT);
 
     adsT += ((aiming ? 1 : 0) - adsT) * (1 - Math.exp(-14 * dt));
-    const fov = baseFov() * (1 - .3 * adsT);
+    const fov = baseFov() * (1 - .3 * adsT) + 7 * Math.min(1, speedT) + 6 * crouchT;
     if (Math.abs(camera.fov - fov) > .01) { camera.fov = fov; camera.updateProjectionMatrix(); }
     const gfov = 60 * baseFov() / 75;
     if (Math.abs(gunCam.fov - gfov) > .01) { gunCam.fov = gfov; gunCam.updateProjectionMatrix(); }
@@ -1030,6 +1088,24 @@
     const a = camera.aspect;
     return a >= 1.2 ? 75 : Math.min(105, Math.max(75, THREE.MathUtils.radToDeg(2 * Math.atan(1 / a))));
   }
+  function startSlide() {
+    if (state !== 'playing' || !player.onGround || slideT > 0 || slideCD > 0) return;
+    const hs = Math.hypot(player.vx, player.vz);
+    if (hs < 3.5) return;  // 走っている勢いがないと滑れない
+    slideDX = player.vx / hs; slideDZ = player.vz / hs;
+    slideV = Math.min(17, Math.max(hs * 1.25, 11.5)) * (speedT > 0 ? 1.15 : 1);
+    slideT = SLIDE_TIME; sfx.slide();
+  }
+  // 腰だめ撃ちはばらつきが大きく、のぞき込む（ADS）とほぼまっすぐ飛ぶ
+  function spreadNow() {
+    const moving = Math.hypot(player.vx, player.vz) > 1;
+    const hip = .03 + bloom, ads = .0015 + bloom * .2;
+    let sp = hip * (1 - adsT) + ads * adsT;
+    if (moving) sp *= 1 + .7 * (1 - adsT) + .25 * adsT;
+    if (!player.onGround) sp *= 2.2;
+    if (slideT > 0) sp *= 1.4;
+    return sp;
+  }
   function startReload() {
     if (reloadT > 0 || ammo === MAG || state !== 'playing') return;
     reloadT = RELOAD; sfx.reload();
@@ -1041,24 +1117,24 @@
     if (reloadT > 0) return;
     if (ammo <= 0) { sfx.dry(); startReload(); return; }
     ammo--; shotsFired++;
-    const moving = Math.hypot(player.vx, player.vz) > 1;
-    let spread = (aiming ? .002 : .011) + bloom;
-    if (moving) spread *= 1.6; if (!player.onGround) spread *= 2.5;
-    if (isTouch) spread *= .75;
-    bloom = Math.min(.03, bloom + .0035);
-    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
-    dir.set(Math.cos(a) * r, Math.sin(a) * r, -1).normalize().applyQuaternion(camera.quaternion);
+    const spread = spreadNow();
+    bloom = adsT > .5 ? Math.min(.012, bloom + .0015) : Math.min(.05, bloom + .006);
+    const fwd = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
+    const aimDir = fwd.clone();
     if (isTouch) {
-      // Light aim assist for touch: bend the shot toward a visible enemy just off the crosshair.
-      const fwd = new V3(0, 0, -1).applyQuaternion(camera.quaternion);
-      let target = null, bestAng = .065;
+      // タッチ操作のエイムアシスト：のぞき込んでいるときだけしっかり吸い付き、腰だめは弱い。
+      // 狙いの中心を寄せたあとでばらつきを足すので、腰だめのぶれは残る
+      let target = null, bestAng = .02 + .05 * adsT;
       for (const e of enemies) {
         if (e.spawnT > 0) continue;
         const to = new V3().subVectors(e.pos, camera.position), ang = fwd.angleTo(to);
         if (ang < bestAng) { bestAng = ang; target = to; }
       }
-      if (target && hasLOS(camera.position, tmp.copy(camera.position).add(target))) dir.add(target.normalize().sub(fwd)).normalize();
+      if (target && hasLOS(camera.position, tmp.copy(camera.position).add(target))) aimDir.copy(target).normalize();
     }
+    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
+    const right = new V3(1, 0, 0).applyQuaternion(camera.quaternion), up = new V3(0, 1, 0).applyQuaternion(camera.quaternion);
+    dir.copy(aimDir).addScaledVector(right, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r).normalize();
     ray.set(camera.position, dir); ray.far = 160;
     const targets = [floor, ...solids]; for (const e of enemies) targets.push(e.g);
     const hits = ray.intersectObjects(targets, true);
@@ -1078,8 +1154,8 @@
       }
     } else end = camera.position.clone().addScaledVector(dir, 160);
     tracer(camera.localToWorld(new V3(aiming ? 0 : .16, aiming ? -.07 : -.15, -.9)), end);
-    player.pitch = Math.min(1.5, player.pitch + (aiming ? .004 : .008));
-    player.yaw += (Math.random() - .5) * (aiming ? .002 : .005);
+    player.pitch = Math.min(1.5, player.pitch + (adsT > .5 ? .003 : .008));
+    player.yaw += (Math.random() - .5) * (adsT > .5 ? .0015 : .006);
     recoil = 1; flashT = .045; sfx.shot();
     if (ammo === 0) startReload();
   }
@@ -1156,9 +1232,9 @@
     $('hpbar').style.width = hp + '%'; $('hpbar').classList.toggle('low', hp <= 30);
     setText('ammo', String(ammo)); $('ammo').classList.toggle('empty', ammo === 0);
     setText('reloadTxt', reloadT > 0 ? 'リロード中…' : ammo <= 8 ? (isTouch ? '弾が少ない' : 'R でリロード') : '');
-    const moving = Math.hypot(player.vx, player.vz) > 1;
-    let spread = (aiming ? .002 : .011) + bloom; if (moving) spread *= 1.6; if (!player.onGround) spread *= 2.5;
-    $('xhair').style.setProperty('--gap', (5 + spread * 500).toFixed(1) + 'px');
+    $('xhair').style.setProperty('--gap', (4 + spreadNow() * 420).toFixed(1) + 'px');
+    $('boost').hidden = speedT <= 0;
+    if (speedT > 0) $('boostBar').style.width = (speedT / SPEED_TIME * 100).toFixed(1) + '%';
     $('xhair').classList.toggle('aim', adsT > .5);
     dmgFlash = Math.max(0, dmgFlash - dt * 2.5); dmgDirT = Math.max(0, dmgDirT - dt * 1.4);
     $('vig').style.opacity = dmgFlash.toFixed(3);
@@ -1179,7 +1255,7 @@
       mctx.fillStyle = c.top <= 1.05 ? 'rgba(227,154,53,.5)' : 'rgba(141,154,166,.45)';
       mctx.fillRect(c.minX * sc, c.minZ * sc, (c.maxX - c.minX) * sc, (c.maxZ - c.minZ) * sc);
     }
-    for (const k of pickups) { mctx.fillStyle = '#55e0b8'; mctx.fillRect(k.g.position.x * sc - 4, k.g.position.z * sc - 4, 8, 8); }
+    for (const k of pickups) { mctx.fillStyle = k.type === 'speed' ? '#ffd447' : '#55e0b8'; mctx.fillRect(k.g.position.x * sc - 4, k.g.position.z * sc - 4, 8, 8); }
     if (core.active) { mctx.fillStyle = '#55e0b8'; mctx.fillRect(core.pos.x * sc - 7, core.pos.z * sc - 7, 14, 14); }
     for (const b of breakers) if (b.on) { mctx.fillStyle = b.done ? '#55e0b8' : '#ffc400'; mctx.fillRect(b.zx * sc - 7, b.zz * sc - 7, 14, 14); }
     if (gate.visible) { mctx.fillStyle = '#55e0b8'; mctx.fillRect(-2 * sc, 38 * sc, 4 * sc, 2 * sc); }
@@ -1216,6 +1292,7 @@
     Object.assign(player, { vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0, onGround: true, hp: 100 });
     player.pos.set(0, 0, 33);
     ammo = MAG; reloadT = 0; bloom = 0; recoil = 0; score = 0; kills = 0; shotsFired = 0; shotsHit = 0;
+    speedT = 0; slideT = 0; slideCD = 0; crouchT = 0;
     wave = 0; waveActive = false; interT = 1.2; spawnQueue = []; gt = 0; lastShot = -1; dmgFlash = 0; dmgDirT = 0;
     camera.fov = baseFov(); camera.updateProjectionMatrix();
   }
@@ -1744,6 +1821,7 @@
     if (state !== 'playing') return;
     if (e.code === 'Space') { e.preventDefault(); if (!e.repeat) jumpQueued = true; }
     if (e.code === 'KeyR') startReload();
+    if (e.code === 'KeyC' && !e.repeat) startSlide();
     if (e.code === 'Escape' || e.code === 'KeyP') {
       if (document.pointerLockElement) document.exitPointerLock(); else setPaused();
     }
@@ -1777,7 +1855,7 @@
     if (isTouch) return;
     isTouch = true; document.body.classList.add('touch');
     $('sensLbl').textContent = '視点の速さ';
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5)); onResize();
+    onResize();
     if (state === 'playing') $('touch').hidden = false;
   }
   $('sensLbl').textContent = isTouch ? '視点の速さ' : 'マウス感度';
@@ -1787,8 +1865,9 @@
   const lookTouches = new Map();
   let fireId = null;
   const knob = $('knob');
+  const isTablet = () => document.body.classList.contains('tablet');
   function setStick(t) {
-    let dx = t.clientX - stick.cx, dy = t.clientY - stick.cy; const d = Math.hypot(dx, dy), max = 52;
+    let dx = t.clientX - stick.cx, dy = t.clientY - stick.cy; const d = Math.hypot(dx, dy), max = 52 * (isTablet() ? 1.3 : 1);
     if (d > max) { dx *= max / d; dy *= max / d; }
     stick.x = dx / max; stick.y = dy / max; knob.style.transform = `translate(${dx}px,${dy}px)`;
   }
@@ -1796,9 +1875,23 @@
     e.preventDefault(); const t = e.changedTouches[0], r = $('stick').getBoundingClientRect();
     stick.id = t.identifier; stick.active = true; stick.cx = r.left + r.width / 2; stick.cy = r.top + r.height / 2; setStick(t);
   }, { passive: false });
+  // 画面の左側を触ったら、その場所にスティックを出す（iPad でも親指の位置で操作できる）
+  function floatStick(t) {
+    const el = $('stick'), r = el.getBoundingClientRect();
+    el.classList.add('float');
+    el.style.left = (t.clientX - r.width / 2) + 'px'; el.style.top = (t.clientY - r.height / 2) + 'px'; el.style.bottom = 'auto';
+    stick.id = t.identifier; stick.active = true; stick.cx = t.clientX; stick.cy = t.clientY; setStick(t);
+  }
+  function resetStick() {
+    const el = $('stick'); el.classList.remove('float'); el.style.left = el.style.top = el.style.bottom = '';
+    stick.id = null; stick.active = false; stick.x = stick.y = 0; knob.style.transform = '';
+  }
   canvas.addEventListener('touchstart', e => {
     e.preventDefault();
-    for (const t of e.changedTouches) lookTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+    for (const t of e.changedTouches) {
+      if (stick.id === null && state === 'playing' && t.clientX < innerWidth * .42) { floatStick(t); continue; }
+      lookTouches.set(t.identifier, { x: t.clientX, y: t.clientY });
+    }
   }, { passive: false });
   addEventListener('touchmove', e => {
     if (state === 'playing') e.preventDefault();
@@ -1812,7 +1905,7 @@
   }, { passive: false });
   const endTouch = e => {
     for (const t of e.changedTouches) {
-      if (t.identifier === stick.id) { stick.id = null; stick.active = false; stick.x = stick.y = 0; knob.style.transform = ''; }
+      if (t.identifier === stick.id) resetStick();
       lookTouches.delete(t.identifier);
       if (t.identifier === fireId) { fireId = null; firing = false; $('tFire').classList.remove('held'); }
     }
@@ -1825,16 +1918,20 @@
   }, { passive: false });
   const tb = (id, fn) => $(id).addEventListener('touchstart', e => { e.preventDefault(); if (state === 'playing') fn(); }, { passive: false });
   tb('tJump', () => { jumpQueued = true; });
+  tb('tSlide', () => startSlide());
   tb('tReload', () => startReload());
   tb('tAim', () => { aiming = !aiming; $('tAim').classList.toggle('on', aiming); });
   tb('tPause', () => setPaused());
 
   function onResize() {
+    document.body.classList.toggle('tablet', isTouch && Math.min(innerWidth, innerHeight) >= 700);
+    renderer.setPixelRatio(pixelRatio());
     renderer.setSize(innerWidth, innerHeight);
     camera.aspect = gunCam.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix(); gunCam.updateProjectionMatrix();
   }
   addEventListener('resize', onResize);
+  onResize();
 
   // ---------- Loop ----------
   let last = performance.now();
