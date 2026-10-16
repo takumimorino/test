@@ -100,6 +100,21 @@
   .dead { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 6px; background: rgba(48, 6, 6, .42); }
   .dead-t { font-weight: 700; font-size: 22px; }
   .dead-s { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+  /* やられている間に、次の武器を選ぶ */
+  .wpick { width: min(360px, calc(100vw - 32px)); display: grid; gap: 6px; margin-top: 8px; }
+  .wpick-l { font-weight: 700; font-size: 12px; color: var(--ink); }
+  .wbtns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .wbtn { pointer-events: auto; display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 8px; text-align: left; padding: 8px 10px;
+    font: 700 13px/1.3 var(--body); color: var(--ink); background: rgba(12, 16, 22, .82); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; touch-action: manipulation; }
+  .wbtn .em { grid-row: span 2; font-size: 22px; line-height: 1; }
+  .wbtn small { font-size: 10px; font-weight: 400; color: var(--muted); line-height: 1.35; }
+  .wbtn.on { border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); color: var(--c); }
+  .half.isdead .ctl { visibility: hidden; }
+  /* スナイパーでのぞき込んだときのスコープ */
+  .scope { position: absolute; inset: 0; opacity: 0; pointer-events: none; background: radial-gradient(circle closest-side at 50% 50%, transparent 0 95%, #05080b 96%); }
+  .scope::before, .scope::after { content: ""; position: absolute; background: rgba(5, 8, 11, .8); }
+  .scope::before { left: 50%; top: 0; bottom: 0; width: 1px; }
+  .scope::after { top: 50%; left: 0; right: 0; height: 1px; }
 
   /* 操作ボタン。右側のボタン群は少し持ち上げて、手前の右下を視点操作用に空けておく */
   .ctl { position: absolute; inset: 0; pointer-events: none; }
@@ -135,16 +150,18 @@
   .ptext { margin: 0; font-size: 13px; line-height: 1.65; color: #cfc9bc; white-space: pre-line; }
   .pstats { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 4px 22px; font-family: var(--mono); }
   .pstats .big { font-family: var(--display); font-weight: 800; font-size: 28px; line-height: 1; }
-  .look { display: flex; align-items: center; gap: 12px; }
-  .pvc { width: 84px; height: 105px; flex: none; border-radius: 6px; border: 1px solid var(--line);
+  .look { display: flex; align-items: center; gap: 10px; }
+  .pvc { width: 72px; height: 90px; flex: none; border-radius: 6px; border: 1px solid var(--line);
     background: radial-gradient(circle at 50% 40%, rgba(236, 230, 216, .16), rgba(236, 230, 216, .03) 70%); }
-  .skins { flex: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-  .skins-l { grid-column: 1 / -1; font-weight: 700; font-size: 11px; color: var(--muted); }
-  .skin { display: flex; align-items: center; gap: 6px; padding: 7px 9px; font: 700 13px var(--body); color: var(--ink); background: rgba(236, 230, 216, .06);
-    border: 1px solid var(--line); border-radius: 4px; cursor: pointer; touch-action: manipulation; }
-  .skin .em { font-size: 18px; line-height: 1; }
-  .skin.on { color: var(--c); border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
-  .skin:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .picks { flex: 1; min-width: 0; display: grid; gap: 6px; }
+  .pick { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .pick-l { grid-column: 1 / -1; font-weight: 700; font-size: 11px; color: var(--muted); }
+  .chip { display: grid; justify-items: center; gap: 1px; padding: 4px 1px 3px; font: 700 10px/1.2 var(--body); letter-spacing: -.03em; white-space: nowrap; color: var(--ink);
+    background: rgba(236, 230, 216, .06); border: 1px solid var(--line); border-radius: 4px; cursor: pointer; touch-action: manipulation; overflow: hidden; }
+  .chip .em { font-size: 17px; line-height: 1.1; }
+  .chip.on { color: var(--c); border-color: var(--c); box-shadow: inset 0 0 0 1px var(--c); }
+  .chip:focus-visible, .wbtn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .wdesc { margin: 0; font-size: 11px; line-height: 1.4; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   /* 1台を2人で使うときは画面の高さが半分なので、準備画面を少し詰める */
   .half { container-type: size; }
   @container (max-height: 560px) {
@@ -269,8 +286,20 @@
   } catch (e) {}
 
   // ---------- Constants ----------
-  const HALF = 28, WALL_H = 6, EYE = 1.62, PR = .45, MAG = 30, RELOAD = 1.35, FIRE_INT = .11;
-  const GOAL = 5, RESPAWN = 2.5, INV = 1.5, DMG_BODY = 14, DMG_HEAD = 34;
+  const HALF = 28, WALL_H = 6, EYE = 1.62, PR = .45;
+  const GOAL = 5, RESPAWN = 3.5, INV = 1.5;  // 復活までの間に、次の武器を選べる
+  // 武器。ダメージは1発（ショットガンは1粒）あたり。hip/ads：腰だめ／のぞき込みのばらつき、zoom：のぞき込んだときの拡大、
+  // assist：エイムアシストの強さ、kick：反動（腰だめ／のぞき込み）、speed：足の速さ
+  const WEAPONS = [
+    { id: 'rifle', name: 'アサルトライフル', short: 'ライフル', icon: '🔫', desc: '連射できて扱いやすい。迷ったらこれ',
+      mag: 30, int: .11, body: 14, head: 34, reload: 1.35, hip: .03, ads: .0015, bloom: [.006, .05, .0015, .012], zoom: .3, assist: 1, pellets: 1, kick: [.005, .003], speed: 1 },
+    { id: 'shotgun', name: 'ショットガン', short: 'ショットガン', icon: '💥', desc: '散弾で、目の前なら一撃。遠いと弱い',
+      mag: 6, int: .85, body: 13, head: 26, reload: 2.1, hip: .075, ads: .05, zoom: .15, assist: .6, pellets: 8, near: 6, far: 22, kick: [.035, .025], speed: 1 },
+    { id: 'sniper', name: 'スナイパーライフル', short: 'スナイパー', icon: '🎯', desc: '頭なら一撃。のぞかないと当たらない',
+      mag: 5, int: 1.15, body: 75, head: 150, reload: 2.3, hip: .09, ads: .0004, zoom: .62, assist: .5, pellets: 1, kick: [.05, .04], speed: .95, scope: true },
+    { id: 'knife', name: 'ナイフ', short: 'ナイフ', icon: '🔪', desc: '足が速い。2回切れば倒せる',
+      melee: true, int: .5, body: 55, head: 55, reach: 2.6, speed: 1.2 }
+  ];
   const COLORS = [0xffae3b, 0x55e0b8, 0xff6b9a, 0x6aa8ff], NAMES = ['オレンジ', 'ミント', 'ピンク', 'ブルー'];
   const HEX = ['#ffae3b', '#55e0b8', '#ff6b9a', '#6aa8ff'], MAXP = 4;  // 2台以上で遊ぶときは4人まで
 
@@ -495,28 +524,70 @@
   }
 
   // ---------- Models ----------
-  function makeGun(color) {
-    const gun = new THREE.Group(); gunScene.add(gun);
+  // 自分の画面に映る武器（4種類ぶん作っておき、使う1つだけを表示する）。どれも動物の手で持つ
+  function makeGuns(color) {
     const gm = new THREE.MeshStandardMaterial({ color: 0x2c333b, metalness: .65, roughness: .38 });
     const gm2 = new THREE.MeshStandardMaterial({ color: 0x14191e, metalness: .4, roughness: .6 });
     const acc = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: .45 });
-    const part = (g, m, x, y, z, rx = 0) => { const p = new THREE.Mesh(g, m); p.position.set(x, y, z); p.rotation.x = rx; gun.add(p); return p; };
-    part(new THREE.BoxGeometry(.09, .12, .5), gm, 0, 0, 0);
-    part(new THREE.BoxGeometry(.1, .1, .26), gm2, 0, -.005, -.36);
-    part(new THREE.CylinderGeometry(.022, .022, .34, 12), gm, 0, .02, -.52, Math.PI / 2);
-    const mag = part(new THREE.BoxGeometry(.065, .2, .09), gm2, 0, -.14, -.06, .18);
-    part(new THREE.BoxGeometry(.06, .15, .07), gm2, 0, -.11, .14, -.32);
-    part(new THREE.BoxGeometry(.07, .09, .22), gm2, 0, -.01, .34);
-    part(new THREE.BoxGeometry(.035, .045, .12), gm, 0, .085, -.04);
-    part(new THREE.BoxGeometry(.092, .012, .32), acc, 0, .038, -.12);
-    const flash = new THREE.Mesh(new THREE.PlaneGeometry(.34, .34),
-      new THREE.MeshBasicMaterial({ map: flashTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
-    flash.position.set(0, .02, -.72); flash.visible = false; gun.add(flash);
-    // 銃を持つ手。選んだ動物の毛の色になる
+    const steel = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: .85, roughness: .25 });
     const pawMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: .85 });
-    part(new THREE.SphereGeometry(.052, 12, 10), pawMat, 0, -.15, .15).scale.set(1.1, .9, 1.3);
-    part(new THREE.SphereGeometry(.05, 12, 10), pawMat, 0, -.085, -.3).scale.set(1.25, .85, 1.2);
-    return { gun, mag, flash, pawMat };
+    const flashMat = new THREE.MeshBasicMaterial({ map: flashTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+    const build = (flashZ, fn) => {
+      const gun = new THREE.Group(); gun.visible = false; gunScene.add(gun);
+      const part = (g, m, x, y, z, rx = 0) => { const p = new THREE.Mesh(g, m); p.position.set(x, y, z); p.rotation.x = rx; gun.add(p); return p; };
+      const paw = (x, y, z, sx, sy, sz) => part(new THREE.SphereGeometry(.05, 12, 10), pawMat, x, y, z).scale.set(sx, sy, sz);
+      const flash = new THREE.Mesh(new THREE.PlaneGeometry(.34, .34), flashMat);
+      flash.position.set(0, .02, flashZ); flash.visible = false; gun.add(flash);
+      const mag = fn(part, paw);
+      mag.userData.base = mag.position.clone();
+      return { gun, mag, flash };
+    };
+    const rifle = build(-.72, (part, paw) => {
+      part(new THREE.BoxGeometry(.09, .12, .5), gm, 0, 0, 0);
+      part(new THREE.BoxGeometry(.1, .1, .26), gm2, 0, -.005, -.36);
+      part(new THREE.CylinderGeometry(.022, .022, .34, 12), gm, 0, .02, -.52, Math.PI / 2);
+      const mag = part(new THREE.BoxGeometry(.065, .2, .09), gm2, 0, -.14, -.06, .18);
+      part(new THREE.BoxGeometry(.06, .15, .07), gm2, 0, -.11, .14, -.32);
+      part(new THREE.BoxGeometry(.07, .09, .22), gm2, 0, -.01, .34);
+      part(new THREE.BoxGeometry(.035, .045, .12), gm, 0, .085, -.04);
+      part(new THREE.BoxGeometry(.092, .012, .32), acc, 0, .038, -.12);
+      paw(0, -.15, .15, 1.15, .95, 1.35); paw(0, -.085, -.3, 1.25, .85, 1.2);
+      return mag;
+    });
+    const shotgun = build(-.76, (part, paw) => {
+      part(new THREE.BoxGeometry(.1, .13, .4), gm2, 0, 0, .02);
+      part(new THREE.CylinderGeometry(.03, .03, .56, 12), gm, 0, .03, -.42, Math.PI / 2);
+      part(new THREE.CylinderGeometry(.022, .022, .48, 10), gm2, 0, -.025, -.38, Math.PI / 2);
+      const pump = part(new THREE.BoxGeometry(.1, .075, .2), gm2, 0, -.03, -.32);  // 撃つたび・リロードのたびに前後に動く
+      part(new THREE.BoxGeometry(.06, .15, .07), gm2, 0, -.11, .16, -.32);
+      part(new THREE.BoxGeometry(.08, .1, .26), gm2, 0, -.02, .36);
+      part(new THREE.BoxGeometry(.102, .014, .22), acc, 0, .067, .02);
+      paw(0, -.15, .17, 1.15, .95, 1.35); paw(0, -.075, -.32, 1.3, .9, 1.3);
+      return pump;
+    });
+    const sniper = build(-.9, (part, paw) => {
+      part(new THREE.BoxGeometry(.08, .11, .5), gm, 0, 0, .02);
+      part(new THREE.CylinderGeometry(.018, .022, .62, 12), gm, 0, .02, -.54, Math.PI / 2);
+      part(new THREE.BoxGeometry(.09, .09, .22), gm2, 0, -.005, -.3);
+      part(new THREE.CylinderGeometry(.034, .034, .3, 14), gm2, 0, .1, -.02, Math.PI / 2);
+      part(new THREE.CylinderGeometry(.044, .034, .05, 14), gm2, 0, .1, -.19, Math.PI / 2);
+      part(new THREE.BoxGeometry(.03, .04, .08), gm, 0, .06, -.02);
+      const mag = part(new THREE.BoxGeometry(.06, .12, .1), gm2, 0, -.1, -.04);
+      part(new THREE.BoxGeometry(.06, .15, .07), gm2, 0, -.11, .16, -.32);
+      part(new THREE.BoxGeometry(.075, .11, .3), gm2, 0, -.02, .38);
+      part(new THREE.BoxGeometry(.006, .03, .4), acc, .042, 0, .02);
+      paw(0, -.15, .17, 1.15, .95, 1.35); paw(0, -.08, -.3, 1.25, .85, 1.2);
+      return mag;
+    });
+    const knife = build(-.5, (part, paw) => {
+      const handle = part(new THREE.BoxGeometry(.035, .045, .13), gm2, 0, 0, .04);
+      part(new THREE.BoxGeometry(.08, .02, .025), gm, 0, 0, -.03);
+      part(new THREE.BoxGeometry(.01, .055, .27), steel, 0, .006, -.17);
+      part(new THREE.BoxGeometry(.012, .008, .2), acc, 0, .036, -.14);
+      paw(0, -.004, .05, 1.25, 1.15, 1.45);
+      return handle;
+    });
+    return { guns: [rifle, shotgun, sniper, knife], pawMat };
   }
   // 相手から見える体。前は -z 向き（カメラと同じ）。頭とバイザーは弱点。
   // 体（胴）の色はプレイヤーの色のまま。頭・耳・しっぽ・手は、選んだ動物になる
@@ -532,10 +603,10 @@
     add(new THREE.BoxGeometry(.2, .62, .22), mat.suit, .45, 1.1, -.04);
     add(new THREE.SphereGeometry(.23, 16, 12), fur, 0, 1.7, 0, true);
     add(new THREE.BoxGeometry(.34, .09, .08), visor, 0, 1.72, -.2, true);  // ゴーグル
-    add(new THREE.BoxGeometry(.08, .11, .66), mat.suit, .28, 1.22, -.34);
+    const held = new THREE.Group(); g.add(held);  // 手に持った武器
     const acc = new THREE.Group(); g.add(acc);  // 耳・鼻・しっぽ・手（飾り。当たり判定なし）
     target.add(g);
-    return { g, team, fur, acc, ears: [], skin: -1,
+    return { g, team, fur, acc, held, weapon: -1, ears: [], skin: -1,
       snout: new THREE.MeshStandardMaterial({ roughness: .85 }), nose: new THREE.MeshStandardMaterial({ roughness: .4 }),
       inner: new THREE.MeshStandardMaterial({ roughness: .85 }) };
   }
@@ -582,6 +653,25 @@
     }
     if (A.id === 'cat' || A.id === 'dog') part(AG.tail, m.fur, 0, .2, 0, pivot(0, .78, .17, A.id === 'cat' ? .9 : .5, 0)).scale.set(1, A.id === 'cat' ? 1 : .55, 1);
     else part(AG.puff, m.fur, 0, .74, .2).scale.setScalar(A.id === 'bear' ? .65 : 1);
+  }
+  // 相手から見える、手に持った武器（飾り。当たり判定なし）
+  const HG = {
+    rifle: new THREE.BoxGeometry(.08, .11, .66), shotgun: new THREE.BoxGeometry(.1, .13, .56), sniper: new THREE.BoxGeometry(.07, .1, .92),
+    scope: new THREE.CylinderGeometry(.04, .04, .26, 10), blade: new THREE.BoxGeometry(.02, .07, .34), handle: new THREE.BoxGeometry(.045, .05, .14)
+  };
+  const bladeMat = new THREE.MeshStandardMaterial({ color: 0xd8dde3, metalness: .85, roughness: .25 });
+  function applyHeld(m, k) {
+    if (m.weapon === k) return;
+    m.weapon = k;
+    while (m.held.children.length) m.held.remove(m.held.children[0]);
+    const part = (gm, mt, x, y, z, rx = 0) => {
+      const s = new THREE.Mesh(gm, mt); s.position.set(x, y, z); s.rotation.x = rx; s.castShadow = true; s.raycast = () => {}; m.held.add(s); return s;
+    };
+    const id = WEAPONS[k].id;
+    if (id === 'rifle') part(HG.rifle, mat.suit, .28, 1.22, -.34);
+    if (id === 'shotgun') part(HG.shotgun, mat.suit, .28, 1.2, -.3);
+    if (id === 'sniper') { part(HG.sniper, mat.suit, .28, 1.22, -.46); part(HG.scope, mat.suit, .28, 1.32, -.3, Math.PI / 2); }
+    if (id === 'knife') { part(HG.handle, mat.suit, .45, .8, -.1); part(HG.blade, bladeMat, .45, .82, -.33); }
   }
   function foldEars(m, t) { for (const e of m.ears) e.rotation.x = e.userData.rx + e.userData.fold * t; }
 
@@ -630,6 +720,10 @@
   }
   const sfx = {
     shot(v = 1) { if (!actx) return; noise(.12, 2400, 'lowpass', .4 * v); tone(170, 45, .11, 'sine', .45 * v); },
+    shotgun(v = 1) { if (!actx) return; noise(.3, 1100, 'lowpass', .6 * v); tone(120, 32, .22, 'sine', .55 * v); },
+    sniper(v = 1) { if (!actx) return; noise(.06, 4200, 'highpass', .45 * v); noise(.55, 700, 'lowpass', .35 * v, .02); tone(230, 38, .28, 'sine', .5 * v); },
+    pump() { if (!actx) return; noise(.04, 1800, 'bandpass', .28, .2); noise(.05, 1300, 'bandpass', .3, .34); },
+    swing(v = 1) { if (!actx || v <= 0) return; noise(.16, 2600, 'bandpass', .32 * v); },
     hit(weak) { if (!actx) return; tone(weak ? 1600 : 1050, weak ? 1500 : 950, .05, 'square', .07); },
     kill() { if (!actx) return; tone(500, 1300, .14, 'triangle', .16); noise(.35, 800, 'lowpass', .35); },
     hurt() { if (!actx) return; tone(130, 50, .2, 'sawtooth', .18); },
@@ -647,8 +741,9 @@
     <div class="hud">
       <div class="score"><span class="me">0</span><span class="sep">–</span><span class="foe">0</span><span class="goal">${GOAL}本先取</span></div>
       <div class="hpbox"><div class="hpwrap"><div class="hpbar"></div></div><span class="hpnum">100</span></div>
-      <div class="ammo"><span class="ammo-n">30</span><span class="ammo-m">/ 30</span><div class="ammo-s"></div></div>
+      <div class="ammo"><span class="ammo-n">30</span><span class="ammo-m"></span><div class="ammo-s"></div></div>
       <canvas class="radar" width="160" height="160"></canvas>
+      <div class="scope"></div>
       <div class="xhair"><i></i><i></i><i></i><i></i><b></b></div>
       <div class="hitm"></div>
       <div class="banner"><div class="bT"></div><div class="bS"></div></div>
@@ -656,7 +751,13 @@
       <div class="boost" hidden>⚡ スピードアップ <span class="bar"><i></i></span></div>
     </div>
     <div class="vig"></div><div class="dmgdir"></div>
-    <div class="dead" hidden><div class="dead-t">やられた…</div><div class="dead-s"></div></div>
+    <div class="dead" hidden>
+      <div class="dead-t">やられた…</div><div class="dead-s"></div>
+      <div class="wpick" role="radiogroup" aria-label="次の武器">
+        <div class="wpick-l">次の武器をえらぶ</div>
+        <div class="wbtns">${WEAPONS.map((w, k) => `<button class="wbtn" type="button" role="radio" aria-checked="false" data-w="${k}"><span class="em">${w.icon}</span>${w.short}<small>${w.desc}</small></button>`).join('')}</div>
+      </div>
+    </div>
     <div class="ctl">
       <div class="stick"><div class="knob"></div></div>
       <button class="tb fire" type="button">撃つ</button>
@@ -674,9 +775,16 @@
         <div class="pstats" hidden></div>
         <div class="look">
           <canvas class="pvc" width="168" height="210" aria-hidden="true"></canvas>
-          <div class="skins" role="radiogroup" aria-label="見た目">
-            <span class="skins-l">見た目</span>
-            ${ANIMALS.map((a, k) => `<button class="skin" type="button" role="radio" aria-checked="false" data-k="${k}"><span class="em">${a.emoji}</span>${a.name}</button>`).join('')}
+          <div class="picks">
+            <div class="pick" role="radiogroup" aria-label="見た目">
+              <span class="pick-l">見た目</span>
+              ${ANIMALS.map((a, k) => `<button class="chip skin" type="button" role="radio" aria-checked="false" data-k="${k}"><span class="em">${a.emoji}</span>${a.name}</button>`).join('')}
+            </div>
+            <div class="pick" role="radiogroup" aria-label="武器">
+              <span class="pick-l">武器（やられるたびに選び直せる）</span>
+              ${WEAPONS.map((w, k) => `<button class="chip wpn" type="button" role="radio" aria-checked="false" data-w="${k}"><span class="em">${w.icon}</span>${w.short}</button>`).join('')}
+            </div>
+            <p class="wdesc"></p>
           </div>
         </div>
         <div class="prow">
@@ -707,27 +815,29 @@
     const muzzle = new THREE.PointLight(COLORS[i], 0, 9, 2); scene.add(muzzle);
     const p = {
       i, name: NAMES[i], color: COLORS[i], el, cam, gunCam, muzzle,
-      ...makeGun(COLORS[i]), model: makeSoldier(COLORS[i]), pv: makeSoldier(COLORS[i], pv.scene), skin: -1,
+      ...makeGuns(COLORS[i]), model: makeSoldier(COLORS[i]), pv: makeSoldier(COLORS[i], pv.scene), skin: -1, weapon: 0, nextWeapon: 0, swingT: 0, pumpT: 0,
       pos: new V3(), vx: 0, vz: 0, vy: 0, yaw: 0, pitch: 0, onGround: true,
-      hp: 100, ammo: MAG, reloadT: 0, lastShot: -1, lastShotAt: -9, bloom: 0, recoil: 0, flashT: 0, landDip: 0, bobPhase: 0,
+      hp: 100, ammo: 0, reloadT: 0, lastShot: -1, lastShotAt: -9, bloom: 0, recoil: 0, flashT: 0, landDip: 0, bobPhase: 0,
       aiming: false, adsT: 0, firing: false, jumpQ: false, kills: 0, shots: 0, hits: 0, heads: 0,
       dead: false, respawnT: 0, deathT: 0, invT: 0, dmgFlash: 0, dmgDirT: 0, hitFlash: 0, hitTimer: 0,
       speedT: 0, slideT: 0, slideCD: 0, slideV: 0, slideDX: 0, slideDZ: 0, crouchT: 0, leanT: 0, crouching: false, gone: false, deaths: 0,
       stick: { active: false, x: 0, y: 0, id: null, cx: 0, cy: 0 }, keys: {},
       sens: store.get('hd.sens' + i, 1), cache: {},
       ui: {
-        me: q('.me'), foe: q('.foe'), hpbar: q('.hpbar'), hpnum: q('.hpnum'), ammo: q('.ammo-n'), ammoS: q('.ammo-s'), radar: q('.radar'),
+        me: q('.me'), foe: q('.foe'), hpbar: q('.hpbar'), hpnum: q('.hpnum'), ammo: q('.ammo-n'), ammoM: q('.ammo-m'), ammoS: q('.ammo-s'), radar: q('.radar'), scope: q('.scope'),
         xhair: q('.xhair'), hitm: q('.hitm'), banner: q('.banner'), bT: q('.bT'), bS: q('.bS'), talk: q('.talk'), talkTxt: q('.talk .txt'),
         vig: q('.vig'), dmgdir: q('.dmgdir'), dead: q('.dead'), deadS: q('.dead-s'),
         stick: q('.stick'), knob: q('.knob'), fire: q('.fire'), zoom: q('.zoom'), jump: q('.jump'), reload: q('.reload'), slide: q('.slide'), crouch: q('.crouch'),
         boost: q('.boost'), boostBar: q('.boost .bar i'),
         panel: q('.panel'), eyebrow: q('.eyebrow'), ptitle: q('.ptitle'), ptext: q('.ptext'), pstats: q('.pstats'),
-        ready: q('.ready'), invite: q('.invite'), sens: q('.sens input'), pvc: q('.pvc'), skins: [...el.querySelectorAll('.skin')], pnote: q('.pnote'), keys: q('.keys')
+        ready: q('.ready'), invite: q('.invite'), sens: q('.sens input'), pvc: q('.pvc'), skins: [...el.querySelectorAll('.skin')], wpns: [...el.querySelectorAll('[data-w]')], wdesc: q('.wdesc'), pnote: q('.pnote'), keys: q('.keys')
       }
     };
     p.rctx = p.ui.radar.getContext('2d'); p.pctx = p.ui.pvc.getContext('2d');
     p.pv.g.visible = false;
     setSkin(p, store.get('hd.skin' + i, i % ANIMALS.length));
+    p.nextWeapon = clamp(Math.round(+store.get('hd.wpn' + i, 0)) || 0, 0, WEAPONS.length - 1);
+    setWeapon(p, p.nextWeapon); showPick(p);
     p.ui.sens.value = p.sens;
     p.ui.sens.addEventListener('input', e => { p.sens = +e.target.value; store.set('hd.sens' + i, p.sens); });
     p.ui.keys.textContent = KEYS_TEXT[i === 1 ? 1 : 0];
@@ -742,6 +852,32 @@
     p.pawMat.color.set(ANIMALS[k].fur);
     for (const b of p.ui.skins) { const on = +b.dataset.k === k; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }
   }
+  // 武器を持ち替える（復活したとき、または試合の前）
+  function setWeapon(p, k) {
+    k = clamp(Math.round(+k) || 0, 0, WEAPONS.length - 1);
+    const W = WEAPONS[k], u = p.ui;
+    p.weapon = k; p.W = W;
+    for (const g of p.guns) g.gun.visible = false;  // 表示するのは描くときに、使っている1つだけ
+    ({ gun: p.gun, mag: p.mag, flash: p.flash } = p.guns[k]);
+    Object.assign(p, { ammo: W.mag || 0, reloadT: 0, bloom: 0, swingT: 0, pumpT: 0 });
+    if (W.melee) p.aiming = false;
+    u.zoom.classList.remove('on'); u.zoom.hidden = u.reload.hidden = !!W.melee;
+    u.fire.textContent = W.melee ? '切る' : '撃つ';
+    u.ammoM.textContent = W.melee ? W.short : `/ ${W.mag} · ${W.short}`;
+    p.cache.ammo = p.cache.ammoS = null;
+    applyHeld(p.model, k); applyHeld(p.pv, k);
+  }
+  // 次に使う武器を選ぶ。試合の前ならすぐ持ち替え、試合中なら次に復活したときから
+  function showPick(p) {
+    const W = WEAPONS[p.nextWeapon];
+    for (const b of p.ui.wpns) { const on = +b.dataset.w === p.nextWeapon; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); }
+    p.ui.wdesc.textContent = W.desc;
+  }
+  function pickWeapon(p, k) {
+    p.nextWeapon = clamp(Math.round(+k) || 0, 0, WEAPONS.length - 1);
+    showPick(p);
+    if (phase === 'lobby' || phase === 'result') setWeapon(p, p.nextWeapon);
+  }
   const players = [makePlayer(0), makePlayer(1)];
   const others = p => players.filter(q => q !== p && !q.gone);
 
@@ -754,8 +890,9 @@
         pt = SPAWNS.reduce((best, s) => d(s) > d(best) ? s : best);
       }
     }
-    Object.assign(p, { vx: 0, vz: 0, vy: 0, pitch: 0, onGround: true, hp: 100, ammo: MAG, reloadT: 0, bloom: 0, dead: false, invT: first ? 0 : INV, aiming: false,
+    Object.assign(p, { vx: 0, vz: 0, vy: 0, pitch: 0, onGround: true, hp: 100, dead: false, invT: first ? 0 : INV, aiming: false,
       speedT: 0, slideT: 0, slideCD: 0, crouchT: 0, leanT: 0, crouching: false });
+    setWeapon(p, p.nextWeapon);  // 選んでおいた武器で復活
     p.pos.set(pt[0], 0, pt[1]);
     p.yaw = Math.atan2(pt[0], pt[1]);  // アリーナの中央を向く
     p.ui.zoom.classList.remove('on'); p.ui.crouch.classList.remove('on');
@@ -841,8 +978,8 @@
     p.cam.position.set(p.pos.x, y, p.pos.z);
     p.cam.rotation.set(pitch, p.yaw, roll);
     p.cam.updateMatrixWorld();
-    p.adsT += ((p.aiming && !p.dead ? 1 : 0) - p.adsT) * (1 - Math.exp(-14 * dt));
-    const base = baseFov(p.cam.aspect), fov = base * (1 - .3 * p.adsT) + 7 * Math.min(1, p.speedT) + 6 * p.leanT, gfov = 60 * base / 75;
+    p.adsT += ((p.aiming && !p.dead && !p.W.melee ? 1 : 0) - p.adsT) * (1 - Math.exp(-14 * dt));
+    const base = baseFov(p.cam.aspect), fov = base * (1 - (p.W.zoom || 0) * p.adsT) + 7 * Math.min(1, p.speedT) + 6 * p.leanT, gfov = 60 * base / 75;
     if (Math.abs(p.cam.fov - fov) > .01) { p.cam.fov = fov; p.cam.updateProjectionMatrix(); }
     if (Math.abs(p.gunCam.fov - gfov) > .01) { p.gunCam.fov = gfov; p.gunCam.updateProjectionMatrix(); }
   }
@@ -861,7 +998,7 @@
     if (k.tl) p.yaw += 2.4 * dt; if (k.tr) p.yaw -= 2.4 * dt;
     const len = Math.hypot(mx, mz); if (len > 1) { mx /= len; mz /= len; }
     p.speedT = Math.max(0, p.speedT - dt); p.slideCD = Math.max(0, p.slideCD - dt);
-    const speed = (p.aiming ? 4 : 7) * (p.speedT > 0 ? SPEED_MUL : 1) * (p.crouching ? .5 : 1);
+    const speed = (p.aiming ? 4 : 7) * p.W.speed * (p.speedT > 0 ? SPEED_MUL : 1) * (p.crouching ? .5 : 1);
     const sy = Math.sin(p.yaw), cy = Math.cos(p.yaw);
     const tx = (-sy * mz + cy * mx) * speed, tz = (-cy * mz - sy * mx) * speed;
     if (p.slideT > 0) {
@@ -896,9 +1033,9 @@
     p.crouchT += ((p.slideT > 0 || p.crouching ? 1 : 0) - p.crouchT) * ease;
     p.leanT += ((p.slideT > 0 ? 1 : 0) - p.leanT) * ease;  // 体を傾けるのはスライド中だけ
     placeCamera(p, dt);
-    if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; p.ammo = MAG; } }
+    if (p.reloadT > 0) { p.reloadT -= dt; if (p.reloadT <= 0) { p.reloadT = 0; p.ammo = p.W.mag; } }
     p.bloom = Math.max(0, p.bloom - dt * .05);
-    if ((p.firing || k.fire) && gt - p.lastShot >= FIRE_INT) fire(p);
+    if ((p.firing || k.fire) && gt - p.lastShot >= p.W.int) fire(p);
   }
   function separatePlayers() {
     const [a, b] = players;
@@ -909,8 +1046,8 @@
     }
   }
   function startReload(p) {
-    if (p.reloadT > 0 || p.ammo === MAG || p.dead) return;
-    p.reloadT = RELOAD; sfx.reload();
+    if (p.W.melee || p.reloadT > 0 || p.ammo === p.W.mag || p.dead) return;
+    p.reloadT = p.W.reload; sfx.reload();
   }
   function startSlide(p) {
     if (!canAct() || p.dead || p.crouching || !p.onGround || p.slideT > 0 || p.slideCD > 0) return;
@@ -929,8 +1066,9 @@
   }
   // 腰だめ撃ちはばらつきが大きく、のぞき込む（ADS）とほぼまっすぐ飛ぶ
   function spreadNow(p) {
-    const moving = Math.hypot(p.vx, p.vz) > 1, a = p.adsT;
-    let sp = (.03 + p.bloom) * (1 - a) + (.0015 + p.bloom * .2) * a;
+    const W = p.W, moving = Math.hypot(p.vx, p.vz) > 1, a = p.adsT;
+    if (W.melee) return 0;
+    let sp = (W.hip + p.bloom) * (1 - a) + (W.ads + p.bloom * .2) * a;
     if (moving) sp *= 1 + .7 * (1 - a) + .25 * a;
     if (!p.onGround) sp *= 2.2;
     if (p.slideT > 0) sp *= 1.4;
@@ -938,7 +1076,7 @@
     return sp;
   }
   function look(p, dx, dy) {
-    const k = .0022 * p.sens * (p.aiming ? .6 : 1);
+    const k = .0022 * p.sens * (p.aiming ? (p.W.scope ? .35 : .6) : 1);  // スコープをのぞいているときは、さらにゆっくり
     p.yaw -= dx * k; p.pitch = clamp(p.pitch - dy * k, -1.4, 1.4);
   }
 
@@ -946,55 +1084,89 @@
   const ray = new THREE.Raycaster(), dir = new V3();
   function ownerOf(o, foe) { while (o) { if (o === foe.model.g) return true; o = o.parent; } return false; }
   function fire(p) {
+    const W = p.W;
     p.lastShot = gt;
-    if (p.reloadT > 0 || p.dead) return;
+    if (p.dead) return;
+    if (W.melee) { swing(p, W); return; }
+    if (p.reloadT > 0) return;
     if (p.ammo <= 0) { sfx.dry(); startReload(p); return; }
     p.ammo--; p.shots++; p.lastShotAt = gt;
     const foes = others(p).filter(q => !q.dead);
     const spread = spreadNow(p);
-    p.bloom = p.adsT > .5 ? Math.min(.012, p.bloom + .0015) : Math.min(.05, p.bloom + .006);
+    if (W.bloom) p.bloom = p.adsT > .5 ? Math.min(W.bloom[3], p.bloom + W.bloom[2]) : Math.min(W.bloom[1], p.bloom + W.bloom[0]);
     const fwd = new V3(0, 0, -1).applyQuaternion(p.cam.quaternion), aimDir = fwd.clone();
     // エイムアシスト：のぞき込んでいるときだけしっかり吸い付き、腰だめは弱い。いちばん狙いに近い相手に寄せる。
     // 狙いの中心を寄せたあとでばらつきを足すので、腰だめのぶれは残る
-    let best = .02 + .055 * p.adsT;
+    let best = (.02 + .055 * p.adsT) * W.assist;
     for (const q of foes) {
       const chest = new V3(q.pos.x, q.pos.y + 1.2 - .6 * q.crouchT, q.pos.z), to = chest.clone().sub(p.cam.position), ang = fwd.angleTo(to);
       if (ang < best && hasLOS(p.cam.position, chest)) { best = ang; aimDir.copy(to).normalize(); }
     }
-    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
     const right = new V3(1, 0, 0).applyQuaternion(p.cam.quaternion), up = new V3(0, 1, 0).applyQuaternion(p.cam.quaternion);
-    dir.copy(aimDir).addScaledVector(right, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r).normalize();
-    ray.set(p.cam.position, dir); ray.far = 120;
-    const hits = ray.intersectObjects([floor, ...solids, ...foes.map(q => q.model.g)], true);
-    let end;
-    if (hits.length) {
-      const h = hits[0]; end = h.point.clone();
-      const foe = foes.find(q => ownerOf(h.object, q));
-      if (foe) {
-        const weak = !!h.object.userData.weak;
-        if (foe.invT > 0) burst(end, 0xece6d8, 4, 2);
-        else {
-          p.hits++;
-          const dmg = weak ? DMG_HEAD : DMG_BODY;
-          let down;
-          if (online) { send({ t: 'hit', to: foe.i, d: dmg, w: weak ? 1 : 0 }); down = foe.hp - dmg <= 0; foe.hitFlash = .1; }
-          else down = damagePlayer(foe, dmg, p, weak);
-          burst(end, weak ? 0xff4a3d : foe.color, weak ? 9 : 5, 4);
-          hitMarker(p, weak, down); sfx.hit(weak);
+    const targets = [floor, ...solids, ...foes.map(q => q.model.g)], ends = [], dealt = new Map();
+    // ショットガンは1回で8粒。1粒ずつ当たりを調べて、相手ごとにダメージを合計する（遠いほど弱い）
+    for (let n = 0; n < W.pellets; n++) {
+      const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * spread;
+      dir.copy(aimDir).addScaledVector(right, Math.cos(a) * r).addScaledVector(up, Math.sin(a) * r).normalize();
+      ray.set(p.cam.position, dir); ray.far = 120;
+      const hits = ray.intersectObjects(targets, true);
+      let end;
+      if (hits.length) {
+        const h = hits[0]; end = h.point.clone();
+        const foe = foes.find(q => ownerOf(h.object, q));
+        if (foe) {
+          const weak = !!h.object.userData.weak;
+          const fall = W.far ? clamp(1 - (h.distance - W.near) / (W.far - W.near) * .7, .3, 1) : 1;
+          const e = dealt.get(foe) || { d: 0, weak: false, at: end };
+          e.d += (weak ? W.head : W.body) * fall; e.weak = e.weak || weak; dealt.set(foe, e);
+        } else {
+          burst(end, 0xbdb6a6, W.pellets > 1 ? 2 : 5, 2.5);
+          if (screens.includes(h.object)) refereeShot();
         }
-      } else {
-        burst(end, 0xbdb6a6, 5, 2.5);
-        if (screens.includes(h.object)) refereeShot();
-      }
-    } else end = p.cam.position.clone().addScaledVector(dir, 120);
+      } else end = p.cam.position.clone().addScaledVector(dir, 120);
+      ends.push(end);
+    }
+    if (dealt.size) p.hits++;
+    for (const [foe, e] of dealt) {
+      if (foe.invT > 0) burst(e.at, 0xece6d8, 4, 2);
+      else hitFoe(p, foe, Math.round(e.d), e.weak, e.at);
+    }
     const s = p.i && !online ? -1 : 1;  // 奥側のカメラは180°回っているので、銃口の位置も上下左右を反転
     const muzzlePos = p.cam.localToWorld(new V3(s * (p.aiming ? 0 : .16), s * (p.aiming ? -.07 : -.15), -.9));
-    tracer(muzzlePos, end, p.color);
-    if (online) send({ t: 'shot', a: [muzzlePos.x, muzzlePos.y, muzzlePos.z], b: [end.x, end.y, end.z] });
-    p.pitch = Math.min(1.4, p.pitch + (p.aiming ? .003 : .005));  // 1人用より反動を弱めにして、撃ち合いを続けやすくする
-    p.yaw += (Math.random() - .5) * (p.adsT > .5 ? .0015 : .006);
-    p.recoil = 1; p.flashT = .045; sfx.shot();
+    for (const end of ends) tracer(muzzlePos, end, p.color);
+    if (online) send({ t: 'shot', g: p.weapon, a: muzzlePos.toArray(), bs: ends.map(e => e.toArray().map(r3)) });
+    p.pitch = Math.min(1.4, p.pitch + W.kick[p.aiming ? 1 : 0]);  // 1人用より反動を弱めにして、撃ち合いを続けやすくする
+    p.yaw += (Math.random() - .5) * (p.adsT > .5 ? .0015 : .006) * (W.pellets > 1 ? 2 : 1);
+    p.recoil = 1; p.flashT = .045; shotSound(p.weapon, 1);
+    if (W.id === 'shotgun') { p.pumpT = PUMP; sfx.pump(); }
     if (p.ammo === 0) startReload(p);
+  }
+  function shotSound(w, v) { const id = WEAPONS[w] && WEAPONS[w].id; if (id === 'shotgun') sfx.shotgun(v); else if (id === 'sniper') sfx.sniper(v); else sfx.shot(v); }
+  // ナイフ：少し踏み込んで、目の前（2.6m以内・正面の左右35°くらい）の相手を切る
+  const SWING = .3, PUMP = .5;
+  function swing(p, W) {
+    p.swingT = SWING; p.shots++; sfx.swing(1);
+    if (online) send({ t: 'swing' });
+    if (p.onGround) { p.vx -= Math.sin(p.yaw) * 5; p.vz -= Math.cos(p.yaw) * 5; }
+    const fwd = new V3(0, 0, -1).applyQuaternion(p.cam.quaternion);
+    let foe = null, at = null, best = Infinity;
+    for (const q of others(p)) {
+      if (q.dead) continue;
+      const chest = new V3(q.pos.x, q.pos.y + 1.1 - .5 * q.crouchT, q.pos.z), to = chest.clone().sub(p.cam.position), d = to.length(), ang = fwd.angleTo(to);
+      if (d > W.reach || ang > .65 || !hasLOS(p.cam.position, chest)) continue;
+      if (ang + d * .1 < best) { best = ang + d * .1; foe = q; at = chest; }
+    }
+    if (!foe) return;
+    if (foe.invT > 0) { burst(at, 0xece6d8, 4, 2); return; }
+    p.hits++;
+    hitFoe(p, foe, W.body, false, at);
+  }
+  function hitFoe(p, foe, dmg, weak, at) {
+    let down;
+    if (online) { send({ t: 'hit', to: foe.i, d: dmg, w: weak ? 1 : 0 }); down = foe.hp - dmg <= 0; foe.hitFlash = .1; }
+    else down = damagePlayer(foe, dmg, p, weak);
+    burst(at, weak ? 0xff4a3d : foe.color, weak ? 9 : 5, 4);
+    hitMarker(p, weak, down); sfx.hit(weak);
   }
   function damagePlayer(v, dmg, from, weak) {
     v.hp -= dmg; v.dmgFlash = 1; v.dmgDirT = 1; v.hitFlash = .1; sfx.hurt();
@@ -1014,7 +1186,7 @@
     from.kills++; if (weak) from.heads++;
     burst(new V3(v.pos.x, v.pos.y + 1.1, v.pos.z), v.color, 24, 6); sfx.kill();
     v.speedT = 0; v.slideT = 0; dropSpeed(v.pos, `${v.i}-${v.deaths}`);
-    banner(from, 'KILL', weak ? 'ヘッドショット！' : `${from.kills} / ${GOAL}`);
+    banner(from, 'KILL', weak ? 'ヘッドショット！' : from.W.melee ? 'ナイフで仕留めた！' : `${from.kills} / ${GOAL}`);
     faceT = 1.5;
     const total = players.reduce((n, q) => n + q.kills, 0);
     if (from.kills >= GOAL) say(`勝者、${from.name}。おめでとうございます。`);
@@ -1022,6 +1194,7 @@
     else if (from.kills === GOAL - 1 && v.kills === GOAL - 1) say(`${GOAL - 1}対${GOAL - 1}。……見ている私が緊張してきました。`);
     else if (from.kills === GOAL - 1) say(`${from.name}、あと1本です。`);
     else if (weak && Math.random() < .5) say('頭に命中。記録しておきます。');
+    else if (from.W.melee && Math.random() < .6) say('……ナイフで？ 度胸がありますね。');
     if (from.kills >= GOAL && !(online && localIdx !== 0)) endMatch(from);  // 2台以上のときは、部屋を作った人のスマホが終わりを決める
   }
   function hitMarker(p, weak, kill) {
@@ -1029,13 +1202,26 @@
     clearTimeout(p.hitTimer); p.hitTimer = setTimeout(() => { p.ui.hitm.className = 'hitm'; }, kill ? 220 : 110);
   }
   function animateGun(p, dt) {
+    const W = p.W;
     p.recoil = Math.max(0, p.recoil - dt * 9);
-    const pr = p.reloadT > 0 ? 1 - p.reloadT / RELOAD : 0, dip = Math.sin(pr * Math.PI);
+    p.pumpT = Math.max(0, p.pumpT - dt); p.swingT = Math.max(0, p.swingT - dt);
+    const pr = p.reloadT > 0 ? 1 - p.reloadT / W.reload : 0, dip = Math.sin(pr * Math.PI);
     const hs = Math.hypot(p.vx, p.vz), amp = Math.min(1, hs / 7) * (1 - p.adsT * .8);
-    const bx = .2 + (0 - .2) * p.adsT, by = -.2 + (-.107 + .2) * p.adsT, bz = -.46 + (-.36 + .46) * p.adsT;
-    p.gun.position.set(bx + Math.cos(p.bobPhase) * .012 * amp, by + Math.abs(Math.sin(p.bobPhase)) * .012 * amp - dip * .12 - p.landDip * .3, bz + p.recoil * .06);
-    p.gun.rotation.set(p.recoil * .05 - dip * .7, dip * .3, dip * .25);
-    p.mag.position.y = -.14 - (pr > .15 && pr < .6 ? Math.sin((pr - .15) / .45 * Math.PI) * .25 : 0);
+    const bobX = Math.cos(p.bobPhase) * .012 * amp, bobY = Math.abs(Math.sin(p.bobPhase)) * .012 * amp;
+    if (W.melee) {
+      // ナイフは右から左へ振り抜く
+      const s = p.swingT > 0 ? Math.sin((1 - p.swingT / SWING) * Math.PI) : 0;
+      p.gun.position.set(.22 - s * .22 + bobX, -.22 + s * .06 + bobY - p.landDip * .3, -.42 - s * .14);
+      p.gun.rotation.set(.25 - s * .45, .15 + s * 1.1, -s * .55);
+    } else {
+      const bx = .2 + (0 - .2) * p.adsT, by = -.2 + (-.107 + .2) * p.adsT, bz = -.46 + (-.36 + .46) * p.adsT;
+      p.gun.position.set(bx + bobX, by + bobY - dip * .12 - p.landDip * .3, bz + p.recoil * .06);
+      p.gun.rotation.set(p.recoil * .05 - dip * .7, dip * .3, dip * .25);
+      // マガジン（ショットガンはポンプ）の動き
+      const b = p.mag.userData.base, off = pr > .15 && pr < .6 ? Math.sin((pr - .15) / .45 * Math.PI) : 0;
+      if (W.id === 'shotgun') p.mag.position.set(b.x, b.y, b.z + (off + (p.pumpT > 0 ? Math.sin((1 - p.pumpT / PUMP) * Math.PI) : 0)) * .11);
+      else p.mag.position.set(b.x, b.y - off * .25, b.z);
+    }
     p.flashT -= dt; p.flash.visible = p.flashT > 0;
     if (p.flash.visible) p.flash.rotation.z = Math.random() * Math.PI;
     p.muzzle.intensity = p.flashT > 0 ? 2 : 0;
@@ -1079,15 +1265,18 @@
     const hp = Math.ceil(p.hp);
     setText(p, 'hp', u.hpnum, String(hp));
     u.hpbar.style.width = hp + '%'; u.hpbar.classList.toggle('low', hp <= 30);
-    setText(p, 'ammo', u.ammo, String(p.ammo)); u.ammo.classList.toggle('empty', p.ammo === 0);
-    setText(p, 'ammoS', u.ammoS, p.reloadT > 0 ? 'リロード中…' : p.ammo <= 8 ? '弾が少ない' : '');
+    const W = p.W;
+    setText(p, 'ammo', u.ammo, W.melee ? '∞' : String(p.ammo)); u.ammo.classList.toggle('empty', !W.melee && p.ammo === 0);
+    setText(p, 'ammoS', u.ammoS, W.melee ? '' : p.reloadT > 0 ? 'リロード中…' : p.ammo <= Math.max(1, Math.round(W.mag * .27)) ? '弾が少ない' : '');
+    const sc = W.scope ? clamp((p.adsT - .6) / .35, 0, 1) : 0;  // スナイパーでのぞき込むと、スコープだけが見える
+    p.scoped = sc > .9; u.scope.style.opacity = sc.toFixed(2);
     u.xhair.style.setProperty('--gap', (4 + spreadNow(p) * 420).toFixed(1) + 'px');
     u.boost.hidden = p.speedT <= 0 || p.dead;
     if (p.speedT > 0) u.boostBar.style.width = (p.speedT / SPEED_TIME * 100).toFixed(1) + '%';
     u.xhair.classList.toggle('aim', p.adsT > .5);
     u.vig.style.opacity = p.dmgFlash.toFixed(3);
     u.dmgdir.style.opacity = p.dmgDirT.toFixed(3);
-    u.dead.hidden = !p.dead;
+    u.dead.hidden = !p.dead; p.el.classList.toggle('isdead', p.dead);
     if (p.dead) setText(p, 'dead', u.deadS, `復活まで ${Math.max(1, Math.ceil(p.respawnT))}`);
     drawRadar(p);
   }
@@ -1376,7 +1565,7 @@
   function sendState() {
     const p = me();
     send({ t: 's', x: r3(p.pos.x), y: r3(p.pos.y), z: r3(p.pos.z), yw: r3(p.yaw), pt: r3(p.pitch), c: r3(p.crouchT), iv: r3(p.invT),
-      hp: Math.ceil(p.hp), d: p.dead ? 1 : 0, a: p.aiming ? 1 : 0, k: p.skin });
+      hp: Math.ceil(p.hp), d: p.dead ? 1 : 0, a: p.aiming ? 1 : 0, k: p.skin, wp: p.weapon });
   }
   function updateRemote(p, dt) {
     const s = p.net;
@@ -1389,6 +1578,7 @@
     p.yaw += Math.atan2(Math.sin(s.yw - p.yaw), Math.cos(s.yw - p.yaw)) * k;
     p.pitch = s.pt; p.crouchT = s.c; p.invT = s.iv; p.hp = s.hp; p.aiming = !!s.a;
     if (s.k != null && s.k !== p.skin) setSkin(p, s.k);
+    if (s.wp != null && s.wp !== p.weapon) setWeapon(p, s.wp);
   }
   // 当たったかどうかは撃った人が判定し、体力を減らして倒れるかどうかは撃たれた人が決める。
   // 試合の終わりは部屋を作った人が決めて伝える（ほぼ同時に倒し合っても、全員の画面で勝者がそろうように）
@@ -1410,13 +1600,15 @@
         break;
       }
       case 'shot': {
-        if (!Array.isArray(m.a) || !Array.isArray(m.b)) break;
-        const a = new V3().fromArray(m.a), b = new V3().fromArray(m.b);
-        tracer(a, b, from.color); burst(b, 0xbdb6a6, 3, 2);
+        const bs = Array.isArray(m.bs) ? m.bs : Array.isArray(m.b) ? [m.b] : null;
+        if (!Array.isArray(m.a) || !bs) break;
+        const a = new V3().fromArray(m.a);
+        for (const e of bs.slice(0, 8)) { if (!Array.isArray(e)) continue; const b = new V3().fromArray(e); tracer(a, b, from.color); burst(b, 0xbdb6a6, bs.length > 1 ? 1 : 3, 2); }
         from.lastShotAt = gt; from.flashT = .045;
-        sfx.shot(clamp(1 - a.distanceTo(p.pos) / 70, .15, .8));
+        shotSound(m.g | 0, clamp(1 - a.distanceTo(p.pos) / 70, .15, .8));
         break;
       }
+      case 'swing': sfx.swing(clamp(1 - from.pos.distanceTo(p.pos) / 25, 0, .7)); break;
       case 'heal': { const k = pickups[m.k]; if (k) { k.cd = 12; k.g.visible = false; } break; }
       case 'take': { const i = drops.findIndex(d => d.id === m.id); if (i >= 0) { scene.remove(drops[i].g); drops.splice(i, 1); } break; }
       case 'ready':
@@ -1458,6 +1650,7 @@
     for (const p of players) { p.el.classList.toggle('local', p.i === idx); p.gunCam.rotation.z = 0; }
     me().ui.keys.textContent = KEYS_TEXT[0];  // 2台以上のときは、だれでも WASD で動かせる
     setSkin(me(), store.get('hd.skinNet', me().skin));
+    pickWeapon(me(), store.get('hd.wpnNet', me().nextWeapon));
     $('netSheet').hidden = true; $('modeSel').hidden = true;
     phase = 'lobby'; winner = null;
     if (net.role === 'host') ready.fill(false);
@@ -1693,6 +1886,11 @@
     tb(u.crouch, () => toggleCrouch(p));
     u.ready.addEventListener('click', () => pressReady(p));
     u.invite.addEventListener('click', inviteMore);
+    for (const b of u.wpns) b.addEventListener('click', () => {
+      pickWeapon(p, +b.dataset.w);
+      store.set(online ? 'hd.wpnNet' : 'hd.wpn' + p.i, p.nextWeapon);
+      if (!u.panel.hidden) updatePanels();
+    });
     for (const b of u.skins) b.addEventListener('click', () => {
       setSkin(p, +b.dataset.k);
       store.set(online ? 'hd.skinNet' : 'hd.skin' + p.i, p.skin);  // 2台以上のときは、このスマホの見た目として覚える
@@ -1784,7 +1982,7 @@
     if (online) {
       const p = me(), blink = Math.floor(performance.now() / 100) % 2 === 0;
       renderer.setScissorTest(false); renderer.setViewport(0, 0, W, H);
-      for (const q of players) { q.model.g.visible = q !== p && !q.gone && !q.dead && (q.invT <= 0 || blink); q.gun.visible = q === p && !p.dead; }
+      for (const q of players) { q.model.g.visible = q !== p && !q.gone && !q.dead && (q.invT <= 0 || blink); q.gun.visible = q === p && !p.dead && !p.scoped; }
       renderer.clear(); renderer.render(scene, p.cam);
       renderer.clearDepth(); renderer.render(gunScene, p.gunCam);
       return;
@@ -1793,7 +1991,7 @@
     for (const p of players) {
       const y = p.i ? h : 0;
       renderer.setViewport(0, y, W, h); renderer.setScissor(0, y, W, h);
-      for (const q of players) { q.model.g.visible = q !== p && !q.dead && (q.invT <= 0 || Math.floor(gt * 10) % 2 === 0); q.gun.visible = q === p && !p.dead; }
+      for (const q of players) { q.model.g.visible = q !== p && !q.dead && (q.invT <= 0 || Math.floor(gt * 10) % 2 === 0); q.gun.visible = q === p && !p.dead && !p.scoped; }
       renderer.clear();
       renderer.render(scene, p.cam);
       renderer.clearDepth();
